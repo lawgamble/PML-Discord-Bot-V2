@@ -20,7 +20,7 @@ function registerUser(filePath, message, arguments, discordId, discordName) {
             console.log(error)
         } else {
             if (data.players.hasOwnProperty(discordId)) {
-                const priorPlayerName = data.players[discordId];
+                const priorPlayerName = data.players[discordId].slice(2)
                 uniqueMessage = `You were already registered, so we just updated your name from: **${priorPlayerName}** to **${arguments.join(" ")}**`
             } else {
                 uniqueMessage = `Thanks, ${discordName}! You've registered as **${arguments.join(" ")}**. If you need to change your in-game name, just re-register with the correct name.`
