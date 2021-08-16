@@ -18,6 +18,7 @@ function removePlayerFromTeam(filePath, message) {
         if (error) {
             console.log(error)
         } else {
+            //if team doesn't exist
             if (!data.teams.hasOwnProperty(teamName)) {
                 message.reply(`The team name **${teamName}** doesn't exist. This is **case sensitive**, so check spelling and casing.`)
                 return;
@@ -25,7 +26,7 @@ function removePlayerFromTeam(filePath, message) {
             // if team name exists
             if (data.teams.hasOwnProperty(teamName)) {
                 userMentionedIds.forEach((id, index) => {
-                    const playerToBeDeleted = data.players[id];
+                    const playerToBeDeleted = "q-" + data.players[id];
                     const teamArray = data.teams[teamName];
                     let deleteIndex = teamArray.indexOf(playerToBeDeleted)
                     if (teamArray.includes(playerToBeDeleted)) {
@@ -33,11 +34,12 @@ function removePlayerFromTeam(filePath, message) {
                         teamArray.splice(deleteIndex, 1);
                     } else {
                         notDeletedArray.push(userMentionedNames[index]);
+                        console.log(notDeletedArray)
                     }
                 })
             }
-            if(deletedArray.length === 0 && notDeletedArray.length === 0) {
-                message.reply("The members you gave to be deleted aren't actually on this team!")
+            if(deletedArray.length === 0 && notDeletedArray.length > 0) {
+                message.reply(`The members you gave to be deleted **(${notDeletedArray.join(", ")})** aren't actually on the **${teamName}**!`)
             }
             if(deletedArray.length > 0 && notDeletedArray.length > 0) {
                 message.reply(`These players were deleted from the team **${teamName}**: ${deletedArray.join(", ")}. Player(s) **${notDeletedArray.join(", ")}** weren't actually registered, therefore aren't on any team! `)
