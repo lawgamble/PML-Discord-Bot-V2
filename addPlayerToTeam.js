@@ -32,7 +32,6 @@ function addPlayerToTeam(filePath, message) {
                         data.teams[teamName].push(data.players[id])
                     } else {
                         notRegisteredArray.push(userMentionedNames[index]);
-                        message.reply(`Player(s):  **${notRegisteredArray.join(',')}** are currently not officially registered, so they can't be added to your team until they register!`)
                     }
                 })
             }
@@ -48,9 +47,10 @@ function addPlayerToTeam(filePath, message) {
         }
         if (registeredArray.length > 0) {
             message.reply(`Player(s):  **${registeredArray.join(', ')}** were added to the team: **${teamName}**`)
-        } else {
-            message.reply(`No players were added to the **${teamName}** because : 1) You may have misspelled the team name. 2) None of the players you tried to add are currently registered.`)
         }
+        if (notRegisteredArray.length > 0) {
+            message.reply(`Player(s):  **${notRegisteredArray.join(',')}** aren't actually registered, so they can't be added to your team until they register!`)
+        } 
     })
 }
 

@@ -8,7 +8,7 @@ function unRegisterUser(filePath, message, discordId, discordName) {
     } else {
       if (data.players.hasOwnProperty(discordId)) {
         const teamsObject = data.teams;
-        const previousPlayerName = "q-" + data.players[discordId];
+        const previousPlayerName = data.players[discordId];
         for (property in teamsObject) {
           let teamList = teamsObject[property];
           if (teamList.includes(previousPlayerName)) {
