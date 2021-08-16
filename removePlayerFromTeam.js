@@ -26,7 +26,7 @@ function removePlayerFromTeam(filePath, message) {
             // if team name exists
             if (data.teams.hasOwnProperty(teamName)) {
                 userMentionedIds.forEach((id, index) => {
-                    const playerToBeDeleted = "q-" + data.players[id];
+                    const playerToBeDeleted =  data.players[id];
                     const teamArray = data.teams[teamName];
                     let deleteIndex = teamArray.indexOf(playerToBeDeleted)
                     if (teamArray.includes(playerToBeDeleted)) {
