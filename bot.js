@@ -6,6 +6,7 @@ const createTeam = require("./createTeam");
 const removeTeam = require("./removeTeam");
 const addPlayerToTeam = require("./addPlayerToTeam");
 const removePlayerFromTeam = require("./removePlayerFromTeam");
+const embed = require("./embed");
 const Discord = require("discord.js");
 const {
     Client,
@@ -26,6 +27,10 @@ const MENTION = "@"
 // When bot logs in and is "ready"
 client.on("ready", () => {
     console.log("We Are LIVE!");
+});
+
+process.on('unhandledRejection', error => {
+    console.error('Unhandled promise rejection:', error);
 });
 
 // when a message is sent on discord, it is checked by this function
@@ -66,6 +71,10 @@ client.on("messageCreate", (message) => {
         removePlayerFromTeam(filePath, message)
     }
 
+    if (command === "rosters") {
+        embed(filePath, message)
+    }
+
 
 
 
@@ -97,6 +106,8 @@ client.on("messageCreate", (message) => {
             return message.reply(JSON.stringify(aliases.teams, null, 2))
         })
     }
+
+    
 });
 
 

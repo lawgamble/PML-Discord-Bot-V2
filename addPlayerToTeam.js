@@ -1,5 +1,6 @@
 const readAliasFile = require("./JSONParser");
 const fs = require("fs");
+const playerOnAnotherTeam = require("./playerOnAnotherTeam.js")
 
 const PREFIX = "!";
 
@@ -10,9 +11,13 @@ function addPlayerToTeam(filePath, message) {
 
     const userMentionedIds = message.mentions.users.map((user) => user.id);
     const userMentionedNames = message.mentions.users.map((user) => user.username);
+    
 
     let registeredArray = [];
     let notRegisteredArray = [];
+    let onAnotherTeam = [];
+
+    
 
     readAliasFile(filePath, (error, data) => {
         if (error) {
@@ -27,12 +32,13 @@ function addPlayerToTeam(filePath, message) {
 
                 userMentionedIds.forEach((id, index) => {
                     //if player is registered
-                    if (data.players.hasOwnProperty(id)) {
+                    if (data.players.hasOwnProperty(id) && !playerOnAnotherTeam(message, data.teams, data.players[id], userMentionedNames[index])) {
                         registeredArray.push(userMentionedNames[index])
                         data.teams[teamName].push(data.players[id])
                     } else {
                         notRegisteredArray.push(userMentionedNames[index]);
                     }
+
                 })
             }
             const teamSet = [...new Set(data.teams[teamName])]
@@ -49,7 +55,7 @@ function addPlayerToTeam(filePath, message) {
             message.reply(`Player(s):  **${registeredArray.join(', ')}** were added to the team: **${teamName}**`)
         }
         if (notRegisteredArray.length > 0) {
-            message.reply(`Player(s):  **${notRegisteredArray.join(',')}** aren't actually registered, so they can't be added to your team until they register!`)
+            message.reply(`Player(s): **${notRegisteredArray.join(', ')}** were not added to the **${teamName}** because they are either already on your/another roster OR have not registered! Check previous reply for confirmation.`)
         } 
     })
 }

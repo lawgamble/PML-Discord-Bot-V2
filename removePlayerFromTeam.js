@@ -45,7 +45,7 @@ function removePlayerFromTeam(filePath, message) {
                 message.reply(`These players were deleted from the team **${teamName}**: ${deletedArray.join(", ")}. Player(s) **${notDeletedArray.join(", ")}** weren't actually registered, therefore aren't on any team! `)
             }
             if(deletedArray.length > 0 && notDeletedArray.length === 0) {
-                message.reply(`These players have been deleted from the team **${teamName}**: ${deletedArray.join(", ")}.`)
+                message.reply(`These players have been deleted from the team **${teamName}**: **${deletedArray.join(", ")}**.`)
             }
             fs.writeFile(filePath, JSON.stringify(data, null, 2), error => {
                 if (error) {
