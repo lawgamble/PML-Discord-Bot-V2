@@ -71,6 +71,8 @@ client.on("messageCreate", (message) => {
         removePlayerFromTeam(filePath, message)
     }
 
+
+    // work in progress to create embedded rosters list
     if (command === "rosters") {
         embed(filePath, message)
     }
