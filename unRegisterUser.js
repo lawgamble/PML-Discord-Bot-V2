@@ -6,18 +6,26 @@ function unRegisterUser(filePath, message, discordId, discordName) {
     if (error) {
       console.log(error);
     } else {
-      if (data.players.hasOwnProperty(discordId)) {
-        const teamsObject = data.teams;
-        const previousPlayerName = data.players[discordId];
-        for (property in teamsObject) {
-          let teamList = teamsObject[property];
-          if (teamList.includes(previousPlayerName)) {
-            let index = teamList.indexOf(previousPlayerName);
-            teamList.splice(index, 1);
+      const playersListData = data.players;
+      const teamsListData = data.teams;
+
+      if (playersListData.hasOwnProperty(discordId)) {
+        const previousPlayerName = playersListData[discordId];
+
+        for (property in teamsListData) {
+          let teamListIteration = teamsListData[property];
+          if (teamListIteration.includes(previousPlayerName)) {
+            let indexOfFoundPlayer =
+              teamListIteration.indexOf(previousPlayerName);
+
+            // remove player from team roster array
+            teamListIteration.splice(indexOfFoundPlayer, 1);
           }
         }
 
-        delete data.players[discordId];
+        // delete player from players list
+        delete playersListData[discordId];
+
         fs.writeFile(filePath, JSON.stringify(data, null, 2), (error) => {
           if (error) {
             console.log(error);

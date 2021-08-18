@@ -39,9 +39,30 @@ client.on("messageCreate", (message) => {
     if (message.content.indexOf(PREFIX) !== 0) return;
 
     const arguments = message.content.slice(PREFIX.length).trim().split(/ +/g);
+    console.log("ARGUMENTS:", arguments)
     const command = arguments.shift().toLowerCase();
+    console.log("ARGUMENTS:", arguments)
     const discordId = message.author.id;
     const discordName = message.author.username;
+
+
+// const cmds = {'cmd_name': f}
+// cmds[cmdName](..args)
+// const args = [arg1, arg2,arg3]
+
+
+    // const args = [filePath, message]
+    // const args2 = [discordId, discordName]
+    const commands = {
+        "register" : registerUser,
+        "unregister": unRegisterUser ,
+        "createteam" : createTeam,
+        "removeteam" : removeTeam,
+        "addplayer" : addPlayerToTeam,
+        "removeplayer": removePlayerFromTeam
+    }
+
+    
 
     // to register a player based on discorId and arguments
     if (command === "register") {

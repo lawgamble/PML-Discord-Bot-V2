@@ -1,10 +1,10 @@
-function playerOnAnotherTeam(message, teams, string, DiscordName) {
-  for (const value in teams) {
-    const iterationObject = { [value]: teams[value] };
-    if (Object.values(iterationObject).length === 0) continue;
-    if (Object.values(iterationObject)[0].includes(string)) {
+function playerOnAnotherTeam(message, teams, playerName, DiscordName) {
+  for (const teamName in teams) {
+    const teamWithPlayers = { [teamName]: teams[teamName] };
+    if (Object.values(teamWithPlayers).length === 0) continue;
+    if (Object.values(teamWithPlayers)[0].includes(playerName)) {
       message.reply(
-        `**${DiscordName}** is already on the **${value}** roster!`
+        `**${DiscordName}** is already on the **${teamName}** roster!`
       );
       return true;
     }

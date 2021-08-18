@@ -15,7 +15,7 @@ function addPlayerToTeam(filePath, message) {
 
     let registeredArray = [];
     let notRegisteredArray = [];
-    let onAnotherTeam = [];
+    
 
     
 
@@ -23,28 +23,31 @@ function addPlayerToTeam(filePath, message) {
         if (error) {
             console.log(error)
         } else {
-            if (!data.teams.hasOwnProperty(teamName)) {
+
+            const teamsListData = data.teams;
+            const playersListData = data.players;
+
+            // If teamName doesn't exist
+            if (!teamsListData.hasOwnProperty(teamName)) {
                 message.reply(`The team name **${teamName}** doesn't exist. This is **case sensitive**, so check spelling and casing.`)
                 return;
             }
             // if team name exists
-            if (data.teams.hasOwnProperty(teamName)) {
+            if (teamsListData.hasOwnProperty(teamName)) {
 
                 userMentionedIds.forEach((id, index) => {
                     //if player is registered
-                    if (data.players.hasOwnProperty(id) && !playerOnAnotherTeam(message, data.teams, data.players[id], userMentionedNames[index])) {
+                    if (playersListData.hasOwnProperty(id) && !playerOnAnotherTeam(message, teamsListData, playersListData[id], userMentionedNames[index])) {
                         registeredArray.push(userMentionedNames[index])
-                        data.teams[teamName].push(data.players[id])
+                        teamsListData[teamName].push(playersListData[id])
                     } else {
                         notRegisteredArray.push(userMentionedNames[index]);
                     }
 
                 })
             }
-            const teamSet = [...new Set(data.teams[teamName])]
-            if(data.teams[teamName].length > teamSet.length) {
-                data.teams[teamName] = teamSet;
-        }
+            teamsListData[teamName] = [...new Set(teamsListData[teamName])];
+        
             fs.writeFile(filePath, JSON.stringify(data, null, 2), error => {
                 if (error) {
                     console.log(error)
