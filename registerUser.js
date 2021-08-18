@@ -19,24 +19,38 @@ function registerUser(filePath, message, arguments, discordId, discordName) {
         if (error) {
             console.log(error)
         } else {
-            if (data.players.hasOwnProperty(discordId)) {
-                const priorPlayerName = data.players[discordId].slice(2)
+
+            let teamsListData = data.teams;
+            let playersListData = data.players;
+
+            //if player is already in players list
+            if (playersListData.hasOwnProperty(discordId)) {
+
+                // removes "q-" from old player name and stores its value to use in unique msg response
+                const priorPlayerName = playersListData[discordId].slice(2)
                 uniqueMessage = `You were already registered, so we just updated your name from: **${priorPlayerName}** to **${arguments.join(" ")}**`
             } else {
                 uniqueMessage = `Thanks, ${discordName}! You've registered as **${arguments.join(" ")}**. If you need to change your in-game name, just re-register with the correct name.`
             }
-            const teamsObject = data.teams;
-            const previousPlayerName = "q-" + data.players[discordId];
-            for(property in teamsObject) {
-              let teamList = teamsObject[property];
-              if(teamList.includes(previousPlayerName)) {
-                  let index = teamList.indexOf(previousPlayerName)
-                  teamList.splice(index, 1, playerToBeRegistered)
-              }
+
+            // find player name prior to updating 
+            const previousPlayerName =  playersListData[discordId];
+            for (property in teamsListData) {
+
+                // single team array
+                let teamListIteration = teamsListData[property];
+                // if previous name is in team array
+                if (teamListIteration.includes(previousPlayerName)) {
+
+                    // find index of previous player name 
+                    let index = teamListIteration.indexOf(previousPlayerName)
+                    // remove and replace with new name
+                    teamListIteration.splice(index, 1, playerToBeRegistered[discordId])
+                }
             }
 
             data.players = {
-                ...data.players,
+                ...playersListData,
                 ...playerToBeRegistered
             }
 
