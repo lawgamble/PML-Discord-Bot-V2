@@ -1,5 +1,6 @@
 const readAliasFile = require("./JSONParser");
 const fs = require("fs");
+const LeaguePlayerRoleId = process.env.LP_ID;
 
 function unRegisterUser(filePath, message, discordId, discordName) {
   readAliasFile(filePath, (error, data) => {
@@ -12,19 +13,28 @@ function unRegisterUser(filePath, message, discordId, discordName) {
       if (playersListData.hasOwnProperty(discordId)) {
         const previousPlayerName = playersListData[discordId];
 
-        for (property in teamsListData) {
-          let teamListIteration = teamsListData[property];
+        for (let teamName in teamsListData) {
+          let teamListIteration = teamsListData[teamName];
           if (teamListIteration.includes(previousPlayerName)) {
             let indexOfFoundPlayer =
               teamListIteration.indexOf(previousPlayerName);
 
             // remove player from team roster array
             teamListIteration.splice(indexOfFoundPlayer, 1);
+
+            // remove team role
+            const teamRole = message.guild.roles.cache.find(
+              (role) => role.name == teamName
+            );
+            message.member.roles.remove(teamRole).catch(console.error);
           }
         }
 
         // delete player from players list
         delete playersListData[discordId];
+        // remove league player role
+        let LeagueRole = message.guild.roles.cache.get(LeaguePlayerRoleId);
+        message.member.roles.remove(LeagueRole).catch(console.error);
 
         fs.writeFile(filePath, JSON.stringify(data, null, 2), (error) => {
           if (error) {

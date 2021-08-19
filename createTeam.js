@@ -1,5 +1,6 @@
 const readAliasFile = require("./JSONParser");
 const fs = require("fs");
+const createRole = require("./createRole")
 
 
 function createTeam(filePath, message, arguments) {
@@ -24,10 +25,10 @@ function createTeam(filePath, message, arguments) {
                     console.log(error)
                 }
             })
-            message.reply(`You've added the team ${arguments.join(" ")}`)
+            createRole(message, arguments);
+            message.reply(`You've added the team ${arguments.join(" ")}, and a new Role for this team was created. Players will be given a Team Role when they are added to the roster.`)
         }
     })
-
 }
 
 

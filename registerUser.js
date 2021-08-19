@@ -2,6 +2,7 @@ const readAliasFile = require("./JSONParser");
 const fs = require("fs");
 
 
+
 function registerUser(filePath, message, arguments, discordId, discordName) {
     if (arguments.length === 0) {
         return message.reply(
@@ -30,7 +31,7 @@ function registerUser(filePath, message, arguments, discordId, discordName) {
                 const priorPlayerName = playersListData[discordId].slice(2)
                 uniqueMessage = `You were already registered, so we just updated your name from: **${priorPlayerName}** to **${arguments.join(" ")}**`
             } else {
-                uniqueMessage = `Thanks, ${discordName}! You've registered as **${arguments.join(" ")}**. If you need to change your in-game name, just re-register with the correct name.`
+                uniqueMessage = `Thanks, ${discordName}! You've registered as **${arguments.join(" ")}**. If you need to change your in-game name, just re-register with the correct name.`;
             }
 
             // find player name prior to updating 

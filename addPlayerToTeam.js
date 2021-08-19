@@ -1,6 +1,8 @@
 const readAliasFile = require("./JSONParser");
 const fs = require("fs");
 const playerOnAnotherTeam = require("./playerOnAnotherTeam.js")
+const LeaguePlayerRoleId = process.env.LP_ID; 
+const RingerRoleId = process.env.RR_ID;
 
 const PREFIX = "!";
 
@@ -11,13 +13,17 @@ function addPlayerToTeam(filePath, message) {
 
     const userMentionedIds = message.mentions.users.map((user) => user.id);
     const userMentionedNames = message.mentions.users.map((user) => user.username);
-    
+
 
     let registeredArray = [];
     let notRegisteredArray = [];
-    
+    let onAnotherTeamArray = [];
 
-    
+    if(userMentionedIds.length > 1) {
+        message.reply("Only add one player to a team at a time!");
+        return;
+    }
+
 
     readAliasFile(filePath, (error, data) => {
         if (error) {
@@ -27,27 +33,47 @@ function addPlayerToTeam(filePath, message) {
             const teamsListData = data.teams;
             const playersListData = data.players;
 
-            // If teamName doesn't exist
-            if (!teamsListData.hasOwnProperty(teamName)) {
-                message.reply(`The team name **${teamName}** doesn't exist. This is **case sensitive**, so check spelling and casing.`)
-                return;
-            }
+
+
             // if team name exists
             if (teamsListData.hasOwnProperty(teamName)) {
 
                 userMentionedIds.forEach((id, index) => {
-                    //if player is registered
-                    if (playersListData.hasOwnProperty(id) && !playerOnAnotherTeam(message, teamsListData, playersListData[id], userMentionedNames[index])) {
-                        registeredArray.push(userMentionedNames[index])
-                        teamsListData[teamName].push(playersListData[id])
+
+                    if (!playerOnAnotherTeam(message, teamsListData, playersListData[id], userMentionedNames[index])) {
+                        if (playersListData.hasOwnProperty(id)) {
+                            registeredArray.push(userMentionedNames[index])
+                            teamsListData[teamName].push(playersListData[id])
+
+                            // find user in discord by discordId
+                            const newTeamMember = message.mentions.members.find(user => user.id === id);
+
+                            // find specific team role
+                            const teamRole = message.guild.roles.cache.find((role) => role.name === teamName);
+                            newTeamMember.roles.add(teamRole).catch(console.error)
+                            let LeagueRole = message.guild.roles.cache.get(LeaguePlayerRoleId);
+                            newTeamMember.roles.add(LeagueRole).catch(console.error);
+                            const ringerRole = message.guild.roles.cache.find((role) => role.id === RingerRoleId);
+
+                            if(newTeamMember.roles.cache.has(RingerRoleId)) {
+                                newTeamMember.roles.remove(ringerRole);
+                              }
+
+                            
+                        } else {
+                            notRegisteredArray.push(userMentionedNames[index]);
+                        }
                     } else {
-                        notRegisteredArray.push(userMentionedNames[index]);
+                        onAnotherTeamArray.push(userMentionedNames[index]);
                     }
 
                 })
+            } else {
+                message.reply(`The team name **${teamName}** doesn't exist. This is **case sensitive**, so check spelling and casing.`)
+                return;
             }
             teamsListData[teamName] = [...new Set(teamsListData[teamName])];
-        
+
             fs.writeFile(filePath, JSON.stringify(data, null, 2), error => {
                 if (error) {
                     console.log(error)
@@ -58,11 +84,9 @@ function addPlayerToTeam(filePath, message) {
             message.reply(`Player(s):  **${registeredArray.join(', ')}** were added to the team: **${teamName}**`)
         }
         if (notRegisteredArray.length > 0) {
-            message.reply(`Player(s): **${notRegisteredArray.join(', ')}** were not added to the **${teamName}** because they are either already on your/another roster OR have not registered! Check previous reply for confirmation.`)
-        } 
+            message.reply(`Player(s): **${notRegisteredArray.join(', ')}** were not added to the **${teamName}** because they have not registered!`)
+        }
     })
 }
 
 module.exports = addPlayerToTeam;
-
-

@@ -1,5 +1,6 @@
 const readAliasFile = require("./JSONParser");
 const fs = require("fs");
+const deleteRole = require("./deleteRole")
 
 
 function removeTeam(filePath, message, arguments) {
@@ -11,6 +12,9 @@ function removeTeam(filePath, message, arguments) {
         } else {
             if (data.teams.hasOwnProperty(teamToBeRemoved)) {
                 delete data.teams[teamToBeRemoved];
+
+                //write code to remove LP role if team gets removed;
+
                 fs.writeFile(filePath, JSON.stringify(data, null, 2), (error) => {
                     if (error) {
                         console.log(error);
@@ -20,6 +24,7 @@ function removeTeam(filePath, message, arguments) {
                     );
                     return;
                 });
+                deleteRole(message, arguments);
             } else {
                 if (arguments.length === 0) {
                     message.reply("Please enter a team to be removed. Example: **!removeteam <teamName>**")
