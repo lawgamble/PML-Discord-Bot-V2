@@ -1,8 +1,9 @@
 const readAliasFile = require("./JSONParser");
 const fs = require("fs");
 const playerOnAnotherTeam = require("./playerOnAnotherTeam.js")
-const LeaguePlayerRoleId = process.env.LP_ID; 
+const LeaguePlayerRoleId = process.env.LP_ID;
 const RingerRoleId = process.env.RR_ID;
+const teamNewsId = process.env.TEAM_NEWS_ID;
 
 const PREFIX = "!";
 
@@ -18,8 +19,9 @@ function addPlayerToTeam(filePath, message) {
     let registeredArray = [];
     let notRegisteredArray = [];
     let onAnotherTeamArray = [];
+    let registeredIds = [];
 
-    if(userMentionedIds.length > 1) {
+    if (userMentionedIds.length > 1) {
         message.reply("Only add one player to a team at a time!");
         return;
     }
@@ -42,6 +44,9 @@ function addPlayerToTeam(filePath, message) {
 
                     if (!playerOnAnotherTeam(message, teamsListData, playersListData[id], userMentionedNames[index])) {
                         if (playersListData.hasOwnProperty(id)) {
+
+                            registeredIds.push(id);
+
                             registeredArray.push(userMentionedNames[index])
                             teamsListData[teamName].push(playersListData[id])
 
@@ -55,11 +60,11 @@ function addPlayerToTeam(filePath, message) {
                             newTeamMember.roles.add(LeagueRole).catch(console.error);
                             const ringerRole = message.guild.roles.cache.find((role) => role.id === RingerRoleId);
 
-                            if(newTeamMember.roles.cache.has(RingerRoleId)) {
+                            if (newTeamMember.roles.cache.has(RingerRoleId)) {
                                 newTeamMember.roles.remove(ringerRole);
-                              }
+                            }
 
-                            
+
                         } else {
                             notRegisteredArray.push(userMentionedNames[index]);
                         }
@@ -81,7 +86,11 @@ function addPlayerToTeam(filePath, message) {
             })
         }
         if (registeredArray.length > 0) {
+            let discordUserData = message.mentions.users.find((user) => user.id === registeredIds[0])
             message.reply(`Player(s):  **${registeredArray.join(', ')}** were added to the team: **${teamName}**`)
+            let channel = message.guild.channels.cache.get(teamNewsId);
+            channel.send(`${discordUserData} has joined ${teamName}`).catch(console.error);
+
         }
         if (notRegisteredArray.length > 0) {
             message.reply(`Player(s): **${notRegisteredArray.join(', ')}** were not added to the **${teamName}** because they have not registered!`)

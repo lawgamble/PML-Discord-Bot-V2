@@ -10,11 +10,13 @@ const embed = require("./embed");
 const Discord = require("discord.js");
 const {
     Client,
-    Intents
+    Intents,
 } = require("discord.js");
 
 const filePath = process.env.ALIASES_FILEPATH;
 const BOT_ID = process.env.BOT_ID;
+const captainRoleId = process.env.CAPTAIN_ROLE_ID;
+const leagueManagerRoleId = process.env.LEAGUE_MANAGER_ROLE_ID;
 
 const client = new Client({
     intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES],
@@ -39,48 +41,63 @@ client.on("messageCreate", (message) => {
     if (message.content.indexOf(PREFIX) !== 0) return;
 
     const arguments = message.content.slice(PREFIX.length).trim().split(/ +/g);
-    
+
     const command = arguments.shift().toLowerCase();
-    
+
     const discordId = message.author.id;
     const discordName = message.author.username;
 
 
 
 
-    // to register a player based on discorId and arguments
     if (command === "register") {
         registerUser(filePath, message, arguments, discordId, discordName);
     }
 
-    //unregister player based on discordId
+    
     if (command === "unregister") {
         unRegisterUser(filePath, message, discordId, discordName);
     }
 
-    //create a team
+    
     if (command === "createteam") {
-        createTeam(filePath, message, arguments)
+        if (message.member.roles.cache.find((role) => role.id === leagueManagerRoleId)) {
+            createTeam(filePath, message, arguments)
+        } else {
+            return message.reply(`You do not have permission to use the **!${command}** command!`)
+        }
     }
 
-    //remove a team
+    
     if (command === "removeteam") {
-        removeTeam(filePath, message, arguments)
+        if (message.member.roles.cache.find((role) => role.id === leagueManagerRoleId)) {
+            removeTeam(filePath, message, arguments)
+        } else {
+            return message.reply(`You do not have permission to use the **!${command}** command!`)
+        }
     }
 
     if (command === "addplayer") {
-        addPlayerToTeam(filePath, message)
+        if (message.member.roles.cache.find((role) => role.id === captainRoleId)) {
+            addPlayerToTeam(filePath, message)
+        } else {
+            return message.reply(`You do not have permission to use the **!${command}** command!`)
+        }
     }
 
     if (command === "removeplayer") {
-        removePlayerFromTeam(filePath, message)
+        if (message.member.roles.cache.find((role) => role.id === captainRoleId)) {
+            removePlayerFromTeam(filePath, message)
+        } else {
+            return message.reply(`You do not have permission to use the **!${command}** command!`)
+        }
     }
 
 
     // work in progress to create embedded rosters list
-    if (command === "rosters") {
-        embed(filePath, message)
-    }
+    // if (command === "rosters") {
+    //     embed(filePath, message)
+    // }
 
 
 

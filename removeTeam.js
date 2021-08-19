@@ -15,6 +15,7 @@ function removeTeam(filePath, message, arguments) {
 
                 //write code to remove LP role if team gets removed;
 
+
                 fs.writeFile(filePath, JSON.stringify(data, null, 2), (error) => {
                     if (error) {
                         console.log(error);
