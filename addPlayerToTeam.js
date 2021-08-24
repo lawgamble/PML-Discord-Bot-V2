@@ -1,9 +1,11 @@
 const readAliasFile = require("./JSONParser");
 const fs = require("fs");
 const playerOnAnotherTeam = require("./playerOnAnotherTeam.js")
+const rosterEmbed = require("./rosterEmbed")
 const LeaguePlayerRoleId = process.env.LP_ID;
 const RingerRoleId = process.env.RR_ID;
 const teamNewsId = process.env.TEAM_NEWS_ID;
+const rostersChannelId = process.env.ROSTERS_ID;
 
 const PREFIX = "!";
 
@@ -88,8 +90,14 @@ function addPlayerToTeam(filePath, message) {
         if (registeredArray.length > 0) {
             let discordUserData = message.mentions.users.find((user) => user.id === registeredIds[0])
             message.reply(`Player(s):  **${registeredArray.join(', ')}** were added to the team: **${teamName}**`)
-            let channel = message.guild.channels.cache.get(teamNewsId);
-            channel.send(`${discordUserData} has joined ${teamName}`).catch(console.error);
+
+            let newsChannel = message.guild.channels.cache.get(teamNewsId);
+            newsChannel.send(`${discordUserData} has joined ${teamName}`).catch(console.error);
+
+
+            rosterEmbed(filePath, message);
+
+
 
         }
         if (notRegisteredArray.length > 0) {

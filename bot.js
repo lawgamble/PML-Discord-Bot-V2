@@ -6,7 +6,9 @@ const createTeam = require("./createTeam");
 const removeTeam = require("./removeTeam");
 const addPlayerToTeam = require("./addPlayerToTeam");
 const removePlayerFromTeam = require("./removePlayerFromTeam");
-const embed = require("./embed");
+
+const rosterEmbed = require("./rosterEmbed");
+
 const Discord = require("discord.js");
 const {
     Client,
@@ -54,12 +56,12 @@ client.on("messageCreate", (message) => {
         registerUser(filePath, message, arguments, discordId, discordName);
     }
 
-    
+
     if (command === "unregister") {
         unRegisterUser(filePath, message, discordId, discordName);
     }
 
-    
+
     if (command === "createteam") {
         if (message.member.roles.cache.find((role) => role.id === leagueManagerRoleId)) {
             createTeam(filePath, message, arguments)
@@ -68,7 +70,7 @@ client.on("messageCreate", (message) => {
         }
     }
 
-    
+
     if (command === "removeteam") {
         if (message.member.roles.cache.find((role) => role.id === leagueManagerRoleId)) {
             removeTeam(filePath, message, arguments)
@@ -94,10 +96,9 @@ client.on("messageCreate", (message) => {
     }
 
 
-    // work in progress to create embedded rosters list
-    // if (command === "rosters") {
-    //     embed(filePath, message)
-    // }
+    if (command === "rosters") {
+        rosterEmbed(filePath, message)
+    }
 
 
 
