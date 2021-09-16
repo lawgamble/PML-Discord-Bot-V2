@@ -1,13 +1,16 @@
 require("dotenv").config();
-const readAliasFile = require("./JSONParser");
-const registerUser = require("./registerUser");
-const unRegisterUser = require("./unRegisterUser");
-const createTeam = require("./createTeam");
-const removeTeam = require("./removeTeam");
-const addPlayerToTeam = require("./addPlayerToTeam");
-const removePlayerFromTeam = require("./removePlayerFromTeam");
+const readAliasFile = require("./alias-functions/JSONParser");
+const registerUser = require("./alias-functions/registerUser");
+const unRegisterUser = require("./alias-functions/unRegisterUser");
+const createTeam = require("./alias-functions/createTeam");
+const removeTeam = require("./alias-functions/removeTeam");
+const addPlayerToTeam = require("./alias-functions/addPlayerToTeam");
+const removePlayerFromTeam = require("./alias-functions/removePlayerFromTeam");
+const clearMessages = require("./discord-functions/clearMessages")
 
-const rosterEmbed = require("./rosterEmbed");
+const rosterEmbed = require("./discord-functions/rosterEmbed");
+const pgClient = require("./db/pg")
+const teamNewsId = process.env.TEAM_NEWS_ID;
 
 const Discord = require("discord.js");
 const {
@@ -31,6 +34,12 @@ const PREFIX = "!";
 // When bot logs in and is "ready"
 client.on("ready", () => {
     console.log("We Are LIVE!");
+
+    //DB connection
+    pgClient.connect(function (err) {
+        if (err) throw err;
+        console.log("PostgreSQL DB is connected!");
+      });
 });
 
 process.on('unhandledRejection', error => {
@@ -40,6 +49,11 @@ process.on('unhandledRejection', error => {
 // when a message is sent on discord, it is checked by this function
 client.on("messageCreate", (message) => {
     if (message.author.id === BOT_ID) return;
+    if (message.channelId === teamNewsId) {
+        message.reply("You shouldn't be typing anything in this channel.");
+        clearMessages(message, 2);
+        return; 
+    } 
     if (message.content.indexOf(PREFIX) !== 0) return;
 
     const arguments = message.content.slice(PREFIX.length).trim().split(/ +/g);
@@ -98,8 +112,9 @@ client.on("messageCreate", (message) => {
 
     if (command === "rosters") {
         rosterEmbed(filePath, message)
-    }
 
+    }
+    
 
 
 
