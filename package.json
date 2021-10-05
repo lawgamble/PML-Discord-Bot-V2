@@ -12,7 +12,11 @@
   "dependencies": {
     "discord.js": "^13.0.1",
     "dotenv": "^10.0.0",
+    "event-stream": "^4.0.1",
+    "gm": "^1.23.1",
+    "merge-images": "^2.0.0",
     "nodemon": "^2.0.12",
-    "pg": "^8.7.1"
+    "pg": "^8.7.1",
+    "tail": "^2.2.3"
   }
 }

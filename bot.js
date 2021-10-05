@@ -6,7 +6,10 @@ const createTeam = require("./alias-functions/createTeam");
 const removeTeam = require("./alias-functions/removeTeam");
 const addPlayerToTeam = require("./alias-functions/addPlayerToTeam");
 const removePlayerFromTeam = require("./alias-functions/removePlayerFromTeam");
-const clearMessages = require("./discord-functions/clearMessages")
+const clearMessages = require("./discord-functions/clearMessages");
+const matchFunction2 = require("./alias-functions/matchFunctions2");
+const connectToServer = require("./rcon-functions/rconCommands");
+const server = require("./serverCreds");
 
 const rosterEmbed = require("./discord-functions/rosterEmbed");
 const pgClient = require("./db/pg")
@@ -23,6 +26,7 @@ const BOT_ID = process.env.BOT_ID;
 const captainRoleId = process.env.CAPTAIN_ROLE_ID;
 const leagueManagerRoleId = process.env.LEAGUE_MANAGER_ROLE_ID;
 
+
 const client = new Client({
     intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES],
 });
@@ -36,10 +40,10 @@ client.on("ready", () => {
     console.log("We Are LIVE!");
 
     //DB connection
-    pgClient.connect(function (err) {
-        if (err) throw err;
-        console.log("PostgreSQL DB is connected!");
-      });
+    // pgClient.connect(function (err) {
+    //     if (err) throw err;
+    //     console.log("PostgreSQL DB is connected!");
+    //   });
 });
 
 process.on('unhandledRejection', error => {
@@ -114,6 +118,41 @@ client.on("messageCreate", (message) => {
         rosterEmbed(filePath, message)
 
     }
+
+    
+    if (command === "matchtime") {
+        matchFunction2(message)
+    }
+
+
+
+
+    //RCON Commands
+    const rconCommandWords = [
+        "ban",
+        "kick",
+        "kill",
+        "rotatemap",
+        "switchmap",
+        "switchteam",
+        "inspectplayer",
+        "refreshlist",
+        "slap",
+        "serverinfo",
+        "resetsnd",
+        "setpin",
+      ];
+
+    
+    if (rconCommandWords.includes(command)) {
+         connectToServer(server, message);
+    }
+    
+
+
+
+
+   
     
 
 
