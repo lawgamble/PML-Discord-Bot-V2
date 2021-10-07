@@ -1,0 +1,229 @@
+const Discord = require("discord.js");
+const scoresChannelId = process.env.SCORES_CHANNEL_ID;
+const teamImages = require("../imageURLs");
+const { challengePmlLogo } = require("../imageURLs");
+
+function challengeScore(message) {
+  let userInputArray = [];
+  let counter = 0;
+  let winner;
+  const scoresChannel = message.guild.channels.cache.get(scoresChannelId);
+
+  const botMsgArray = [
+    "Name of the Team 1",
+    "Name of Team 2",
+    "What was the first map?",
+    `What was the score on Map 1? \n(Example: 10-5)`,
+    `Who won on Map 1?`,
+    "What was the second map?",
+    `What was the score on Map 2? \n(Example: 10-5)`,
+    `Who won on Map 2?`,
+    "What was the third map? If no third map, type **'none'**",
+    `What was the score on Map 3? \n(Example: 10-5`,
+    `Who won on Map 3 `,
+  ];
+
+  const cancelEmbed = new Discord.MessageEmbed()
+    .setTitle("Cancelled Challenge Score")
+    .addField(
+      "Try Again with '!challengeScore'",
+      "**NOTE:** Editing messages will do absolutely nothing."
+    )
+    .setColor("#FF0000");
+  const successEmbed = new Discord.MessageEmbed()
+    .setTitle("Success!")
+    .addField(
+      "Scores successfully submitted",
+      "Check the appropriate channel to see the scores!"
+    )
+    .setColor("#00FF00");
+
+  const endEmbed = new Discord.MessageEmbed()
+    .setTitle("Score submission has ended")
+    .setColor("#FF0000");
+
+  const instructionsStartEmbed = new Discord.MessageEmbed()
+    .setTitle("Score Submission Instructions")
+    .addField(`Step ${counter + 1}`, botMsgArray[counter++])
+    .setColor("#FFFF00");
+
+  message.channel.send({ embeds: [instructionsStartEmbed] });
+
+  //Collector
+  const collector = new Discord.MessageCollector(message.channel, {
+    time: 180000,
+  });
+
+  collector.on("collect", (m) => {
+    if (m.content === "cancel") {
+      collector.stop("Cancelled");
+      message.channel.send({ embeds: [cancelEmbed] });
+      setTimeout(() => {
+        message.channel.bulkDelete(99);
+      }, 5000);
+      return;
+    }
+
+    if (m.content === "none" || m.content === "None" || m.content === "NONE") {
+      winner = teamImages[userInputArray[7]];
+      const twoGameEmbed = new Discord.MessageEmbed()
+        .setTitle(
+          `Challenge Match Score:\n${userInputArray[0]}  vs.  ${userInputArray[1]}`
+        )
+        .setImage(winner)
+        .setThumbnail(challengePmlLogo)
+        .addFields(
+          {
+            name: `${userInputArray[2]}`,
+            value: `${userInputArray[3]} - ${userInputArray[4]}`,
+          },
+          {
+            name: `${userInputArray[5]}`,
+            value: `${userInputArray[6]} - ${userInputArray[7]}`,
+          },
+          {
+            name: "Challenge Winner:",
+            value: `${userInputArray[7]}`,
+          }
+        )
+        .setColor("#FFFF00");
+
+      const confirmEmbed = new Discord.MessageEmbed()
+        .setTitle("Please Confirm")
+        .setFields(
+          { name: "Yes", value: "Type 'yes' and press ENTER" },
+          { name: "No", value: "Type 'no' and press ENTER" }
+        )
+        .setColor("#FFFF00");
+
+      message.channel.send({ embeds: [twoGameEmbed] });
+      message.channel.send({ embeds: [confirmEmbed] });
+      collector.stop();
+
+      const confirmCollector = new Discord.MessageCollector(message.channel, {
+        time: 180000,
+      });
+      confirmCollector.on("collect", () => {
+        confirmCollector.collected.forEach((word) => {
+          if (word.content.toLowerCase() === "yes") {
+            scoresChannel.send({ embeds: [twoGameEmbed] });
+            message.channel.send({ embeds: [successEmbed] });
+            confirmCollector.stop();
+            setTimeout(() => {
+              message.channel.bulkDelete(99);
+            }, 5000);
+            return;
+          } else if (word.content === "no") {
+            message.channel.send({ embeds: [cancelEmbed] });
+            setTimeout(() => {
+              message.channel.bulkDelete(99);
+            }, 5000);
+            return;
+          }
+        });
+      });
+    }
+    // collector.collected.forEach((word) => {
+    //   if (word.content.toLowerCase() === "yes") {
+    //     scoresChannel.send({ embeds: [threeGameEmbed] });
+    //     message.channel.send({ embeds: [successEmbed] });
+    //     collector.stop();
+    //     setTimeout(() => {
+    //       message.channel.bulkDelete(15);
+    //     }, 5000);
+    //     return;
+    //   } else if (word.content === "no") {
+    //     message.channel.send({ embeds: [cancelEmbed] });
+    //     setTimeout(() => {
+    //       message.channel.bulkDelete(15);
+    //     }, 5000);
+    //     return;
+    //   }
+    // });
+
+    // m collectiom
+    if (
+      m.author.id === message.author.id &&
+      m.content != "none" &&
+      m.content != "None" &&
+      m.content != "NONE"
+    ) {
+      if (counter <= botMsgArray.length - 1) {
+        const instructionsEmbed = new Discord.MessageEmbed()
+          .addField(`Step ${counter + 1}`, botMsgArray[counter++])
+          .setColor("#FFFF00");
+
+        message.channel.send({ embeds: [instructionsEmbed] });
+      }
+      userInputArray.push(m.content);
+    }
+
+    if (userInputArray.length >= 11 && m.author.id === message.author.id) {
+      winner = userInputArray[10];
+      const threeGameEmbed = new Discord.MessageEmbed()
+        .setTitle(
+          `Challenge Match Score:\n${userInputArray[0]}  vs.  ${userInputArray[1]}`
+        )
+        .setThumbnail(challengePmlLogo)
+        .setImage(teamImages[winner])
+        .addFields(
+          {
+            name: `${userInputArray[2]}`,
+            value: `${userInputArray[3]} - ${userInputArray[4]}`,
+          },
+          {
+            name: `${userInputArray[5]}`,
+            value: `${userInputArray[6]} - ${userInputArray[7]}`,
+          },
+
+          {
+            name: `${userInputArray[8]}`,
+            value: `${userInputArray[9] + "-" + userInputArray[10]}`,
+          },
+          {
+            name: "Challenge Winner:",
+            value: `${userInputArray[10]}`,
+          }
+        )
+        .setColor("#FFFF00");
+
+      const confirmEmbed = new Discord.MessageEmbed()
+        .setTitle("Please Confirm")
+        .setFields(
+          { name: "Yes", value: "Type 'yes' and press ENTER" },
+          { name: "No", value: "Type 'no' and press ENTER" }
+        )
+        .setColor("#FFFF00");
+
+      if (userInputArray.length < 12) {
+        message.channel.send({ embeds: [threeGameEmbed] });
+        message.channel.send({ embeds: [confirmEmbed] });
+      }
+
+      collector.collected.forEach((word) => {
+        if (word.content.toLowerCase() === "yes") {
+          // send to specific channel
+          const scoresChannel =
+            message.guild.channels.cache.get(scoresChannelId);
+          scoresChannel.send({ embeds: [threeGameEmbed] });
+          message.channel.send({ embeds: [successEmbed] });
+          collector.stop();
+          setTimeout(() => {
+            message.channel.bulkDelete(99);
+          }, 5000);
+          return;
+        } else if (word.content === "no") {
+          message.channel.send({ embeds: [cancelEmbed] });
+          setTimeout(() => {
+            message.channel.bulkDelete(99);
+          }, 5000);
+          return;
+        }
+      });
+    }
+  });
+
+  collector.on("end", () => {});
+}
+
+module.exports = challengeScore;

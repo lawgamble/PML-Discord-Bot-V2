@@ -22,6 +22,12 @@ const teamImages = {
     "https://static.wixstatic.com/media/8de966_8db007b176e84d5cb5f87b8f54f61991~mv2.png",
   Contingency:
     "https://static.wixstatic.com/media/8de966_de710ccdb55e4a008f40877b61a44790~mv2.png",
+  matchPmlLogo:
+    "https://static.wixstatic.com/media/8de966_3945dfd38c8748eeb3a9609f0767a77f~mv2.png",
+  scrimPmlLogo:
+    "https://static.wixstatic.com/media/8de966_970fc24b27264dd88e56134e72578cf6~mv2.png",
+  challengePmlLogo:
+    "https://static.wixstatic.com/media/8de966_93fdaaade08e4c00a36dac5429549b82~mv2.png",
 };
 
 module.exports = teamImages;

@@ -1,9 +1,9 @@
 const Discord = require("discord.js");
 const matchupChannelId = process.env.MATCHUP_CHANNEL_ID;
 // use PML LOGO
-const { matchPmlLogo } = require("../imageURLs");
+const { scrimPmlLogo } = require("../imageURLs");
 
-function matchFunction(message) {
+function scrimFunction(message) {
   const disclaimer =
     "Do NOT make message edits. If you made a mistake, just input 'cancel', press ENTER and try again.";
   const botMsgArray = [
@@ -20,22 +20,22 @@ function matchFunction(message) {
   let counter = 0;
 
   const cancelEmbed = new Discord.MessageEmbed()
-    .setTitle("Cancelled MatchTime")
+    .setTitle("Cancelled Scrim Time")
     .addField(
-      "Try Again with '!matchTime'",
+      "Try Again with '!scrimTime'",
       "**NOTE:** Editing messages will do absolutely nothing."
     )
     .setColor("#FF0000");
   const successEmbed = new Discord.MessageEmbed()
     .setTitle("Success!")
     .addField(
-      "Match successfully created.",
+      "Scrim successfully created.",
       "Check the appropriate channel to see the matchups!"
     )
     .setColor("#00FF00");
 
   const endEmbed = new Discord.MessageEmbed()
-    .setTitle("MatchTime Process Has Ended")
+    .setTitle("Scrim TIme Process Has Ended")
     .setColor("#FF0000");
 
   const collector = new Discord.MessageCollector(message.channel, {
@@ -43,7 +43,7 @@ function matchFunction(message) {
   });
 
   const instructionsStartEmbed = new Discord.MessageEmbed()
-    .setTitle("Create Match Instructions")
+    .setTitle("Create Scrim Instructions")
     .addField(`Step ${counter + 1} of 6`, botMsgArray[counter++])
     .setColor("#FFFF00");
   message.channel.send({ embeds: [instructionsStartEmbed] });
@@ -69,10 +69,8 @@ function matchFunction(message) {
     }
     if (userInputArray.length >= 6 && m.author.id === message.author.id) {
       const matchupEmbed = new Discord.MessageEmbed()
-        .setTitle(
-          `Official Match:\n${userInputArray[0]}  vs.  ${userInputArray[1]}`
-        )
-        .setThumbnail(matchPmlLogo)
+        .setTitle(`Scrim\n${userInputArray[0]}  vs.  ${userInputArray[1]}`)
+        .setThumbnail(scrimPmlLogo)
         .addFields(
           { name: "When:", value: `${userInputArray[2]}` },
           {
@@ -80,8 +78,7 @@ function matchFunction(message) {
             value: `${userInputArray[3]} ${userInputArray[4]}`,
           },
           { name: "Server", value: userInputArray[5] }
-        )
-        .setColor("#ce3d00");
+        );
 
       const confirmEmbed = new Discord.MessageEmbed()
         .setTitle("Please Confirm")
@@ -122,4 +119,4 @@ function matchFunction(message) {
   collector.on("end", () => message.channel.send({ embeds: [endEmbed] }));
 }
 
-module.exports = matchFunction;
+module.exports = scrimFunction;

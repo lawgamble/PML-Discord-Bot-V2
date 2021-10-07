@@ -1,46 +1,49 @@
 const Discord = require("discord.js");
+const matchupChannelId = process.env.MATCHUP_CHANNEL_ID;
+// use PML LOGO
+const { challengePmlLogo } = require("../imageURLs");
 
-function matchFunction2(message) {
+function challengeFunction(message) {
   const disclaimer =
     "Do NOT make message edits. If you made a mistake, just input 'cancel', press ENTER and try again.";
   const botMsgArray = [
-    `Input Team 1 and Press ENTER`,
+    "Input Team 1 and Press ENTER",
     "Input Team 2 and Press ENTER",
     "Input DATE and Press ENTER (01/01/2021)",
     "Input TIME and Press Enter (12:00 AM/PM)",
     "Input Time Zone and Press Enter (EST, BST...)",
     "Input League Server(PML1, PML2...)",
   ];
+
   let userInputArray = [];
-  let collectedSet = new Set();
+
   let counter = 0;
 
   const cancelEmbed = new Discord.MessageEmbed()
-    .setTitle("Cancelled MatchTime")
+    .setTitle("Cancelled Challenge Setup")
     .addField(
-      "Try Again with '!matchTime'",
+      "Try Again with '!challengeTime'",
       "**NOTE:** Editing messages will do absolutely nothing."
     )
     .setColor("#FF0000");
   const successEmbed = new Discord.MessageEmbed()
     .setTitle("Success!")
     .addField(
-      "Match successfully created.",
+      "Challenge successfully created.",
       "Check the appropriate channel to see the matchups!"
     )
     .setColor("#00FF00");
 
-  const filter = (m) => {
-    m.author.id === message.author.id;
-  };
+  const endEmbed = new Discord.MessageEmbed()
+    .setTitle("Challenge Setup Process Has Ended")
+    .setColor("#FF0000");
 
   const collector = new Discord.MessageCollector(message.channel, {
-    max: 7,
-    time: 60000,
+    time: 180000,
   });
 
   const instructionsStartEmbed = new Discord.MessageEmbed()
-    .setTitle("Create Match Instructions")
+    .setTitle("Create Challenge Instructions")
     .addField(`Step ${counter + 1} of 6`, botMsgArray[counter++])
     .setColor("#FFFF00");
   message.channel.send({ embeds: [instructionsStartEmbed] });
@@ -50,7 +53,7 @@ function matchFunction2(message) {
       collector.stop("Cancelled");
       message.channel.send({ embeds: [cancelEmbed] });
       setTimeout(() => {
-        message.channel.bulkDelete(99);
+        message.channel.bulkDelete(15);
       }, 5000);
       return;
     }
@@ -66,7 +69,8 @@ function matchFunction2(message) {
     }
     if (userInputArray.length >= 6 && m.author.id === message.author.id) {
       const matchupEmbed = new Discord.MessageEmbed()
-        .setTitle(`${userInputArray[0]}  vs.  ${userInputArray[1]}`)
+        .setTitle(`Challenge\n${userInputArray[0]}  vs.  ${userInputArray[1]}`)
+        .setThumbnail(challengePmlLogo)
         .addFields(
           { name: "When:", value: `${userInputArray[2]}` },
           {
@@ -74,13 +78,14 @@ function matchFunction2(message) {
             value: `${userInputArray[3]} ${userInputArray[4]}`,
           },
           { name: "Server", value: userInputArray[5] }
-        );
+        )
+        .setColor("#FFFF00");
 
       const confirmEmbed = new Discord.MessageEmbed()
         .setTitle("Please Confirm")
         .setFields(
-          { name: "Yes?", value: "Type yes and press ENTER" },
-          { name: "No?", value: "Type no and press ENTER" }
+          { name: "Yes", value: "Type 'yes' and press ENTER" },
+          { name: "No", value: "Type 'no' and press ENTER" }
         )
         .setColor("#FFFF00");
 
@@ -90,24 +95,29 @@ function matchFunction2(message) {
       }
 
       collector.collected.forEach((word) => {
-        if (word.content === "yes") {
+        if (word.content.toLowerCase() === "yes") {
           // send to specific channel
-          message.author.send({ embeds: [matchupEmbed] });
+          const matchupChannel =
+            message.guild.channels.cache.get(matchupChannelId);
+          matchupChannel.send({ embeds: [matchupEmbed] });
           message.channel.send({ embeds: [successEmbed] });
           collector.stop();
           setTimeout(() => {
-            message.channel.bulkDelete(99);
+            message.channel.bulkDelete(15);
           }, 5000);
+          return;
         } else if (word.content === "no") {
           message.channel.send({ embeds: [cancelEmbed] });
           setTimeout(() => {
-            message.channel.bulkDelete(99);
+            message.channel.bulkDelete(15);
           }, 5000);
+          return;
         }
       });
     }
   });
-  collector.on("end", () => console.log("ENDED"));
+
+  collector.on("end", () => message.channel.send({ embeds: [endEmbed] }));
 }
 
-module.exports = matchFunction2;
+module.exports = challengeFunction;

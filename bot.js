@@ -7,8 +7,13 @@ const removeTeam = require("./alias-functions/removeTeam");
 const addPlayerToTeam = require("./alias-functions/addPlayerToTeam");
 const removePlayerFromTeam = require("./alias-functions/removePlayerFromTeam");
 const clearMessages = require("./discord-functions/clearMessages");
-const matchFunction2 = require("./alias-functions/matchFunctions2");
+const matchFunction = require("./alias-functions/matchFunctions");
+const scrimFunction = require("./alias-functions/scrimFunction")
+const challengeFunction = require("./alias-functions/challengeFunction");
+const matchScore = require("./alias-functions/matchScore");
+const challengeScore = require("./alias-functions/challengeScore")
 const connectToServer = require("./rcon-functions/rconCommands");
+const { cautionEmbed } = require("./discord-functions/generalEmbed");
 const server = require("./serverCreds");
 
 const rosterEmbed = require("./discord-functions/rosterEmbed");
@@ -25,6 +30,7 @@ const filePath = process.env.ALIASES_FILEPATH;
 const BOT_ID = process.env.BOT_ID;
 const captainRoleId = process.env.CAPTAIN_ROLE_ID;
 const leagueManagerRoleId = process.env.LEAGUE_MANAGER_ROLE_ID;
+const coCaptainRoleId = process.env.CO_CAP_ROLE_ID;
 
 
 const client = new Client({
@@ -84,7 +90,7 @@ client.on("messageCreate", (message) => {
         if (message.member.roles.cache.find((role) => role.id === leagueManagerRoleId)) {
             createTeam(filePath, message, arguments)
         } else {
-            return message.reply(`You do not have permission to use the **!${command}** command!`)
+            return  cautionEmbed(message, "FAILED", `You do not have permission to use the **!${command}** command!`)
         }
     }
 
@@ -93,23 +99,23 @@ client.on("messageCreate", (message) => {
         if (message.member.roles.cache.find((role) => role.id === leagueManagerRoleId)) {
             removeTeam(filePath, message, arguments)
         } else {
-            return message.reply(`You do not have permission to use the **!${command}** command!`)
+            return  cautionEmbed(message, "FAILED", `You do not have permission to use the **!${command}** command!`)
         }
     }
 
     if (command === "addplayer") {
-        if (message.member.roles.cache.find((role) => role.id === captainRoleId)) {
+        if (message.member.roles.cache.find((role) => role.id === leagueManagerRoleId)) {
             addPlayerToTeam(filePath, message)
         } else {
-            return message.reply(`You do not have permission to use the **!${command}** command!`)
+            return  cautionEmbed(message, "FAILED", `You do not have permission to use the **!${command}** command!`)
         }
     }
 
     if (command === "removeplayer") {
-        if (message.member.roles.cache.find((role) => role.id === captainRoleId)) {
+        if (message.member.roles.cache.find((role) => role.id === leagueManagerRoleId)) {
             removePlayerFromTeam(filePath, message)
         } else {
-            return message.reply(`You do not have permission to use the **!${command}** command!`)
+            return  cautionEmbed(message, "FAILED", `You do not have permission to use the **!${command}** command!`)
         }
     }
 
@@ -121,7 +127,39 @@ client.on("messageCreate", (message) => {
 
     
     if (command === "matchtime") {
-        matchFunction2(message)
+        if (message.member.roles.cache.find((role) => role.id === captainRoleId || role.id === coCaptainRoleId)) {
+            matchFunction(message)
+        } else {
+            return cautionEmbed(message, "FAILED", `You do not have permission to use the **!${command}** command!`)
+        }
+    }
+    if (command === "scrimtime") {
+        if (message.member.roles.cache.find((role) => role.id === captainRoleId || role.id === coCaptainRoleId)) {
+           scrimFunction(message)
+        } else {
+            return cautionEmbed(message, "FAILED", `You do not have permission to use the **!${command}** command!`)
+        }
+    }
+    if (command === "challengetime") {
+        if (message.member.roles.cache.find((role) => role.id === captainRoleId || role.id === coCaptainRoleId)) {
+           challengeFunction(message)
+        } else {
+            return cautionEmbed(message, "FAILED", `You do not have permission to use the **!${command}** command!`)
+        }
+    }
+    if (command === "matchscore") {
+        if (message.member.roles.cache.find((role) => role.id === captainRoleId || role.id === coCaptainRoleId)) {
+           matchScore(message)
+        } else {
+            return cautionEmbed(message, "FAILED", `You do not have permission to use the **!${command}** command!`)
+        }
+    }
+    if (command === "challengescore") {
+        if (message.member.roles.cache.find((role) => role.id === captainRoleId || role.id === coCaptainRoleId)) {
+           challengeScore(message)
+        } else {
+            return cautionEmbed(message, "FAILED", `You do not have permission to use the **!${command}** command!`)
+        }
     }
 
 
@@ -185,8 +223,6 @@ client.on("messageCreate", (message) => {
             return message.reply(JSON.stringify(aliases.teams, null, 2))
         })
     }
-
-
 });
 
 
