@@ -95,7 +95,6 @@ function scrimFunction(message) {
 
       collector.collected.forEach((word) => {
         if (word.content.toLowerCase() === "yes") {
-          // send to specific channel
           const matchupChannel =
             message.guild.channels.cache.get(matchupChannelId);
           matchupChannel.send({ embeds: [matchupEmbed] });
@@ -107,6 +106,7 @@ function scrimFunction(message) {
           return;
         } else if (word.content === "no") {
           message.channel.send({ embeds: [cancelEmbed] });
+          collector.stop("canceled");
           setTimeout(() => {
             message.channel.bulkDelete(15);
           }, 5000);

@@ -47,6 +47,14 @@ function matchScore(message) {
     .addField(`Step ${counter + 1}`, botMsgArray[counter++])
     .setColor("#FFFF00");
 
+  const confirmEmbed = new Discord.MessageEmbed()
+    .setTitle("Please Confirm")
+    .setFields(
+      { name: "Yes", value: "Type 'yes' and press ENTER" },
+      { name: "No", value: "Type 'no' and press ENTER" }
+    )
+    .setColor("#FFFF00");
+
   message.channel.send({ embeds: [instructionsStartEmbed] });
 
   //Collector
@@ -64,13 +72,8 @@ function matchScore(message) {
       return;
     }
 
+    // two game embed
     if (m.content === "none" || m.content === "None" || m.content === "NONE") {
-      if (!teamImages.hasOwnProperty(userInputArray[7])) {
-        userInputArray[7] = userInputArray[4];
-        winner = teamImages[userInputArray[7]];
-      } else {
-        winner = teamImages[matchPmlLogo];
-      }
       winner = teamImages[userInputArray[7]];
       const twoGameEmbed = new Discord.MessageEmbed()
         .setTitle(
@@ -94,14 +97,6 @@ function matchScore(message) {
         )
         .setColor("#ce3d00");
 
-      const confirmEmbed = new Discord.MessageEmbed()
-        .setTitle("Please Confirm")
-        .setFields(
-          { name: "Yes", value: "Type 'yes' and press ENTER" },
-          { name: "No", value: "Type 'no' and press ENTER" }
-        )
-        .setColor("#FFFF00");
-
       message.channel.send({ embeds: [twoGameEmbed] });
       message.channel.send({ embeds: [confirmEmbed] });
       collector.stop();
@@ -109,18 +104,20 @@ function matchScore(message) {
       const confirmCollector = new Discord.MessageCollector(message.channel, {
         time: 180000,
       });
+
       confirmCollector.on("collect", () => {
         confirmCollector.collected.forEach((word) => {
           if (word.content.toLowerCase() === "yes") {
             scoresChannel.send({ embeds: [twoGameEmbed] });
             message.channel.send({ embeds: [successEmbed] });
-            confirmCollector.stop();
+            confirmCollector.stop("Successfully Created");
             setTimeout(() => {
               message.channel.bulkDelete(99);
             }, 5000);
             return;
           } else if (word.content === "no") {
             message.channel.send({ embeds: [cancelEmbed] });
+            confirmCollector.stop("cancelled");
             setTimeout(() => {
               message.channel.bulkDelete(99);
             }, 5000);
@@ -128,26 +125,12 @@ function matchScore(message) {
           }
         });
       });
+      confirmCollector.on("end", () =>
+        message.channel.send({ embeds: [endEmbed] })
+      );
     }
-    // collector.collected.forEach((word) => {
-    //   if (word.content.toLowerCase() === "yes") {
-    //     scoresChannel.send({ embeds: [threeGameEmbed] });
-    //     message.channel.send({ embeds: [successEmbed] });
-    //     collector.stop();
-    //     setTimeout(() => {
-    //       message.channel.bulkDelete(15);
-    //     }, 5000);
-    //     return;
-    //   } else if (word.content === "no") {
-    //     message.channel.send({ embeds: [cancelEmbed] });
-    //     setTimeout(() => {
-    //       message.channel.bulkDelete(15);
-    //     }, 5000);
-    //     return;
-    //   }
-    // });
 
-    // m collectiom
+    // m collection
     if (
       m.author.id === message.author.id &&
       m.content != "none" &&
@@ -213,13 +196,14 @@ function matchScore(message) {
             message.guild.channels.cache.get(scoresChannelId);
           scoresChannel.send({ embeds: [threeGameEmbed] });
           message.channel.send({ embeds: [successEmbed] });
-          collector.stop();
+          collector.stop("Success");
           setTimeout(() => {
             message.channel.bulkDelete(99);
           }, 5000);
           return;
         } else if (word.content === "no") {
           message.channel.send({ embeds: [cancelEmbed] });
+          collector.stop("canceled");
           setTimeout(() => {
             message.channel.bulkDelete(99);
           }, 5000);
@@ -229,7 +213,9 @@ function matchScore(message) {
     }
   });
 
-  collector.on("end", () => {});
+  collector.on("end", () => {
+    message.channel.send({ embeds: endEmbed });
+  });
 }
 
 module.exports = matchScore;

@@ -98,18 +98,18 @@ function matchFunction(message) {
 
       collector.collected.forEach((word) => {
         if (word.content.toLowerCase() === "yes") {
-          // send to specific channel
           const matchupChannel =
             message.guild.channels.cache.get(matchupChannelId);
           matchupChannel.send({ embeds: [matchupEmbed] });
           message.channel.send({ embeds: [successEmbed] });
-          collector.stop();
+          collector.stop("success");
           setTimeout(() => {
             message.channel.bulkDelete(15);
           }, 5000);
           return;
         } else if (word.content === "no") {
           message.channel.send({ embeds: [cancelEmbed] });
+          collector.stop("canceled");
           setTimeout(() => {
             message.channel.bulkDelete(15);
           }, 5000);
