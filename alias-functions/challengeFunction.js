@@ -1,6 +1,6 @@
 const Discord = require("discord.js");
 const matchupChannelId = process.env.MATCHUP_CHANNEL_ID;
-// use PML LOGO
+
 const { challengePmlLogo } = require("../imageURLs");
 
 function challengeFunction(message) {
@@ -96,7 +96,6 @@ function challengeFunction(message) {
 
       collector.collected.forEach((word) => {
         if (word.content.toLowerCase() === "yes") {
-          // send to specific channel
           const matchupChannel =
             message.guild.channels.cache.get(matchupChannelId);
           matchupChannel.send({ embeds: [matchupEmbed] });

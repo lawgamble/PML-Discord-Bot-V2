@@ -1,6 +1,6 @@
 const Discord = require("discord.js");
 const matchupChannelId = process.env.MATCHUP_CHANNEL_ID;
-// use PML LOGO
+
 const { matchPmlLogo } = require("../imageURLs");
 
 function matchFunction(message) {

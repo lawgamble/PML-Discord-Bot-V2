@@ -223,6 +223,13 @@ client.on("messageCreate", (message) => {
             return message.reply(JSON.stringify(aliases.teams, null, 2))
         })
     }
+
+
+    //DB functions
+
+    if(command === "userstable") {
+        message.reply("Users Table PlaceHolder")
+    }
 });
 
 
