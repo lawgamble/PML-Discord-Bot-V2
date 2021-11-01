@@ -1,4 +1,5 @@
 require("dotenv").config();
+const fs = require("fs");
 const readAliasFile = require("./alias-functions/JSONParser");
 const registerUser = require("./alias-functions/registerUser");
 const unRegisterUser = require("./alias-functions/unRegisterUser");
@@ -14,10 +15,16 @@ const matchScore = require("./alias-functions/matchScore");
 const challengeScore = require("./alias-functions/challengeScore")
 const connectToServer = require("./rcon-functions/rconCommands");
 const { cautionEmbed } = require("./discord-functions/generalEmbed");
+const push2db = require("./db/push2db")
 const server = require("./serverCreds");
+const  pickupGame = require("./alias-functions/pickupGame");
+const wipeRedAndBlueTeams = require("./alias-functions/wipeRedAndBlueTeams");
+
+
+const { getInfo, getStats} = require("./db/getTables");
 
 const rosterEmbed = require("./discord-functions/rosterEmbed");
-const pgClient = require("./db/pg")
+
 const teamNewsId = process.env.TEAM_NEWS_ID;
 
 const Discord = require("discord.js");
@@ -25,6 +32,7 @@ const {
     Client,
     Intents,
 } = require("discord.js");
+
 
 const filePath = process.env.ALIASES_FILEPATH;
 const BOT_ID = process.env.BOT_ID;
@@ -34,7 +42,7 @@ const coCaptainRoleId = process.env.CO_CAP_ROLE_ID;
 
 
 const client = new Client({
-    intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES],
+    intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_MEMBERS],
 });
 
 const PREFIX = "!";
@@ -43,13 +51,19 @@ const PREFIX = "!";
 
 // When bot logs in and is "ready"
 client.on("ready", () => {
+    readAliasFile(filePath, (error, data) => {
+        if (error) {
+          console.log(error);
+        }
+        delete data.teams["RED Team"];
+        delete data.teams["BLUE Team"];
+        fs.writeFile(filePath, JSON.stringify(data, null, 2), (error) => {
+            if (error) {
+              console.log(error);
+            }
+          });
+    });
     console.log("We Are LIVE!");
-
-    //DB connection
-    // pgClient.connect(function (err) {
-    //     if (err) throw err;
-    //     console.log("PostgreSQL DB is connected!");
-    //   });
 });
 
 process.on('unhandledRejection', error => {
@@ -69,7 +83,6 @@ client.on("messageCreate", (message) => {
     const arguments = message.content.slice(PREFIX.length).trim().split(/ +/g);
 
     const command = arguments.shift().toLowerCase();
-
     const discordId = message.author.id;
     const discordName = message.author.username;
 
@@ -90,7 +103,7 @@ client.on("messageCreate", (message) => {
         if (message.member.roles.cache.find((role) => role.id === leagueManagerRoleId)) {
             createTeam(filePath, message, arguments)
         } else {
-            return  cautionEmbed(message, "FAILED", `You do not have permission to use the **!${command}** command!`)
+            return cautionEmbed(message, "FAILED", `You do not have permission to use the **!${command}** command!`)
         }
     }
 
@@ -99,7 +112,7 @@ client.on("messageCreate", (message) => {
         if (message.member.roles.cache.find((role) => role.id === leagueManagerRoleId)) {
             removeTeam(filePath, message, arguments)
         } else {
-            return  cautionEmbed(message, "FAILED", `You do not have permission to use the **!${command}** command!`)
+            return cautionEmbed(message, "FAILED", `You do not have permission to use the **!${command}** command!`)
         }
     }
 
@@ -107,7 +120,7 @@ client.on("messageCreate", (message) => {
         if (message.member.roles.cache.find((role) => role.id === leagueManagerRoleId)) {
             addPlayerToTeam(filePath, message)
         } else {
-            return  cautionEmbed(message, "FAILED", `You do not have permission to use the **!${command}** command!`)
+            return cautionEmbed(message, "FAILED", `You do not have permission to use the **!${command}** command!`)
         }
     }
 
@@ -115,7 +128,7 @@ client.on("messageCreate", (message) => {
         if (message.member.roles.cache.find((role) => role.id === leagueManagerRoleId)) {
             removePlayerFromTeam(filePath, message)
         } else {
-            return  cautionEmbed(message, "FAILED", `You do not have permission to use the **!${command}** command!`)
+            return cautionEmbed(message, "FAILED", `You do not have permission to use the **!${command}** command!`)
         }
     }
 
@@ -189,12 +202,6 @@ client.on("messageCreate", (message) => {
 
 
 
-
-   
-    
-
-
-
     // to see all of aliases.json file
     if (command === "info-alias") {
         readAliasFile(filePath, (error, aliases) => {
@@ -224,11 +231,33 @@ client.on("messageCreate", (message) => {
         })
     }
 
+    // Pickup Games Functions
+
+    if(command === "pickup") {
+        pickupGame(filePath, message, arguments, command)
+    } 
+
+    if(command === "wipernb") {
+        wipeRedAndBlueTeams(message, filePath, client)
+    }
+
 
     //DB functions
 
-    if(command === "userstable") {
-        message.reply("Users Table PlaceHolder")
+    if(command === "get") {
+        getInfo(message);
+    }
+
+
+    if(command === "push2db") {
+        readAliasFile(filePath, (error, aliases) => {
+            if (error) {
+                return message.reply(`There was an error: ${error}`)
+            }
+            const teams = aliases.teams;
+            const players = aliases.players;
+            push2db(message,players, teams)
+        })
     }
 });
 

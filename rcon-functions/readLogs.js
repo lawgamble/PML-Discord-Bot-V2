@@ -38,7 +38,7 @@ var s = fs
         lineNr += 1;
         let dataArray = [];
         if (line.includes("StatManagerLog")) {
-          KillData = line.split("StatManagerLog:");
+          KillData = line.splice("StatManagerLog:");
           const statDataLogs = KillData[1]; // shows all statManagerLogs
           dataArray.push(statDataLogs);
         }
