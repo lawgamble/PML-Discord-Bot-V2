@@ -39,6 +39,7 @@ const BOT_ID = process.env.BOT_ID;
 const captainRoleId = process.env.CAPTAIN_ROLE_ID;
 const leagueManagerRoleId = process.env.LEAGUE_MANAGER_ROLE_ID;
 const coCaptainRoleId = process.env.CO_CAP_ROLE_ID;
+const pickupChannelId = process.env.PICKUP_CHANNEL_ID;
 
 
 const client = new Client({
@@ -117,7 +118,7 @@ client.on("messageCreate", (message) => {
     }
 
     if (command === "addplayer") {
-        if (message.member.roles.cache.find((role) => role.id === leagueManagerRoleId)) {
+        if (message.member.roles.cache.find((role) => role.id === captainRoleId || role.id === coCaptainRoleId)) {
             addPlayerToTeam(filePath, message)
         } else {
             return cautionEmbed(message, "FAILED", `You do not have permission to use the **!${command}** command!`)
@@ -125,7 +126,7 @@ client.on("messageCreate", (message) => {
     }
 
     if (command === "removeplayer") {
-        if (message.member.roles.cache.find((role) => role.id === leagueManagerRoleId)) {
+        if (message.member.roles.cache.find((role) => role.id === captainRoleId || role.id === coCaptainRoleId)) {
             removePlayerFromTeam(filePath, message)
         } else {
             return cautionEmbed(message, "FAILED", `You do not have permission to use the **!${command}** command!`)
@@ -234,7 +235,11 @@ client.on("messageCreate", (message) => {
     // Pickup Games Functions
 
     if(command === "pickup") {
-        pickupGame(filePath, message, arguments, command)
+        if(message.channel.id === pickupChannelId) {
+            pickupGame(filePath, message, arguments, command)
+        } else {
+            cautionEmbed(message, "FAILED", `You can only use the pickup game commands in the #pickup-games channel!`)
+        }
     } 
 
     if(command === "wipernb") {
