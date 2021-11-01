@@ -15,6 +15,7 @@
   
   const teamFilter = ["red", "blue"];
   const otherArgumentsFilter = ["leave", "teams", "end"];
+  const botRebootCommand = process.env.BOT_REBOOT_COMMAND;
   
   
   let twentyMinuteTimer;
@@ -438,7 +439,7 @@ const server = {
   // run when someone runs start or auto start happens
   // joes shell command: sudo systemctl restart pavlov-bot.service
   function restartOtherBot() {
-    exec("ping 127.0.0.1", (error, stdout, stderr) => {
+    exec(botRebootCommand, (error, stdout, stderr) => {
       if (error) {
         console.log(`error: ${error.message}`);
         return;
