@@ -7,11 +7,14 @@
     cautionEmbed,
     successEmbed,
     pickupGameTeamEmbed,
-    simpleReplyEmbed
+    simpleReplyEmbed,
+    startPickupGameEmbed
   } = require("../discord-functions/generalEmbed");
+  const pickupGameMatchupEmbed = require("../discord-functions/pickupGameMatchupEmbed");
  
   const wipeRedAndBlueTeams = require("./wipeRedAndBlueTeams");
   const pickupCaptainRoleId = process.env.PICKUP_CAPTAIN_ROLE_ID;
+  
   
   const teamFilter = ["red", "blue"];
   const otherArgumentsFilter = ["leave", "teams", "end"];
@@ -24,15 +27,15 @@
   let playerToAdd;
   let firstReadNumber;
   let secondReadNumber;
-  let teamData;
+  let redTeam;
+  let blueTeam;
   let playerData;
   let gameStarted = false;
 
 const serverPort = process.env.SERVER_PORT;
-
 const serverIp = process.env.PICKUP_SERVER_IP;
-
 const serverPassword = process.env.SERVER_PASSWORD;
+const pickupChannelId = process.env.PICKUP_CHANNEL_ID;
 
 let socket = {};
 
@@ -44,22 +47,26 @@ const server = {
   
   function pickupGame(filePath, message, arguments, command) {
 
+    if(gameStarted && arguments[0] === "start") return cautionEmbed(message, "", "A game is already in progress!");
 
     if(!gameStarted && arguments[0] === "end") return cautionEmbed(message, "", "There is no game currently running!"); 
 
-    if(gameStarted && arguments[0] !== "end") return cautionEmbed(message, "", "The game has already started, dumbass...");
+    if(gameStarted && arguments[0] !== "end") return cautionEmbed(message, "", "The Pickup Game has already started!\nYou can't make any commands other than '!pickup end' while a game is running.");
 
     if(gameStarted && arguments[0] === "end") {
       if(message.member.roles.cache.find((role) => role.id === pickupCaptainRoleId)) {
-        gameStarted = false;
         clearTimeout(ninetyMinuteTimer);
+        ninetyMinuteTimer = null;
+
+
         wipeRedAndBlueTeams(message, filePath);
+        gameStarted = false;
         return;
       }
     } 
 
+    // startPickup game args are the message, the filePath and if conditions should be skipped
      if(arguments[0] === "start") {
-       // startPickup game args are the message, the filePath and if conditions should be skipped
        return startPickupGame(message, filePath, false);
      }
 
@@ -119,12 +126,13 @@ const server = {
   
       // if neither team exists on initial read, set 20 min timer
       if (!data.teams.hasOwnProperty("RED Team") && !data.teams.hasOwnProperty("BLUE Team")) {
-    
         twentyMinuteTimer = setTimeout(() => {
           wipeRedAndBlueTeams(message, filePath);
+          twentyMinuteTimer = null;
         }, 1200000);
       }
-      
+
+
   
       // if team doesn't exist, add it to  data.teams
       if (!data.teams.hasOwnProperty(teamName)) {
@@ -171,6 +179,9 @@ const server = {
         if (arguments[0].toLowerCase() === "leave") {
           if (secondReadNumber === 0 && data.teams["RED Team"] || secondReadNumber === 0 && data.teams["BLUE Team"]) {
             clearTimeout(twentyMinuteTimer);
+            twentyMinuteTimer = null;
+
+
             return wipeRedAndBlueTeams(message, filePath);
           }
         }
@@ -298,20 +309,14 @@ const server = {
       // teamData = data.teams;
       playerData = data.players;
   
-      if (
-        !data.teams.hasOwnProperty("RED Team") ||
-        !data.teams.hasOwnProperty("BLUE Team")
-      ) {
+      if (!data.teams.hasOwnProperty("RED Team") ||!data.teams.hasOwnProperty("BLUE Team")) {
         return cautionEmbed(
           message,
           "",
           "Both teams need players before you can start the game!"
         );
       }
-      if (
-        data.teams.hasOwnProperty("RED Team") &&
-        data.teams.hasOwnProperty("BLUE Team")
-      ) {
+      if (data.teams.hasOwnProperty("RED Team") && data.teams.hasOwnProperty("BLUE Team")) {
         const redTeam = data.teams["RED Team"];
         const blueTeam = data.teams["BLUE Team"];
         if (redTeam.length < 1 || blueTeam.length < 1) {
@@ -323,12 +328,23 @@ const server = {
         }
       }
 
+      ninetyMinuteTimer = setTimeout(() => {
+        wipeRedAndBlueTeams(message, filePath, ninetyMinuteTimer);
+        ninetyMinuteTimer = null;
+        gameStarted = false;
+      }, 5400000);
+
+     
+
       gameStarted = true;
       // restart other bot
       restartOtherBot();
   
       // stops the twenty min timer
       clearTimeout(twentyMinuteTimer);
+      twentyMinuteTimer = null;
+
+      
       // generate pin
       let pin = Math.floor(1000 + Math.random() * 9000);
 
@@ -340,13 +356,15 @@ const server = {
       const redTeam = data.teams["RED Team"];
       redTeam.forEach((userName, index) => {
         const userId = getUserIdByUserName(playerData, userName);
+
+
   
         // send DM to user with pin
         message.client.users.fetch(userId).then((user) => {
           if (index === 0) {
-            user.send(`Use !pickupstart to start the game!\n Pickup Game Pin: ${pin}`);
+            user.send(`-You are a captain for this pickup game.\n-Use "!switchmap <mapname> SND pickup" to pick your map and "!pickupsetup" to start the game!\n-Please Join the "PML Pickup Games" Server\nPickup Game Pin: ${pin}`);
           } else {
-            user.send(`Pickup Game Pin: ${pin}`);
+            user.send(`Pickup Game servername: PML Pickup Games! [PavlovMasterLeague.com]\nPickup Game Pin: ${pin}`);
           }
         });
       });
@@ -357,17 +375,16 @@ const server = {
         // send DM to user with pin
         message.client.users.fetch(userId).then((user) => {
 
-          if (index === 0) {
-            user.send(`Pickup Game Pin: ${pin}\nUse !pickupstart to start the game!`);
+          if(index === 0) {
+            user.send(`-You are a captain for this pickup game.\n-Use "!switchmap <mapname> SND pickup" to pick your map and "!pickupsetup" to start the game!\n-Please Join the "PML Pickup Games" Server\nPickup Game Pin: ${pin}`);
           } else {
-            user.send(`Pickup Game Pin: ${pin}`);
+            user.send(`Pickup Game servername: PML Pickup Games! [PavlovMasterLeague.com]\nPickup Game Pin: ${pin}`);
           }
         });
       });
+      pickupGameMatchupEmbed(message, "RED v. BLUE", data);
     });
-    ninetyMinuteTimer = setTimeout(() => {
-      wipeRedAndBlueTeams(message, filePath, ninetyMinuteTimer);
-    }, 5400000);
+    startPickupGameEmbed(message, "Pickup Game Has Started!", "You've been given specific instructions on how to play this pickup game.");
   }
   
   

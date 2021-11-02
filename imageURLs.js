@@ -28,6 +28,8 @@ const teamImages = {
     "https://static.wixstatic.com/media/8de966_970fc24b27264dd88e56134e72578cf6~mv2.png",
   challengePmlLogo:
     "https://static.wixstatic.com/media/8de966_93fdaaade08e4c00a36dac5429549b82~mv2.png",
+  pickupPmlLogo:
+    "https://static.wixstatic.com/media/8de966_eb6a00fa2acd409abab8ffbb83137306~mv2.png",
 };
 
 module.exports = teamImages;

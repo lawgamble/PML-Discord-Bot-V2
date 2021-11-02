@@ -88,7 +88,7 @@ client.on("messageCreate", (message) => {
     const discordName = message.author.username;
 
 
-
+///////////////////////////////////////////////////////////// REGISTER
 
     if (command === "register") {
         registerUser(filePath, message, arguments, discordId, discordName);
@@ -99,6 +99,8 @@ client.on("messageCreate", (message) => {
         unRegisterUser(filePath, message, discordId, discordName);
     }
 
+
+    ///////////////////////////////////////////////////////// TEAM Commands
 
     if (command === "createteam") {
         if (message.member.roles.cache.find((role) => role.id === leagueManagerRoleId)) {
@@ -133,13 +135,14 @@ client.on("messageCreate", (message) => {
         }
     }
 
+    /////////////////////////////////////////////////////////////// ROSTERS
 
     if (command === "rosters") {
         rosterEmbed(filePath, message)
-
     }
 
-    
+    ////////////////////////////////////////////////////////////// Match, Scrim, Challenge
+
     if (command === "matchtime") {
         if (message.member.roles.cache.find((role) => role.id === captainRoleId || role.id === coCaptainRoleId)) {
             matchFunction(message)
@@ -177,64 +180,9 @@ client.on("messageCreate", (message) => {
     }
 
 
+     /////////////////////////////////////////////////////////// Pickup Games Functions
 
-
-    //RCON Commands
-    const rconCommandWords = [
-        "ban",
-        "kick",
-        "kill",
-        "rotatemap",
-        "switchmap",
-        "switchteam",
-        "inspectplayer",
-        "refreshlist",
-        "slap",
-        "serverinfo",
-        "resetsnd",
-        "setpin",
-      ];
-
-    
-    if (rconCommandWords.includes(command)) {
-         connectToServer(server, message);
-    }
-    
-
-
-
-    // to see all of aliases.json file
-    if (command === "info-alias") {
-        readAliasFile(filePath, (error, aliases) => {
-            if (error) {
-                return message.reply(`There was an error: ${error}`)
-            }
-            return message.reply(JSON.stringify(aliases, null, 2))
-        })
-    }
-    // to see list of registered players
-    if (command === "info-players") {
-        readAliasFile(filePath, (error, aliases) => {
-            if (error) {
-                return message.reply(`There was an error: ${error}`)
-            }
-            return message.reply(JSON.stringify(aliases.players, null, 2))
-        })
-    }
-
-    // to see list of teams and its players
-    if (command === "info-teams") {
-        readAliasFile(filePath, (error, aliases) => {
-            if (error) {
-                return message.reply(`There was an error: ${error}`)
-            }
-            return message.reply(JSON.stringify(aliases.teams, null, 2))
-        })
-    }
-
-    // Pickup Games Functions
-
-    if(command === "pickup") {
+     if(command === "pickup") {
         if(message.channel.id === pickupChannelId) {
             pickupGame(filePath, message, arguments, command)
         } else {
@@ -247,23 +195,84 @@ client.on("messageCreate", (message) => {
     }
 
 
-    //DB functions
 
-    if(command === "get") {
-        getInfo(message);
-    }
+    //////////////////////////////////////////////////////RCON Commands
+    // const rconCommandWords = [
+    //     "ban",
+    //     "kick",
+    //     "kill",
+    //     "rotatemap",
+    //     "switchmap",
+    //     "switchteam",
+    //     "inspectplayer",
+    //     "refreshlist",
+    //     "slap",
+    //     "serverinfo",
+    //     "resetsnd",
+    //     "setpin",
+    //   ];
+
+    
+    // if (rconCommandWords.includes(command)) {
+    //      connectToServer(server, message);
+    // }
+    
 
 
-    if(command === "push2db") {
-        readAliasFile(filePath, (error, aliases) => {
-            if (error) {
-                return message.reply(`There was an error: ${error}`)
-            }
-            const teams = aliases.teams;
-            const players = aliases.players;
-            push2db(message,players, teams)
-        })
-    }
+
+    // to see all of aliases.json file
+
+    // if (command === "info-alias") {
+    //     readAliasFile(filePath, (error, aliases) => {
+    //         if (error) {
+    //             return message.reply(`There was an error: ${error}`)
+    //         }
+    //         return message.reply(JSON.stringify(aliases, null, 2))
+    //     })
+    // }
+
+    // to see list of registered players
+
+    // if (command === "info-players") {
+    //     readAliasFile(filePath, (error, aliases) => {
+    //         if (error) {
+    //             return message.reply(`There was an error: ${error}`)
+    //         }
+    //         return message.reply(JSON.stringify(aliases.players, null, 2))
+    //     })
+    // }
+
+    // to see list of teams and its players
+
+    // if (command === "info-teams") {
+    //     readAliasFile(filePath, (error, aliases) => {
+    //         if (error) {
+    //             return message.reply(`There was an error: ${error}`)
+    //         }
+    //         return message.reply(JSON.stringify(aliases.teams, null, 2))
+    //     })
+    // }
+
+   
+
+
+    ////////////////////////////////////////////////////////////////// DB functions
+
+    // if(command === "get") {
+    //     getInfo(message);  
+    // }
+
+
+    // if(command === "push2db") {
+    //     readAliasFile(filePath, (error, aliases) => {
+    //         if (error) {
+    //             return message.reply(`There was an error: ${error}`)
+    //         }
+    //         const teams = aliases.teams;
+    //         const players = aliases.players;
+    //         push2db(message,players, teams)
+    //     })
+    // }
 });
 
 

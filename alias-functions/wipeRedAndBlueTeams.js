@@ -1,13 +1,17 @@
 const readAliasFile = require("../alias-functions/JSONParser");
 const fs = require("fs");
-const { successEmbed } = require("../discord-functions/generalEmbed");
+const {
+  successEmbed,
+  simpleReplyEmbed,
+  wipeTeamsEmbed,
+} = require("../discord-functions/generalEmbed");
 const pickupCaptainRoleId = process.env.PICKUP_CAPTAIN_ROLE_ID;
 
 function getUserIdByUserName(players, userName) {
   return Object.keys(players).find((key) => players[key] === userName);
 }
 
-function wipeRedAndBlueTeam(message, filePath) {
+function wipeRedAndBlueTeam(message, filePath, channel) {
   const role = message.guild.roles.cache.find(
     (role) => role.id === pickupCaptainRoleId
   );
@@ -56,11 +60,7 @@ function wipeRedAndBlueTeam(message, filePath) {
         if (error) {
           console.log(error);
         }
-        return successEmbed(
-          message,
-          "Teams Wiped",
-          "Red and Blue Teams were removed."
-        );
+        return wipeTeamsEmbed(message, "Teams Wiped: Game Cancelled.");
       });
     }, 500);
   });

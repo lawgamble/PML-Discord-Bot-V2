@@ -84,7 +84,24 @@ function pickupGameTeamEmbed(message, data) {
 
 function simpleReplyEmbed(message, title) {
   let embed = new MessageEmbed().setTitle(title);
-  message.reply({
+  channel.send({
+    embeds: [embed],
+  });
+}
+
+function wipeTeamsEmbed(message, title) {
+  let embed = new MessageEmbed().setTitle(title);
+  message.channel.send({
+    embeds: [embed],
+  });
+}
+
+function startPickupGameEmbed(message, title, field) {
+  let embed = new MessageEmbed()
+    .setTitle(title)
+    .setColor("00FF00")
+    .addField("Check your DM's", field);
+  message.channel.send({
     embeds: [embed],
   });
 }
@@ -96,4 +113,6 @@ module.exports = {
   teamNewsEmbed,
   pickupGameTeamEmbed,
   simpleReplyEmbed,
+  wipeTeamsEmbed,
+  startPickupGameEmbed,
 };
