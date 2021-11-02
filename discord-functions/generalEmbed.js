@@ -40,8 +40,8 @@ function teamNewsEmbed(channel, title) {
 function pickupGameTeamEmbed(message, data) {
   const redTeam = data.teams["RED Team"];
   const blueTeam = data.teams["BLUE Team"];
-  let redTeamString = `-`;
-  let blueTeamString = `-`;
+  let redTeamString = "(c)";
+  let blueTeamString = "(c)";
 
   if (redTeam != undefined) {
     redTeam.forEach((member) => {
@@ -62,13 +62,17 @@ function pickupGameTeamEmbed(message, data) {
     .addFields(
       {
         name: `RED Team: --- (${
-          redTeam != undefined ? 5 - redTeam.length : 5
+          redTeam != undefined
+            ? `${5 - redTeam.length} spots left`
+            : `5 spots left`
         }) \n`,
         value: redTeamString,
       },
       {
         name: `BLUE Team: --- (${
-          blueTeam != undefined ? 5 - blueTeam.length : 5
+          blueTeam != undefined
+            ? `${5 - blueTeam.length} spots left`
+            : `5 spots left`
         }) \n`,
         value: blueTeamString,
       }

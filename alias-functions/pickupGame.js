@@ -9,7 +9,7 @@
     pickupGameTeamEmbed,
     simpleReplyEmbed
   } = require("../discord-functions/generalEmbed");
-  // const startPickupGame = require("./pickupGameStart");
+ 
   const wipeRedAndBlueTeams = require("./wipeRedAndBlueTeams");
   const pickupCaptainRoleId = process.env.PICKUP_CAPTAIN_ROLE_ID;
   
@@ -29,9 +29,9 @@
   let gameStarted = false;
 
 const serverPort = process.env.SERVER_PORT;
-console.log("SP", serverPort);
+
 const serverIp = process.env.PICKUP_SERVER_IP;
-console.log(serverIp);
+
 const serverPassword = process.env.SERVER_PASSWORD;
 
 let socket = {};
@@ -44,7 +44,6 @@ const server = {
   
   function pickupGame(filePath, message, arguments, command) {
 
-    console.log("GAME STARTED:", gameStarted);
 
     if(!gameStarted && arguments[0] === "end") return cautionEmbed(message, "", "There is no game currently running!"); 
 
@@ -60,7 +59,8 @@ const server = {
     } 
 
      if(arguments[0] === "start") {
-       return startPickupGame(message, filePath);
+       // startPickup game args are the message, the filePath and if conditions should be skipped
+       return startPickupGame(message, filePath, false);
      }
 
 
@@ -119,15 +119,12 @@ const server = {
   
       // if neither team exists on initial read, set 20 min timer
       if (!data.teams.hasOwnProperty("RED Team") && !data.teams.hasOwnProperty("BLUE Team")) {
-        console.log("Timer Started")
+    
         twentyMinuteTimer = setTimeout(() => {
-          console.log("Timer Ended");
           wipeRedAndBlueTeams(message, filePath);
-        }, 180000);
+        }, 1200000);
       }
-      else {
-        console.log("No Timer needed")
-      }
+      
   
       // if team doesn't exist, add it to  data.teams
       if (!data.teams.hasOwnProperty(teamName)) {
@@ -144,7 +141,7 @@ const server = {
           data.teams[teamName] = [...new Set(data.teams[teamName])];
         }
         else {
-          cautionEmbed(message, "No-Can-Do!", `${data.teams[teamName]} already has 5 players or the game has already started!`);
+          cautionEmbed(message, "No-Can-Do!", `The ${arguments[0].toUpperCase()} Team already has 5 players or the game has already started!`);
         }
       }
       else {
@@ -159,7 +156,6 @@ const server = {
     });
   
     const readFileAgain = setTimeout(() => {
-      console.log("reading file again");
       readAliasFile(filePath, (error, data) => {
         if (error) {
           console.log(error);
@@ -169,7 +165,7 @@ const server = {
         secondReadNumber = countPlayersOnRedAndBlueTeams(data);
 
         // if teams are full, start the game automatically
-        if (secondReadNumber === 10) return startPickupGame(message, filePath);
+        if (secondReadNumber === 10) return startPickupGame(message, filePath, true);
   
         // if users leave and teams are empty, cancel the Pickup Game and timer.
         if (arguments[0].toLowerCase() === "leave") {
@@ -267,7 +263,6 @@ const server = {
   
   // write a function that counts the length of players on the blue team array and the red team array, if they exist 
   function countPlayersOnRedAndBlueTeams(data) {
-    console.log("DATA:", data.teams["RED Team"])
     let redTeamCount = 0;
     let blueTeamCount = 0;
     if (data.teams.hasOwnProperty("RED Team")) {
@@ -283,15 +278,15 @@ const server = {
 
   /////////////// START Pickup Game //////////////////
   
-  function startPickupGame(message, filePath) {
-    if (
-      !message.member.roles.cache.find((role) => role.id === pickupCaptainRoleId)
-    ) {
-      return cautionEmbed(
-        message,
-        "",
-        "You need to be a Pickup Game Captain to start the game!"
-      );
+  function startPickupGame(message, filePath, skipConditions) {
+    if(!skipConditions) {
+      if (!message.member.roles.cache.find((role) => role.id === pickupCaptainRoleId)) {
+        return cautionEmbed(
+          message,
+          "",
+          "You need to be a Pickup Game Captain OR both teams must be full in order to start the game!"
+        );
+      }
     }
     // if user has PickupCaptainRole, make sure both teams exist and that there are at least 1 player on each team.
     readAliasFile(filePath, (error, data) => {
@@ -336,7 +331,7 @@ const server = {
       clearTimeout(twentyMinuteTimer);
       // generate pin
       let pin = Math.floor(1000 + Math.random() * 9000);
-      console.log("PIN", pin, "PIN LENGTH", pin.toString().length);
+
   
       // connects to server and sets new pin.
       connectToServer(server, pin);
@@ -361,7 +356,7 @@ const server = {
   
         // send DM to user with pin
         message.client.users.fetch(userId).then((user) => {
-          console.log(user);
+
           if (index === 0) {
             user.send(`Pickup Game Pin: ${pin}\nUse !pickupstart to start the game!`);
           } else {
@@ -372,7 +367,7 @@ const server = {
     });
     ninetyMinuteTimer = setTimeout(() => {
       wipeRedAndBlueTeams(message, filePath, ninetyMinuteTimer);
-    }, 30000);
+    }, 5400000);
   }
   
   
@@ -389,7 +384,7 @@ const server = {
       });
   
       socket.on("data", function (data) {
-        console.log("DATA", data.toString());
+
         if (data.toString().startsWith("Password:")) {
           socket.write(server.password);
         }
@@ -437,7 +432,6 @@ const server = {
   }
   
   // run when someone runs start or auto start happens
-  // joes shell command: sudo systemctl restart pavlov-bot.service
   function restartOtherBot() {
     exec(botRebootCommand, (error, stdout, stderr) => {
       if (error) {
