@@ -160,6 +160,7 @@ const server = {
             message.client.users.fetch(authorId).then((user) => {
                 user.send(`Pickup Game servername: PML Pickup Games! [PavlovMasterLeague.com]\nPickup Game Pin: ${pin}`);
             })
+            restartOtherBot();
           }
         }
         else {
