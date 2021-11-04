@@ -17,8 +17,9 @@ const connectToServer = require("./rcon-functions/rconCommands");
 const { cautionEmbed } = require("./discord-functions/generalEmbed");
 const push2db = require("./db/push2db")
 const server = require("./serverCreds");
-const  pickupGame = require("./alias-functions/pickupGame");
-const wipeRedAndBlueTeams = require("./alias-functions/wipeRedAndBlueTeams");
+const { pickupGame, wipeRedAndBlueTeams, thirtyFiveMinuteTimer, ninetyMinuteTimer } = require("./alias-functions/pickupGame");
+
+
 
 
 const { getInfo, getStats} = require("./db/getTables");
@@ -58,6 +59,8 @@ client.on("ready", () => {
         }
         delete data.teams["RED Team"];
         delete data.teams["BLUE Team"];
+        clearTimeout(thirtyFiveMinuteTimer);
+        clearTimeout(ninetyMinuteTimer);
         fs.writeFile(filePath, JSON.stringify(data, null, 2), (error) => {
             if (error) {
               console.log(error);
@@ -184,14 +187,14 @@ client.on("messageCreate", (message) => {
 
      if(command === "pickup") {
         if(message.channel.id === pickupChannelId) {
-            pickupGame(filePath, message, arguments, command)
+            pickupGame(filePath, message, arguments, command);
         } else {
             cautionEmbed(message, "FAILED", `You can only use the pickup game commands in the #pickup-games channel!`)
         }
     } 
 
     if(command === "wipernb") {
-        wipeRedAndBlueTeams(message, filePath, client)
+        wipeRedAndBlueTeams(message, filePath, thirtyFiveMinuteTimer, ninetyMinuteTimer);
     }
 
 

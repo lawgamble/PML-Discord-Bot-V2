@@ -37,7 +37,7 @@ function teamNewsEmbed(channel, title) {
   });
 }
 
-function pickupGameTeamEmbed(message, data) {
+function pickupGameTeamEmbed(message, data, timeLeft) {
   const redTeam = data.teams["RED Team"];
   const blueTeam = data.teams["BLUE Team"];
   let redTeamString = "(c)";
@@ -75,6 +75,10 @@ function pickupGameTeamEmbed(message, data) {
             : `5 spots left`
         }) \n`,
         value: blueTeamString,
+      },
+      {
+        name: "_____",
+        value: `There are ${timeLeft} minute(s) left to fill the teams before they're flushed!`,
       }
     );
   message.reply({
@@ -84,7 +88,7 @@ function pickupGameTeamEmbed(message, data) {
 
 function simpleReplyEmbed(message, title) {
   let embed = new MessageEmbed().setTitle(title);
-  channel.send({
+  message.channel.send({
     embeds: [embed],
   });
 }
@@ -101,6 +105,16 @@ function startPickupGameEmbed(message, title, field) {
     .setTitle(title)
     .setColor("00FF00")
     .addField("Check your DM's", field);
+  message.channel.send({
+    embeds: [embed],
+  });
+}
+
+function pickupGameMatchupEmbed(message, title, field) {
+  let embed = new MessageEmbed()
+    .setTitle(title)
+    .setColor("00FF00")
+    .addField("Matchup:", field);
   message.channel.send({
     embeds: [embed],
   });

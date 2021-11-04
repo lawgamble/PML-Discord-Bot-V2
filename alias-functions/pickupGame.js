@@ -1,6 +1,7 @@
 
   const fs = require("fs");
   const net = require("net");
+  const { Timer } = require('timer-node');
   const exec = require("child_process").exec;
   const readAliasFile = require("./JSONParser");
   const {
@@ -8,20 +9,21 @@
     successEmbed,
     pickupGameTeamEmbed,
     simpleReplyEmbed,
-    startPickupGameEmbed
+    startPickupGameEmbed,
+    wipeTeamsEmbed
   } = require("../discord-functions/generalEmbed");
   const pickupGameMatchupEmbed = require("../discord-functions/pickupGameMatchupEmbed");
  
-  const wipeRedAndBlueTeams = require("./wipeRedAndBlueTeams");
+  
   const pickupCaptainRoleId = process.env.PICKUP_CAPTAIN_ROLE_ID;
   
   
   const teamFilter = ["red", "blue"];
-  const otherArgumentsFilter = ["leave", "teams", "end"];
+  const otherArgumentsFilter = ["leave", "teams"];
   const botRebootCommand = process.env.BOT_REBOOT_COMMAND;
   
   
-  let twentyMinuteTimer;
+  let thirtyFiveMinuteTimer;
   let ninetyMinuteTimer;
   let teamName;
   let playerToAdd;
@@ -31,6 +33,7 @@
   let blueTeam;
   let playerData;
   let gameStarted = false;
+  const timer = new Timer();
 
 const serverPort = process.env.SERVER_PORT;
 const serverIp = process.env.PICKUP_SERVER_IP;
@@ -46,7 +49,7 @@ const server = {
 };
   
   function pickupGame(filePath, message, arguments, command) {
-
+   
     if(gameStarted && arguments[0] === "start") return cautionEmbed(message, "", "A game is already in progress!");
 
     if(!gameStarted && arguments[0] === "end") return cautionEmbed(message, "", "There is no game currently running!"); 
@@ -57,12 +60,12 @@ const server = {
       if(message.member.roles.cache.find((role) => role.id === pickupCaptainRoleId)) {
         clearTimeout(ninetyMinuteTimer);
         ninetyMinuteTimer = null;
-
-
-        wipeRedAndBlueTeams(message, filePath);
+        wipeRedAndBlueTeams(message, filePath, thirtyFiveMinuteTimer, ninetyMinuteTimer);
         gameStarted = false;
+        timer.stop();
         return;
       }
+      return;
     } 
 
     // startPickup game args are the message, the filePath and if conditions should be skipped
@@ -103,7 +106,11 @@ const server = {
       // creates embed of the teams when command === "teams"
       if (arguments[0].toLowerCase() === "teams") {
         if (data.teams.hasOwnProperty("RED Team") || data.teams.hasOwnProperty("BLUE Team")) {
-          pickupGameTeamEmbed(message, data);
+          const timePassedMS = Date.now() - timer.startedAt(); 
+          const timePassedSec = Math.floor(timePassedMS / 1000);
+          const timePassedMin = (timePassedSec / 60);
+          const timeLeft = Math.ceil(35 - timePassedMin);
+          pickupGameTeamEmbed(message, data, timeLeft);
         }
         else {
           simpleReplyEmbed(message, "No Pickup Games Found")
@@ -126,10 +133,12 @@ const server = {
   
       // if neither team exists on initial read, set 20 min timer
       if (!data.teams.hasOwnProperty("RED Team") && !data.teams.hasOwnProperty("BLUE Team")) {
-        twentyMinuteTimer = setTimeout(() => {
-          wipeRedAndBlueTeams(message, filePath);
-          twentyMinuteTimer = null;
-        }, 1200000);
+        timer.start();
+        thirtyFiveMinuteTimer = setTimeout(() => {
+          wipeRedAndBlueTeams(message, filePath, thirtyFiveMinuteTimer, ninetyMinuteTimer);
+          timer.stop();
+          thirtyFiveMinuteTimer = null;
+        }, 2100000);
       }
 
 
@@ -178,11 +187,10 @@ const server = {
         // if users leave and teams are empty, cancel the Pickup Game and timer.
         if (arguments[0].toLowerCase() === "leave") {
           if (secondReadNumber === 0 && data.teams["RED Team"] || secondReadNumber === 0 && data.teams["BLUE Team"]) {
-            clearTimeout(twentyMinuteTimer);
-            twentyMinuteTimer = null;
-
-
-            return wipeRedAndBlueTeams(message, filePath);
+            clearTimeout(thirtyFiveMinuteTimer);
+            thirtyFiveMinuteTimer = null;
+            timer.stop();
+            return wipeRedAndBlueTeams(message, filePath, thirtyFiveMinuteTimer, ninetyMinuteTimer);
           }
         }
   
@@ -203,7 +211,11 @@ const server = {
           }
         }
         if (firstReadNumber !== secondReadNumber) {
-          pickupGameTeamEmbed(message, data);
+          const timePassedMS = Date.now() - timer.startedAt(); 
+          const timePassedSec = Math.floor(timePassedMS / 1000);
+          const timePassedMin = (timePassedSec / 60);
+          const timeLeft = Math.ceil(35 - timePassedMin);
+          pickupGameTeamEmbed(message, data, timeLeft);
         }
       })
     }, 1000);
@@ -329,7 +341,7 @@ const server = {
       }
 
       ninetyMinuteTimer = setTimeout(() => {
-        wipeRedAndBlueTeams(message, filePath, ninetyMinuteTimer);
+        wipeRedAndBlueTeams(message, filePath, thirtyFiveMinuteTimer, ninetyMinuteTimer);
         ninetyMinuteTimer = null;
         gameStarted = false;
       }, 5400000);
@@ -341,8 +353,8 @@ const server = {
       restartOtherBot();
   
       // stops the twenty min timer
-      clearTimeout(twentyMinuteTimer);
-      twentyMinuteTimer = null;
+      clearTimeout(thirtyFiveMinuteTimer);
+      thirtyFiveMinuteTimer = null;
 
       
       // generate pin
@@ -382,9 +394,9 @@ const server = {
           }
         });
       });
+      startPickupGameEmbed(message, "Pickup Game Has Started!", "You've been given specific instructions on how to play this pickup game.");
       pickupGameMatchupEmbed(message, "RED v. BLUE", data);
     });
-    startPickupGameEmbed(message, "Pickup Game Has Started!", "You've been given specific instructions on how to play this pickup game.");
   }
   
   
@@ -462,6 +474,76 @@ const server = {
       console.log(`stdout: ${stdout}`);
     });
   }
+
+
+  ///////////////////////////////// Wipe Red and Blue Teams /////////////////////////////////
+
+  function wipeRedAndBlueTeams(message, filePath, thirtyFiveMinuteTimer, ninetyMinuteTimer) {
+    const role = message.guild.roles.cache.find(
+      (role) => role.id === pickupCaptainRoleId
+    );
   
-  module.exports =  pickupGame;
+    readAliasFile(filePath, (error, data) => {
+      if (error) {
+        console.log(error);
+      }
+  
+      if (data.teams["RED Team"]) {
+        if (data.teams["RED Team"][0]) {
+          const redTeamCaptain = data.teams["RED Team"][0];
+  
+          const redTeamCaptainUserId = getUserIdByUserName(
+            data.players,
+            redTeamCaptain
+          );
+          // remove captainRoleId from redTeamCaptainId
+          const foundUser = message.guild.members.fetch(redTeamCaptainUserId);
+          role.members.forEach((member) =>
+            member.roles.remove(pickupCaptainRoleId)
+          );
+        }
+      }
+      if (data.teams["BLUE Team"]) {
+        if (data.teams["BLUE Team"][0]) {
+          const blueTeamCaptain = data.teams["BLUE Team"][0];
+  
+          const blueTeamCaptainUserId = getUserIdByUserName(
+            data.players,
+            blueTeamCaptain
+          );
+  
+          // remove captainRoleId from blueTeamCaptainId
+          const foundUser = message.guild.members.fetch(blueTeamCaptainUserId);
+          role.members.forEach((member) =>
+            member.roles.remove(pickupCaptainRoleId)
+          );
+        }
+      }
+      setTimeout(() => {
+        delete data.teams["RED Team"];
+        delete data.teams["BLUE Team"];
+
+        clearTimeout(thirtyFiveMinuteTimer);
+        clearTimeout(ninetyMinuteTimer);
+
+        console.log(thirtyFiveMinuteTimer);
+        console.log(ninetyMinuteTimer);
+
+        fs.writeFile(filePath, JSON.stringify(data, null, 2), (error) => {
+          if (error) {
+            console.log(error);
+          }
+          return wipeTeamsEmbed(message, "Teams Wiped: Game Cancelled.");
+        });
+      }, 500);
+    });
+  }
+
+
+  module.exports = {
+    pickupGame,
+    wipeRedAndBlueTeams,
+    thirtyFiveMinuteTimer,
+    ninetyMinuteTimer
+  }
   
