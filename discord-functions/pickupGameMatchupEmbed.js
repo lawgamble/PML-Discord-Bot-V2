@@ -7,7 +7,7 @@ const pickupGameImage = teamImages["pickupPmlLogo"];
 let redTeam;
 let blueTeam;
 
-function pickupGameMatchupEmbed(message, title, data) {
+function redAndBlueMatchupEmbed(message, title, data) {
   redTeam = data.teams["RED Team"];
   blueTeam = data.teams["BLUE Team"];
   let redTeamRoster = "";
@@ -33,4 +33,30 @@ function pickupGameMatchupEmbed(message, title, data) {
   });
 }
 
-module.exports = pickupGameMatchupEmbed;
+function blackAndGoldMatchupEmbed(message, title, data) {
+  blackTeam = data.teams["BLACK Team"];
+  goldTeam = data.teams["GOLD Team"];
+  let blackTeamRoster = "";
+  let goldTeamRoster = "";
+
+  blackTeam.forEach((player) => {
+    blackTeamRoster += `${player.slice(2)}\n`;
+  });
+  goldTeam.forEach((player) => {
+    goldTeamRoster += `${player.slice(2)}\n`;
+  });
+
+  let embed2 = new MessageEmbed()
+    .setImage(pickupGameImage)
+    .setColor("#9932CC")
+    .setTitle(title)
+    .addFields(
+      { name: "BLACK Team", value: blackTeamRoster },
+      { name: "GOLD Team", value: goldTeamRoster }
+    );
+  message.channel.send({
+    embeds: [embed2],
+  });
+}
+
+module.exports = { redAndBlueMatchupEmbed, blackAndGoldMatchupEmbed };

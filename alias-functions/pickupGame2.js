@@ -7,33 +7,34 @@
   const {
     cautionEmbed,
     successEmbed,
-    redAndBlueTeamEmbed,
+    blackAndGoldTeamEmbed,
     simpleReplyEmbed,
     startPickupGameEmbed,
-    wipeTeamsEmbed
+    wipeTeamsEmbed,
   } = require("../discord-functions/generalEmbed");
-  const{ redAndBlueMatchupEmbed } = require("../discord-functions/pickupGameMatchupEmbed");
+  const { blackAndGoldMatchupEmbed } = require("../discord-functions/pickupGameMatchupEmbed");
  
   
   const pickupCaptainRoleId = process.env.PICKUP_CAPTAIN_ROLE_ID;
   
   
-  const teamFilter = ["red", "blue"];
+  const teamFilter = ["black", "gold"];
   const otherArgumentsFilter = ["leave", "teams"];
+  // make sure this doesn't mess up the first 
+
   const botRebootCommand = process.env.BOT_REBOOT_COMMAND;
   
   
-  let thirtyFiveMinuteTimer;
-  let ninetyMinuteTimer;
+  let thirtyFiveMinuteTimer2;
+  let ninetyMinuteTimer2;
   let teamName;
   let playerToAdd;
   let firstReadNumber;
   let secondReadNumber;
-  let pin;
-  
   let playerData;
   let gameStarted = false;
   const timer = new Timer();
+  let pin;
 
 const serverPort = process.env.SERVER_PORT;
 const serverIp = process.env.PICKUP_SERVER_IP;
@@ -48,7 +49,8 @@ const server = {
   password: serverPassword,
 };
   
-  function pickupGame(filePath, message, arguments, command) {
+  function pickupGame2(filePath, message, arguments, command) {
+
    
     if(gameStarted && arguments[0] === "start") return cautionEmbed(message, "", "A game is already in progress!");
 
@@ -58,9 +60,9 @@ const server = {
 
     if(gameStarted && arguments[0] === "end") {
       if(message.member.roles.cache.find((role) => role.id === pickupCaptainRoleId)) {
-        clearTimeout(ninetyMinuteTimer);
-        ninetyMinuteTimer = null;
-        wipeRedAndBlueTeams(message, filePath, thirtyFiveMinuteTimer, ninetyMinuteTimer);
+        clearTimeout(ninetyMinuteTimer2);
+        ninetyMinuteTimer2 = null;
+        wipeBlackAndGoldTeams(message, filePath, thirtyFiveMinuteTimer2, ninetyMinuteTimer2);
         gameStarted = false;
         timer.stop();
         return;
@@ -68,9 +70,11 @@ const server = {
       return;
     } 
 
+
+
     // startPickup game args are the message, the filePath and if conditions should be skipped
      if(arguments[0] === "start") {
-       return startPickupGame(message, filePath, false);
+       return startPickupGame2(message, filePath, false);
      }
 
 
@@ -81,11 +85,11 @@ const server = {
     if (!otherArgumentsFilter.includes(arguments[0]?.toLowerCase()) && !teamFilter.includes(arguments[0]?.toLowerCase())) {
       return cautionEmbed(
         message,
-        "", `!${command} ${arguments[0]} is not a valid !pickup command!\n **Valid Commands**\n!pickup red \n*puts you on RED Team*\n!pickup blue \n*puts you on BLUE Team*\n!pickup leave \n*removes you from either team*`
+        "", `!${command} ${arguments[0]} is not a valid !pickup command!\n **Valid Commands**\n!pickup black \n*puts you on BLACK Team*\n!pickup gold \n*puts you on GOLD Team*\n!pickup leave \n*removes you from either team*`
       );
     }
   
-    // if argument is red or blue, change team name to argument.
+    // if argument is black or gold, change team name to argument.
     if (teamFilter.includes(arguments[0].toLowerCase())) {
       teamName = `${arguments[0].toUpperCase()} Team`;
     }
@@ -101,16 +105,16 @@ const server = {
   
       const playersListData = data.players;
   
-      firstReadNumber = countPlayersOnRedAndBlueTeams(data);
+      firstReadNumber = countPlayersOnBlackAndGoldTeams(data);
   
       // creates embed of the teams when command === "teams"
       if (arguments[0].toLowerCase() === "teams") {
-        if (data.teams.hasOwnProperty("RED Team") || data.teams.hasOwnProperty("BLUE Team")) {
+        if (data.teams.hasOwnProperty("BLACK Team") || data.teams.hasOwnProperty("GOLD Team")) {
           const timePassedMS = Date.now() - timer.startedAt(); 
           const timePassedSec = Math.floor(timePassedMS / 1000);
           const timePassedMin = (timePassedSec / 60);
           const timeLeft = Math.ceil(35 - timePassedMin);
-          redAndBlueTeamEmbed(message, data, timeLeft, gameStarted);
+          blackAndGoldTeamEmbed(message, data, timeLeft, gameStarted);
         }
         else {
           simpleReplyEmbed(message, "No Pickup Games Found")
@@ -120,7 +124,7 @@ const server = {
   
       // check if player wants to leave
       if (arguments[0].toLowerCase() === "leave") {
-        return leavePickupGame(message, data, playersListData, blueTeam = data.teams["BLUE Team"], redTeam = data.teams["RED Team"], authorId, filePath);
+        return leavePickupGame(message, data, playersListData, blackTeam = data.teams["BLACK Team"], goldTeam = data.teams["GOLD Team"], authorId, filePath);
       }
   
       // check if user is registered
@@ -132,12 +136,12 @@ const server = {
       }
   
       // if neither team exists on initial read, set 20 min timer
-      if (!data.teams.hasOwnProperty("RED Team") && !data.teams.hasOwnProperty("BLUE Team")) {
+      if (!data.teams.hasOwnProperty("BLACK Team") && !data.teams.hasOwnProperty("GOLD Team")) {
         timer.start();
-        thirtyFiveMinuteTimer = setTimeout(() => {
-          wipeRedAndBlueTeams(message, filePath, thirtyFiveMinuteTimer, ninetyMinuteTimer);
+        thirtyFiveMinuteTimer2 = setTimeout(() => {
+          wipeBlackAndGoldTeams(message, filePath, thirtyFiveMinuteTimer2, ninetyMinuteTimer2);
           timer.stop();
-          thirtyFiveMinuteTimer = null;
+          thirtyFiveMinuteTimer2 = null;
         }, 2100000);
       }
 
@@ -184,35 +188,35 @@ const server = {
         }
         
         // read the file a second time ---
-        secondReadNumber = countPlayersOnRedAndBlueTeams(data);
+        secondReadNumber = countPlayersOnBlackAndGoldTeams(data);
 
         // if teams are full, start the game automatically
-        if (secondReadNumber === 10 && gameStarted === false) return startPickupGame(message, filePath, true);
+        if (secondReadNumber === 10 && gameStarted === false) return startPickupGame2(message, filePath, true);
   
         // if users leave and teams are empty, cancel the Pickup Game and timer.
         if (arguments[0].toLowerCase() === "leave") {
-          if (secondReadNumber === 0 && data.teams["RED Team"] || secondReadNumber === 0 && data.teams["BLUE Team"]) {
-            clearTimeout(thirtyFiveMinuteTimer);
-            thirtyFiveMinuteTimer = null;
+          if (secondReadNumber === 0 && data.teams["BLACK Team"] || secondReadNumber === 0 && data.teams["GOLD Team"]) {
+            clearTimeout(thirtyFiveMinuteTimer2);
+            thirtyFiveMinuteTimer2 = null;
             timer.stop();
-            return wipeRedAndBlueTeams(message, filePath, thirtyFiveMinuteTimer, ninetyMinuteTimer);
+            return wipeBlackAndGoldTeams(message, filePath, thirtyFiveMinuteTimer2, ninetyMinuteTimer2);
           }
         }
   
-        if (data.teams.hasOwnProperty("RED Team")) {
-          if (data.teams["RED Team"][0] != undefined) {
-            const redTeamCaptianUserName = data.teams["RED Team"][0];
-            const redTeamCaptainDiscordId = getUserIdByUserName(data.players, redTeamCaptianUserName);
-            const foundUserRedTeam = message.guild.members.cache.find((user) => user.id === redTeamCaptainDiscordId);
-            foundUserRedTeam.roles.add(pickupGameCaptainRole);
+        if (data.teams.hasOwnProperty("BLACK Team")) {
+          if (data.teams["BLACK Team"][0] != undefined) {
+            const blackTeamCaptianUserName = data.teams["BLACK Team"][0];
+            const blackTeamCaptainDiscordId = getUserIdByUserName(data.players, blackTeamCaptianUserName);
+            const foundUserBlackTeam = message.guild.members.cache.find((user) => user.id === blackTeamCaptainDiscordId);
+            foundUserBlackTeam.roles.add(pickupGameCaptainRole);
           };
         }
-        if (data.teams.hasOwnProperty("BLUE Team")) {
-          if (data.teams["BLUE Team"][0] != undefined) {
-            const blueTeamCaptianUserName = data.teams["BLUE Team"][0];
-            const blueTeamCaptainDiscordId = getUserIdByUserName(data.players, blueTeamCaptianUserName);
-            const foundUserBlueTeam = message.guild.members.cache.find((user) => user.id === blueTeamCaptainDiscordId);
-            foundUserBlueTeam.roles.add(pickupGameCaptainRole);
+        if (data.teams.hasOwnProperty("GOLD Team")) {
+          if (data.teams["GOLD Team"][0] != undefined) {
+            const goldTeamCaptianUserName = data.teams["GOLD Team"][0];
+            const goldTeamCaptainDiscordId = getUserIdByUserName(data.players, goldTeamCaptianUserName);
+            const foundUserGoldTeam = message.guild.members.cache.find((user) => user.id === goldTeamCaptainDiscordId);
+            foundUserGoldTeam.roles.add(pickupGameCaptainRole);
           }
         }
         if (firstReadNumber !== secondReadNumber) {
@@ -220,7 +224,7 @@ const server = {
           const timePassedSec = Math.floor(timePassedMS / 1000);
           const timePassedMin = (timePassedSec / 60);
           const timeLeft = Math.ceil(35 - timePassedMin);
-          redAndBlueTeamEmbed(message, data, timeLeft, gameStarted);
+          blackAndGoldTeamEmbed(message, data, timeLeft, gameStarted);
         }
       })
     }, 1000);
@@ -230,33 +234,33 @@ const server = {
     return Object.keys(players).find(key => players[key] === userName);
   }
   
-  function leavePickupGame(message, data, playersListData, blueTeam, redTeam, authorId, filePath) {
+  function leavePickupGame(message, data, playersListData, blackTeam, goldTeam, authorId, filePath) {
     // if user has pickupCaptain role, remove it 
     if (message.member.roles.cache.find((role) => role.id === pickupCaptainRoleId)) {
       message.member.roles.remove(pickupCaptainRoleId);
     }
-    if (data.teams.hasOwnProperty("RED Team")) {
-      if (redTeam.includes(playersListData[authorId])) {
-        const indexOfPlayer = redTeam.indexOf(playersListData[authorId]);
-        redTeam.splice(indexOfPlayer, 1);
+    if (data.teams.hasOwnProperty("BLACK Team")) {
+      if (blackTeam.includes(playersListData[authorId])) {
+        const indexOfPlayer = blackTeam.indexOf(playersListData[authorId]);
+        blackTeam.splice(indexOfPlayer, 1);
         fs.writeFile(filePath, JSON.stringify(data, null, 2), (error) => {
           if (error) {
             console.log(error);
           }
         });
-        return successEmbed(message, "Seeya!", "You've been removed from the RED Team");
+        return successEmbed(message, "Seeya!", "You've been removed from the BLACK Team");
       }
     }
-    if (data.teams.hasOwnProperty("BLUE Team")) {
-      if (blueTeam.includes(playersListData[authorId])) {
-        const indexOfPlayer = blueTeam.indexOf(playersListData[authorId]);
-        blueTeam.splice(indexOfPlayer, 1);
+    if (data.teams.hasOwnProperty("GOLD Team")) {
+      if (goldTeam.includes(playersListData[authorId])) {
+        const indexOfPlayer = goldTeam.indexOf(playersListData[authorId]);
+        goldTeam.splice(indexOfPlayer, 1);
         fs.writeFile(filePath, JSON.stringify(data, null, 2), (error) => {
           if (error) {
             console.log(error);
           }
         });
-        return successEmbed(message, "Seeya!", "You've been removed from the BLUE Team");
+        return successEmbed(message, "Seeya!", "You've been removed from the GOLD Team");
       }
     }
     return cautionEmbed(message, "Awkward!", "You aren't actually on a team...")
@@ -264,17 +268,17 @@ const server = {
   
   function checkIfUserOnOtherTeam(data, arguments, authorId, message) {
     const userName = data.players[authorId];
-    if (arguments[0] === "red" && data.teams["BLUE Team"]) {
-      const blueTeam = data.teams["BLUE Team"];
-      if (blueTeam.includes(userName)) {
-        cautionEmbed(message, "", "You're already on the BLUE Team!");
+    if (arguments[0] === "black" && data.teams["GOLD Team"]) {
+      const goldTeam = data.teams["GOLD Team"];
+      if (goldTeam.includes(userName)) {
+        cautionEmbed(message, "", "You're already on the GOLD Team!");
         return false;
       }
     }
-    if (arguments[0] === "blue" && data.teams["RED Team"]) {
-      const redTeam = data.teams["RED Team"];
-      if (redTeam.includes(userName)) {
-        cautionEmbed(message, "", "You're already on the RED Team!");
+    if (arguments[0] === "gold" && data.teams["BLACK Team"]) {
+      const blackTeam = data.teams["BLACK Team"];
+      if (blackTeam.includes(userName)) {
+        cautionEmbed(message, "", "You're already on the BLACK Team!");
         return false;
       }
     }
@@ -289,24 +293,24 @@ const server = {
     return true;
   }
   
-  // write a function that counts the length of players on the blue team array and the red team array, if they exist 
-  function countPlayersOnRedAndBlueTeams(data) {
-    let redTeamCount = 0;
-    let blueTeamCount = 0;
-    if (data.teams.hasOwnProperty("RED Team")) {
-      redTeamCount = data.teams["RED Team"].length;
+  // write a function that counts the length of players on the black team array and the gold team array, if they exist 
+  function countPlayersOnBlackAndGoldTeams(data) {
+    let blackTeamCount = 0;
+    let goldTeamCount = 0;
+    if (data.teams.hasOwnProperty("BLACK Team")) {
+      blackTeamCount = data.teams["BLACK Team"].length;
     }
-    if (data.teams.hasOwnProperty("BLUE Team")) {
-      blueTeamCount = data.teams["BLUE Team"].length;
+    if (data.teams.hasOwnProperty("GOLD Team")) {
+      goldTeamCount = data.teams["GOLD Team"].length;
     }
-    return redTeamCount + blueTeamCount;
+    return blackTeamCount + goldTeamCount;
   }
   
 
 
   /////////////// START Pickup Game //////////////////
   
-  function startPickupGame(message, filePath, skipConditions) {
+  function startPickupGame2(message, filePath, skipConditions) {
     if(!skipConditions) {
       if (!message.member.roles.cache.find((role) => role.id === pickupCaptainRoleId)) {
         return cautionEmbed(
@@ -326,16 +330,16 @@ const server = {
       // teamData = data.teams;
       playerData = data.players;
   
-      if (!data.teams.hasOwnProperty("RED Team") ||!data.teams.hasOwnProperty("BLUE Team")) {
+      if (!data.teams.hasOwnProperty("BLACK Team") ||!data.teams.hasOwnProperty("GOLD Team")) {
         return cautionEmbed(
           message,
           "",
           "Both teams need players before you can start the game!"
         );
       }
-      if (data.teams.hasOwnProperty("RED Team") && data.teams.hasOwnProperty("BLUE Team")) {
-        const redTeam = data.teams["RED Team"];
-        const blueTeam = data.teams["BLUE Team"];
+      if (data.teams.hasOwnProperty("BLACK Team") && data.teams.hasOwnProperty("GOLD Team")) {
+        const redTeam = data.teams["BLACK Team"];
+        const blueTeam = data.teams["GOLD Team"];
         if (redTeam.length < 1 || blueTeam.length < 1) {
           return cautionEmbed(
             message,
@@ -345,9 +349,9 @@ const server = {
         }
       }
 
-      ninetyMinuteTimer = setTimeout(() => {
-        wipeRedAndBlueTeams(message, filePath, thirtyFiveMinuteTimer, ninetyMinuteTimer);
-        ninetyMinuteTimer = null;
+      ninetyMinuteTimer2 = setTimeout(() => {
+        wipeBlackAndGoldTeams(message, filePath, thirtyFiveMinuteTimer2, ninetyMinuteTimer2);
+        ninetyMinuteTimer2 = null;
         gameStarted = false;
       }, 5400000);
 
@@ -358,21 +362,21 @@ const server = {
       restartOtherBot();
   
       // stops the twenty min timer
-      clearTimeout(thirtyFiveMinuteTimer);
-      thirtyFiveMinuteTimer = null;
+      clearTimeout(thirtyFiveMinuteTimer2);
+      thirtyFiveMinuteTimer2 = null;
 
       
       // generate pin
-      pin = Math.floor(1000 + Math.random() * 9000);
+    pin = Math.floor(1000 + Math.random() * 9000);
 
   
       // connects to server and sets new pin.
       connectToServer(server, pin);
   
       // loop through redTeam and getUserIdByUserName. For Each user send DM of the pin.
-      const redTeam = data.teams["RED Team"];
+      const redTeam = data.teams["BLACK Team"];
       redTeam.forEach((userName, index) => {
-        const userId = getUserIdByUserName(playerData, userName);
+      const userId = getUserIdByUserName(playerData, userName);
 
 
   
@@ -385,7 +389,7 @@ const server = {
           }
         });
       });
-      const blueTeam = data.teams["BLUE Team"];
+      const blueTeam = data.teams["GOLD Team"];
       blueTeam.forEach((user, index) => {
         const userId = getUserIdByUserName(playerData, user);
   
@@ -400,7 +404,7 @@ const server = {
         });
       });
       startPickupGameEmbed(message, "Pickup Game Has Started!", "You've been given specific instructions on how to play this pickup game.");
-      redAndBlueMatchupEmbed(message, "RED v. BLUE", data);
+      blackAndGoldMatchupEmbed(message, "BLACK v. GOLD", data);
     });
   }
   
@@ -481,9 +485,9 @@ const server = {
   }
 
 
-  ///////////////////////////////// Wipe Red and Blue Teams /////////////////////////////////
+  ///////////////////////////////// Wipe Black and Gold Teams /////////////////////////////////
 
-  function wipeRedAndBlueTeams(message, filePath, thirtyFiveMinuteTimer, ninetyMinuteTimer) {
+  function wipeBlackAndGoldTeams(message, filePath, thirtyFiveMinuteTimer, ninetyMinuteTimer) {
     const role = message.guild.roles.cache.find(
       (role) => role.id === pickupCaptainRoleId
     );
@@ -493,9 +497,9 @@ const server = {
         console.log(error);
       }
   
-      if (data.teams["RED Team"]) {
-        if (data.teams["RED Team"][0]) {
-          const redTeamCaptain = data.teams["RED Team"][0];
+      if (data.teams["BLACK Team"]) {
+        if (data.teams["BLACK Team"][0]) {
+          const redTeamCaptain = data.teams["BLACK Team"][0];
   
           const redTeamCaptainUserId = getUserIdByUserName(
             data.players,
@@ -508,9 +512,9 @@ const server = {
           );
         }
       }
-      if (data.teams["BLUE Team"]) {
-        if (data.teams["BLUE Team"][0]) {
-          const blueTeamCaptain = data.teams["BLUE Team"][0];
+      if (data.teams["GOLD Team"]) {
+        if (data.teams["GOLD Team"][0]) {
+          const blueTeamCaptain = data.teams["GOLD Team"][0];
   
           const blueTeamCaptainUserId = getUserIdByUserName(
             data.players,
@@ -525,8 +529,8 @@ const server = {
         }
       }
       setTimeout(() => {
-        delete data.teams["RED Team"];
-        delete data.teams["BLUE Team"];
+        delete data.teams["BLACK Team"];
+        delete data.teams["GOLD Team"];
 
         clearTimeout(thirtyFiveMinuteTimer);
         clearTimeout(ninetyMinuteTimer);
@@ -546,9 +550,9 @@ const server = {
 
 
   module.exports = {
-    pickupGame,
-    wipeRedAndBlueTeams,
-    thirtyFiveMinuteTimer,
-    ninetyMinuteTimer
+    pickupGame2,
+    wipeBlackAndGoldTeams,
+    thirtyFiveMinuteTimer2,
+    ninetyMinuteTimer2
   }
   

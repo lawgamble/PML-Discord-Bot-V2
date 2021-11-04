@@ -18,6 +18,7 @@ const { cautionEmbed } = require("./discord-functions/generalEmbed");
 const push2db = require("./db/push2db")
 const server = require("./serverCreds");
 const { pickupGame, wipeRedAndBlueTeams, thirtyFiveMinuteTimer, ninetyMinuteTimer } = require("./alias-functions/pickupGame");
+const { pickupGame2, wipeBlackAndGoldTeams, thirtyFiveMinuteTimer2, ninetyMinuteTimer2 } = require("./alias-functions/pickupGame2");
 
 
 
@@ -41,6 +42,7 @@ const captainRoleId = process.env.CAPTAIN_ROLE_ID;
 const leagueManagerRoleId = process.env.LEAGUE_MANAGER_ROLE_ID;
 const coCaptainRoleId = process.env.CO_CAP_ROLE_ID;
 const pickupChannelId = process.env.PICKUP_CHANNEL_ID;
+const pickupChannel2Id = process.env.PICKUP_CHANNEL2_ID;
 
 
 const client = new Client({
@@ -59,8 +61,12 @@ client.on("ready", () => {
         }
         delete data.teams["RED Team"];
         delete data.teams["BLUE Team"];
+        delete data.teams["BLACK Team"];
+        delete data.teams["GOLD Team"];
         clearTimeout(thirtyFiveMinuteTimer);
         clearTimeout(ninetyMinuteTimer);
+        clearTimeout(thirtyFiveMinuteTimer2);
+        clearTimeout(ninetyMinuteTimer2);
         fs.writeFile(filePath, JSON.stringify(data, null, 2), (error) => {
             if (error) {
               console.log(error);
@@ -186,15 +192,26 @@ client.on("messageCreate", (message) => {
      /////////////////////////////////////////////////////////// Pickup Games Functions
 
      if(command === "pickup") {
-        if(message.channel.id === pickupChannelId) {
-            pickupGame(filePath, message, arguments, command);
+        if(message.channel.id === pickupChannelId || message.channel.id === pickupChannel2Id) {
+            if(message.channel.id === pickupChannelId) { 
+                pickupGame(filePath, message, arguments, command);
+            }
+            if(message.channel.id === pickupChannel2Id) {
+                pickupGame2(filePath, message, arguments, command);
+            }
         } else {
             cautionEmbed(message, "FAILED", `You can only use the pickup game commands in the #pickup-games channel!`)
         }
     } 
 
+
+
     if(command === "wipernb") {
         wipeRedAndBlueTeams(message, filePath, thirtyFiveMinuteTimer, ninetyMinuteTimer);
+    }
+
+    if(command === "wipebng") {
+        wipeBlackAndGoldTeams(message, filePath, thirtyFiveMinuteTimer2, ninetyMinuteTimer2);
     }
 
 
