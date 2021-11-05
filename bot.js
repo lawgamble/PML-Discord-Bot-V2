@@ -17,6 +17,7 @@ const connectToServer = require("./rcon-functions/rconCommands");
 const { cautionEmbed } = require("./discord-functions/generalEmbed");
 const push2db = require("./db/push2db")
 const server = require("./serverCreds");
+const botRepeat = require("./discord-functions/botRepeat");
 const { pickupGame, wipeRedAndBlueTeams, thirtyFiveMinuteTimer, ninetyMinuteTimer } = require("./alias-functions/pickupGame");
 const { pickupGame2, wipeBlackAndGoldTeams, thirtyFiveMinuteTimer2, ninetyMinuteTimer2 } = require("./alias-functions/pickupGame2");
 
@@ -95,6 +96,11 @@ client.on("messageCreate", (message) => {
     const command = arguments.shift().toLowerCase();
     const discordId = message.author.id;
     const discordName = message.author.username;
+
+///////////////////////////////////////////////////////////// Bot Repeats Message
+    if (command === "repeat") {
+        botRepeat(message, arguments);
+    }    
 
 
 ///////////////////////////////////////////////////////////// REGISTER

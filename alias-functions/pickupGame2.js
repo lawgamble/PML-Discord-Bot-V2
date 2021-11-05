@@ -536,9 +536,6 @@ const server = {
         clearTimeout(thirtyFiveMinuteTimer);
         clearTimeout(ninetyMinuteTimer);
 
-        console.log(thirtyFiveMinuteTimer);
-        console.log(ninetyMinuteTimer);
-
         fs.writeFile(filePath, JSON.stringify(data, null, 2), (error) => {
           if (error) {
             console.log(error);
