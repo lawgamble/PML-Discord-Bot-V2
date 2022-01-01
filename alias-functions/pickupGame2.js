@@ -32,7 +32,7 @@
   let firstReadNumber;
   let secondReadNumber;
   let playerData;
-  let gameStarted = false;
+ // let gameStarted = false;
   const timer = new Timer();
   let pin;
 

@@ -4,6 +4,7 @@
   const { Timer } = require('timer-node');
   const exec = require("child_process").exec;
   const readAliasFile = require("./JSONParser");
+  const checkInactivePlayers = require("../alias-functions/removeInactivePlayers")
   const {
     cautionEmbed,
     successEmbed,
@@ -30,6 +31,7 @@
   let firstReadNumber;
   let secondReadNumber;
   let pin;
+  let teamQueue = [];
   
   let playerData;
   let gameStarted = false;
@@ -225,9 +227,19 @@ const server = {
           redAndBlueTeamEmbed(message, data, timeLeft, gameStarted);
         }
       })
-    }, 1000);
+    }, 1000); 
   };
-  
+   
+
+
+
+
+
+
+
+
+
+
   function getUserIdByUserName(players, userName) {
     return Object.keys(players).find(key => players[key] === userName);
   }
@@ -356,7 +368,7 @@ const server = {
      
 
       gameStarted = true;
-      // restart other bot
+    
       restartOtherBot();
   
       // stops the twenty min timer
@@ -401,10 +413,43 @@ const server = {
           }
         });
       });
+
       startPickupGameEmbed(message, "Pickup Game Has Started!", "You've been given specific instructions on how to play this pickup game.");
       redAndBlueMatchupEmbed(message, "RED v. BLUE", data);
+
+      
+      // create QUEUE Team
+      data.teams = {...data.teams, "PICKUP Queue": ["q-XxPunisher78xX"]};
+
+      fs.writeFile(filePath, JSON.stringify(data, null, 2), (error) => {
+        if (error) {
+          console.log(error);
+        }
+      });
+      pickupKicker(filePath, gameStarted, message);
     });
   }
+
+  // starts after 5 minutes, checks every 1 min interval.
+function pickupKicker(filePath, gameStarted, message) {
+  let gameEnded;
+  setTimeout(() => {
+    const interval = setInterval(() => {
+
+      readAliasFile(filePath, (error, data) => {
+        if (error) {
+          console.log(error);
+        }
+        gameEnded = checkInactivePlayers(filePath, data, message, gameStarted);
+      })
+      if(!gameStarted || gameEnded === true) {
+          wipeRedAndBlueTeams(message, filePath, thirtyFiveMinuteTimer, ninetyMinuteTimer)
+          clearInterval(interval);
+          return;
+      }
+    }, 15000); // 1 min
+  }, 30000); // 5 min
+}
   
   
 
@@ -529,6 +574,7 @@ const server = {
       setTimeout(() => {
         delete data.teams["RED Team"];
         delete data.teams["BLUE Team"];
+        delete data.teams["PICKUP Queue"];
 
         clearTimeout(thirtyFiveMinuteTimer);
         clearTimeout(ninetyMinuteTimer);
@@ -544,10 +590,14 @@ const server = {
   }
 
 
+
+
+
   module.exports = {
     pickupGame,
     wipeRedAndBlueTeams,
     thirtyFiveMinuteTimer,
-    ninetyMinuteTimer
+    ninetyMinuteTimer,
+    gameStarted
   }
   

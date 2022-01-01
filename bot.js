@@ -13,18 +13,16 @@ const scrimFunction = require("./alias-functions/scrimFunction")
 const challengeFunction = require("./alias-functions/challengeFunction");
 const matchScore = require("./alias-functions/matchScore");
 const challengeScore = require("./alias-functions/challengeScore")
-const connectToServer = require("./rcon-functions/rconCommands");
 const { cautionEmbed } = require("./discord-functions/generalEmbed");
-const push2db = require("./db/push2db")
 const server = require("./serverCreds");
 const botRepeat = require("./discord-functions/botRepeat");
 const { pickupGame, wipeRedAndBlueTeams, thirtyFiveMinuteTimer, ninetyMinuteTimer } = require("./alias-functions/pickupGame");
 const { pickupGame2, wipeBlackAndGoldTeams, thirtyFiveMinuteTimer2, ninetyMinuteTimer2 } = require("./alias-functions/pickupGame2");
+const  hf  = require("./helperFunctions")
 
 
 
 
-const { getInfo, getStats} = require("./db/getTables");
 
 const rosterEmbed = require("./discord-functions/rosterEmbed");
 
@@ -60,19 +58,10 @@ client.on("ready", () => {
         if (error) {
           console.log(error);
         }
-        delete data.teams["RED Team"];
-        delete data.teams["BLUE Team"];
-        delete data.teams["BLACK Team"];
-        delete data.teams["GOLD Team"];
-        clearTimeout(thirtyFiveMinuteTimer);
-        clearTimeout(ninetyMinuteTimer);
-        clearTimeout(thirtyFiveMinuteTimer2);
-        clearTimeout(ninetyMinuteTimer2);
-        fs.writeFile(filePath, JSON.stringify(data, null, 2), (error) => {
-            if (error) {
-              console.log(error);
-            }
-          });
+        
+        hf.deletePickupTeams(data) 
+        hf.clearAllTimeouts()
+        hf.writeToAliasFile(data);
     });
     console.log("We Are LIVE!");
 });
@@ -94,213 +83,146 @@ client.on("messageCreate", (message) => {
     const arguments = message.content.slice(PREFIX.length).trim().split(/ +/g);
 
     const command = arguments.shift().toLowerCase();
-    const discordId = message.author.id;
-    const discordName = message.author.username;
+    const discordAuthorID = message.author.id;
+    const discordAuthorUserName = message.author.username;
 
-///////////////////////////////////////////////////////////// Bot Repeats Message
-    if (command === "repeat") {
-        botRepeat(message, arguments);
-    }    
+    switch(command) {
+        case "repeat":
+            botRepeat(message, arguments);
+            break;
 
+        case "register":
+            registerUser(filePath, message, arguments, discordAuthorID, discordAuthorUserName);
+            break;
 
-///////////////////////////////////////////////////////////// REGISTER
+        case "unregister":
+            unRegisterUser(filePath, message, discordAuthorID, discordAuthorUserName);
+            break;
+            
+        case "createteam":
+            if(isLeagueManager()) {
+                createTeam(filePath, message, arguments)
+            };
+            break;
+            
+        case "removeteam":
+            if(isLeagueManager()) {
+                removeTeam(filePath, message, arguments)
+            }; 
+            break;
 
-    if (command === "register") {
-        registerUser(filePath, message, arguments, discordId, discordName);
+        case "addplayer":
+            if(isCapOrCoCaptain()) {
+                addPlayerToTeam(filePath, message)
+            }; 
+            break;
+
+        case "removeplayer":
+            if(isCapOrCoCaptain()) {
+                removePlayerFromTeam(filePath, message)
+            };
+            break;
+
+        case "rosters":
+            rosterEmbed(filePath, message);
+            break;
+
+        case "matchtime":
+            if(isCapOrCoCaptain()) {
+                matchFunction(message)
+            };
+            break;
+            
+        case "scrimtime":
+            if(isCapOrCoCaptain()) {
+                scrimFunction(message)
+             };
+             break;
+             
+        case "challengetime":
+            if(isCapOrCoCaptain()) {
+                challengeFunction(message)
+             };
+             break;
+             
+        case "matchscore":
+            if(isCapOrCoCaptain()) {
+                matchScore(message)
+             };
+             break;
+             
+        case "challengescore":
+            if(isCapOrCoCaptain()) {
+                challengeScore(message)
+             };
+             break;
+             
+        case "pickup":
+            if(msgFromCorrectChannel()) {
+                if(message.channel.id === pickupChannelId) { 
+                    pickupGame(filePath, message, arguments, command);
+                }
+                if(message.channel.id === pickupChannel2Id) {
+                    pickupGame2(filePath, message, arguments, command);
+                }
+            };
+            break;
+            
+        case "wipernb":
+            wipeRedAndBlueTeams(message, filePath, thirtyFiveMinuteTimer, ninetyMinuteTimer);
+            break;
+
+        case "wipebng":
+            wipeBlackAndGoldTeams(message, filePath, thirtyFiveMinuteTimer2, ninetyMinuteTimer2);
+            break;
+
+        default:
+            break;
     }
-
-
-    if (command === "unregister") {
-        unRegisterUser(filePath, message, discordId, discordName);
-    }
-
-
-    ///////////////////////////////////////////////////////// TEAM Commands
-
-    if (command === "createteam") {
-        if (message.member.roles.cache.find((role) => role.id === leagueManagerRoleId)) {
-            createTeam(filePath, message, arguments)
-        } else {
-            return cautionEmbed(message, "FAILED", `You do not have permission to use the **!${command}** command!`)
-        }
-    }
-
-
-    if (command === "removeteam") {
-        if (message.member.roles.cache.find((role) => role.id === leagueManagerRoleId)) {
-            removeTeam(filePath, message, arguments)
-        } else {
-            return cautionEmbed(message, "FAILED", `You do not have permission to use the **!${command}** command!`)
-        }
-    }
-
-    if (command === "addplayer") {
-        if (message.member.roles.cache.find((role) => role.id === captainRoleId || role.id === coCaptainRoleId)) {
-            addPlayerToTeam(filePath, message)
-        } else {
-            return cautionEmbed(message, "FAILED", `You do not have permission to use the **!${command}** command!`)
-        }
-    }
-
-    if (command === "removeplayer") {
-        if (message.member.roles.cache.find((role) => role.id === captainRoleId || role.id === coCaptainRoleId)) {
-            removePlayerFromTeam(filePath, message)
-        } else {
-            return cautionEmbed(message, "FAILED", `You do not have permission to use the **!${command}** command!`)
-        }
-    }
-
-    /////////////////////////////////////////////////////////////// ROSTERS
-
-    if (command === "rosters") {
-        rosterEmbed(filePath, message)
-    }
-
-    ////////////////////////////////////////////////////////////// Match, Scrim, Challenge
-
-    if (command === "matchtime") {
-        if (message.member.roles.cache.find((role) => role.id === captainRoleId || role.id === coCaptainRoleId)) {
-            matchFunction(message)
-        } else {
-            return cautionEmbed(message, "FAILED", `You do not have permission to use the **!${command}** command!`)
-        }
-    }
-    if (command === "scrimtime") {
-        if (message.member.roles.cache.find((role) => role.id === captainRoleId || role.id === coCaptainRoleId)) {
-           scrimFunction(message)
-        } else {
-            return cautionEmbed(message, "FAILED", `You do not have permission to use the **!${command}** command!`)
-        }
-    }
-    if (command === "challengetime") {
-        if (message.member.roles.cache.find((role) => role.id === captainRoleId || role.id === coCaptainRoleId)) {
-           challengeFunction(message)
-        } else {
-            return cautionEmbed(message, "FAILED", `You do not have permission to use the **!${command}** command!`)
-        }
-    }
-    if (command === "matchscore") {
-        if (message.member.roles.cache.find((role) => role.id === captainRoleId || role.id === coCaptainRoleId)) {
-           matchScore(message)
-        } else {
-            return cautionEmbed(message, "FAILED", `You do not have permission to use the **!${command}** command!`)
-        }
-    }
-    if (command === "challengescore") {
-        if (message.member.roles.cache.find((role) => role.id === captainRoleId || role.id === coCaptainRoleId)) {
-           challengeScore(message)
-        } else {
-            return cautionEmbed(message, "FAILED", `You do not have permission to use the **!${command}** command!`)
-        }
-    }
-
-
-     /////////////////////////////////////////////////////////// Pickup Games Functions
-
-     if(command === "pickup") {
-        if(message.channel.id === pickupChannelId || message.channel.id === pickupChannel2Id) {
-            if(message.channel.id === pickupChannelId) { 
-                pickupGame(filePath, message, arguments, command);
-            }
-            if(message.channel.id === pickupChannel2Id) {
-                pickupGame2(filePath, message, arguments, command);
-            }
-        } else {
-            cautionEmbed(message, "FAILED", `You can only use the pickup game commands in the #pickup-games channel!`)
-        }
-    } 
-
-
-
-    if(command === "wipernb") {
-        wipeRedAndBlueTeams(message, filePath, thirtyFiveMinuteTimer, ninetyMinuteTimer);
-    }
-
-    if(command === "wipebng") {
-        wipeBlackAndGoldTeams(message, filePath, thirtyFiveMinuteTimer2, ninetyMinuteTimer2);
-    }
-
-
-
-    //////////////////////////////////////////////////////RCON Commands
-    // const rconCommandWords = [
-    //     "ban",
-    //     "kick",
-    //     "kill",
-    //     "rotatemap",
-    //     "switchmap",
-    //     "switchteam",
-    //     "inspectplayer",
-    //     "refreshlist",
-    //     "slap",
-    //     "serverinfo",
-    //     "resetsnd",
-    //     "setpin",
-    //   ];
-
-    
-    // if (rconCommandWords.includes(command)) {
-    //      connectToServer(server, message);
-    // }
     
 
-
-
-    // to see all of aliases.json file
-
-    // if (command === "info-alias") {
-    //     readAliasFile(filePath, (error, aliases) => {
-    //         if (error) {
-    //             return message.reply(`There was an error: ${error}`)
-    //         }
-    //         return message.reply(JSON.stringify(aliases, null, 2))
-    //     })
-    // }
-
-    // to see list of registered players
-
-    // if (command === "info-players") {
-    //     readAliasFile(filePath, (error, aliases) => {
-    //         if (error) {
-    //             return message.reply(`There was an error: ${error}`)
-    //         }
-    //         return message.reply(JSON.stringify(aliases.players, null, 2))
-    //     })
-    // }
-
-    // to see list of teams and its players
-
-    // if (command === "info-teams") {
-    //     readAliasFile(filePath, (error, aliases) => {
-    //         if (error) {
-    //             return message.reply(`There was an error: ${error}`)
-    //         }
-    //         return message.reply(JSON.stringify(aliases.teams, null, 2))
-    //     })
-    // }
-
-   
-
-
-    ////////////////////////////////////////////////////////////////// DB functions
-
-    // if(command === "get") {
-    //     getInfo(message);  
-    // }
-
-
-    // if(command === "push2db") {
-    //     readAliasFile(filePath, (error, aliases) => {
-    //         if (error) {
-    //             return message.reply(`There was an error: ${error}`)
-    //         }
-    //         const teams = aliases.teams;
-    //         const players = aliases.players;
-    //         push2db(message,players, teams)
-    //     })
-    // }
+    
+    function isLeagueManager() {
+        if (message.member.roles.cache.find((role) => role.id === leagueManagerRoleId)) {
+            return true
+        } else {
+            cautionEmbed(message, "FAILED", `You do not have permission to use the **!${command}** command!`)
+            return false;
+        }
+    }
+    
+    function isCapOrCoCaptain() {
+        if (message.member.roles.cache.find((role) => role.id === captainRoleId || role.id === coCaptainRoleId)) {
+            return true
+        } else {
+            cautionEmbed(message, "FAILED", `You do not have permission to use the **!${command}** command!`)
+            return false
+        }
+    }
+    // can add commands to this before the else statement to re-use this function for multiple channels.
+    function msgFromCorrectChannel() {
+        if(command === "pickup") {
+            if(message.channel.id === pickupChannelId || message.channel.id === pickupChannel2Id) {
+                return true;
+            } else {
+                cautionEmbed(message, "FAILED", `You can only use the pickup game commands in the #pickup-games channel!`);
+                return false;
+            }
+        }
+    }
 });
 
-
-
 client.login(process.env.BOT_TOKEN);
+
+
+
+
+
+
+
+
+
+
+module.exports = {
+    filePath,
+}
