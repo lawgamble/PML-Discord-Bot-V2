@@ -1,7 +1,7 @@
-const readAliasFile = require("./JSONParser");
+const hf = require("../../helperFunctions");
 const fs = require("fs");
-const createRole = require("../discord-functions/createRole");
-const { successEmbed, noActionRequiredEmbed } = require("../discord-functions/generalEmbed");
+const createRole = require("../../discord-functions/createRole");
+const em = require("../../discord-functions/generalEmbed");
 
 
 function createTeam(filePath, message, arguments) {
@@ -11,14 +11,14 @@ function createTeam(filePath, message, arguments) {
     let teamToBeCreated = {
         [teamName]: []
     }
-    readAliasFile(filePath, (error, data) => {
+    hf.readAliasFile(filePath, (error, data) => {
         if (error) {
             console.log(error)
         } else {
             if (data.teams.hasOwnProperty(teamName)) {
                 title = "Team Not Created";
                 uniqueMessage = "This team name is already taken or you've already registered it.";
-                return noActionRequiredEmbed(message, title, uniqueMessage);
+                return em.noActionRequiredEmbed(message, title, uniqueMessage);
                 
             }
             data.teams = {
@@ -33,7 +33,7 @@ function createTeam(filePath, message, arguments) {
             createRole(message, arguments);
             title = "Team Created!";
             uniqueMessage = `You've added the team ${arguments.join(" ")}, and a new Role for this team was created. \n Players will be given a Team Role when they are added to the roster.`
-            return successEmbed(message, title, uniqueMessage);
+            return em.successEmbed(message, title, uniqueMessage);
         }
     })
 }

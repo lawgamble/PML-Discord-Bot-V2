@@ -1,12 +1,11 @@
 const fs = require("fs");
-const readAliasFile = require("./JSONParser");
-const playerOnAnotherTeam = require("./playerOnAnotherTeam.js")
-const rosterEmbed = require("../discord-functions/rosterEmbed")
-const { cautionEmbed, successEmbed, noActionRequiredEmbed } = require("../discord-functions/generalEmbed");
+const hf = require("../../helperFunctions");
+const rosterEmbed = require("../../discord-functions/rosterEmbed")
+const em = require("../../discord-functions/generalEmbed");
 const LeaguePlayerRoleId = process.env.LP_ID;
 const RingerRoleId = process.env.RR_ID;
 const teamNewsId = process.env.TEAM_NEWS_ID;
-const rostersChannelId = process.env.ROSTERS_ID;
+
 
 const PREFIX = "!";
 
@@ -30,7 +29,7 @@ function addPlayerToTeam(filePath, message) {
     if (userMentionedIds.length > 1) {
         title = "Caution";
         uniqueMessage = "Only add one player to a team at a time!";
-        return noActionRequiredEmbed(message, title, uniqueMessage)
+        return em.noActionRequiredEmbed(message, title, uniqueMessage)
     }
 
 
@@ -49,7 +48,7 @@ function addPlayerToTeam(filePath, message) {
 
                 userMentionedIds.forEach((id, index) => {
 
-                    if (!playerOnAnotherTeam(message, teamsListData, playersListData[id], userMentionedNames[index])) {
+                    if (!hf.playerOnAnotherTeam(message, teamsListData, playersListData[id], userMentionedNames[index])) {
                         if (playersListData.hasOwnProperty(id)) {
 
                             registeredIds.push(id);
@@ -84,11 +83,11 @@ function addPlayerToTeam(filePath, message) {
                 if(arguments.length === 0) {
                     title = "Caution";
                     uniqueMessage = `You need to specify a team!\n This is **case/space sensitive**, so check spelling and casing. For Example:\n *!addplayer <teamName> @DiscordUser*`
-                    return noActionRequiredEmbed(message, title, uniqueMessage);
+                    return em.noActionRequiredEmbed(message, title, uniqueMessage);
                 }
                 title = "Caution";
                 uniqueMessage = `The team name **${teamName}** doesn't exist. This is **case/space sensitive**, so check spelling and casing.`;
-                return noActionRequiredEmbed(message, title, uniqueMessage);
+                return em.noActionRequiredEmbed(message, title, uniqueMessage);
             }
             teamsListData[teamName] = [...new Set(teamsListData[teamName])];
 
@@ -102,7 +101,7 @@ function addPlayerToTeam(filePath, message) {
             let discordUserData = message.mentions.users.find((user) => user.id === registeredIds[0]);
             title = "Let's Go!";
             uniqueMessage = `Player(s): **${registeredArray.join(', ')}** were added to the team: **${teamName}**`;
-            successEmbed(message, title, uniqueMessage);
+            em.successEmbed(message, title, uniqueMessage);
 
             let newsChannel = message.guild.channels.cache.get(teamNewsId);
             let newsChannelMessage = `${discordUserData} has joined ${teamName}`;
@@ -117,7 +116,7 @@ function addPlayerToTeam(filePath, message) {
         if (notRegisteredArray.length > 0) {
             title = "Caution"
             uniqueMessage = `Player(s): **${notRegisteredArray.join(', ')}** were not added to the **${teamName}** because they have not registered!`;
-            cautionEmbed(message, title, uniqueMessage);
+            em.cautionEmbed(message, title, uniqueMessage);
         }
     })
 }

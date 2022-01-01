@@ -174,14 +174,17 @@ function pickupGameMatchupEmbed(message, title, field) {
   });
 }
 
-module.exports = {
+const em = {
   cautionEmbed,
   successEmbed,
   noActionRequiredEmbed,
   teamNewsEmbed,
   redAndBlueTeamEmbed,
+  blackAndGoldTeamEmbed,
   simpleReplyEmbed,
   wipeTeamsEmbed,
   startPickupGameEmbed,
-  blackAndGoldTeamEmbed,
-};
+  pickupGameMatchupEmbed,
+}
+
+module.exports = em;

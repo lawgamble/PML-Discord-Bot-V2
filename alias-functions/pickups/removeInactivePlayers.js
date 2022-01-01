@@ -1,6 +1,6 @@
-const rconPlayersListForPickups = require("../rcon-functions/checkRconUserCount");
-const { redAndBlueTeamEmbed } = require("../discord-functions/generalEmbed");
-const readAliasFile = require("../alias-functions/JSONParser");
+const rconPlayersListForPickups = require("../../rcon-functions/checkRconUserCount");
+const { redAndBlueTeamEmbed } = require("../../discord-functions/generalEmbed");
+const hf = require("../../helperFunctions");
 const fs = require("fs");
 const { Console } = require("console");
 

@@ -1,6 +1,6 @@
-const readAliasFile = require("./JSONParser");
+const readAliasFile = require("../../JSONParser");
 const fs = require("fs");
-const { cautionEmbed, successEmbed } = require("../discord-functions/generalEmbed")
+const em = require("../../discord-functions/generalEmbed")
 
 
 
@@ -11,7 +11,7 @@ function registerUser(filePath, message, arguments, discordId, discordName) {
     if (arguments.length === 0) {
         title = "**CAUTION**"
         uniqueMessage = "You must enter a valid, case-sensitive in game name when registering! Try again, like this:\n**!register <in-game-name>**";
-        return cautionEmbed(message, title, uniqueMessage);
+        return em.cautionEmbed(message, title, uniqueMessage);
     }
     const playerToBeRegistered = {
         [discordId]: "q-" + arguments.join(" ")
@@ -57,7 +57,7 @@ function registerUser(filePath, message, arguments, discordId, discordName) {
                     console.log(error)
                 } else {
                     title ="Lets Go!"
-                    return successEmbed(message, title, uniqueMessage)
+                    return em.successEmbed(message, title, uniqueMessage)
                 }
             })
         }

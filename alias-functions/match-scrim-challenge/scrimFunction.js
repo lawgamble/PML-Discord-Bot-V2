@@ -1,9 +1,9 @@
 const Discord = require("discord.js");
 const matchupChannelId = process.env.MATCHUP_CHANNEL_ID;
 
-const { challengePmlLogo } = require("../imageURLs");
+const { scrimPmlLogo } = require("../../imageURLs");
 
-function challengeFunction(message) {
+function scrimFunction(message) {
   const disclaimer =
     "Do NOT make message edits. If you made a mistake, just input 'cancel', press ENTER and try again.";
   const botMsgArray = [
@@ -20,22 +20,22 @@ function challengeFunction(message) {
   let counter = 0;
 
   const cancelEmbed = new Discord.MessageEmbed()
-    .setTitle("Cancelled Challenge Setup")
+    .setTitle("Cancelled Scrim Time")
     .addField(
-      "Try Again with '!challengeTime'",
+      "Try Again with '!scrimTime'",
       "**NOTE:** Editing messages will do absolutely nothing."
     )
     .setColor("#FF0000");
   const successEmbed = new Discord.MessageEmbed()
     .setTitle("Success!")
     .addField(
-      "Challenge successfully created.",
+      "Scrim successfully created.",
       "Check the appropriate channel to see the matchups!"
     )
     .setColor("#00FF00");
 
   const endEmbed = new Discord.MessageEmbed()
-    .setTitle("Challenge Setup Process Has Ended")
+    .setTitle("Scrim TIme Process Has Ended")
     .setColor("#FF0000");
 
   const collector = new Discord.MessageCollector(message.channel, {
@@ -43,7 +43,7 @@ function challengeFunction(message) {
   });
 
   const instructionsStartEmbed = new Discord.MessageEmbed()
-    .setTitle("Create Challenge Instructions")
+    .setTitle("Create Scrim Instructions")
     .addField(`Step ${counter + 1} of 6`, botMsgArray[counter++])
     .setColor("#FFFF00");
   message.channel.send({ embeds: [instructionsStartEmbed] });
@@ -69,8 +69,8 @@ function challengeFunction(message) {
     }
     if (userInputArray.length >= 6 && m.author.id === message.author.id) {
       const matchupEmbed = new Discord.MessageEmbed()
-        .setTitle(`Challenge\n${userInputArray[0]}  vs.  ${userInputArray[1]}`)
-        .setThumbnail(challengePmlLogo)
+        .setTitle(`Scrim\n${userInputArray[0]}  vs.  ${userInputArray[1]}`)
+        .setThumbnail(scrimPmlLogo)
         .addFields(
           { name: "When:", value: `${userInputArray[2]}` },
           {
@@ -78,8 +78,7 @@ function challengeFunction(message) {
             value: `${userInputArray[3]} ${userInputArray[4]}`,
           },
           { name: "Server", value: userInputArray[5] }
-        )
-        .setColor("#FFFF00");
+        );
 
       const confirmEmbed = new Discord.MessageEmbed()
         .setTitle("Please Confirm")
@@ -100,7 +99,7 @@ function challengeFunction(message) {
             message.guild.channels.cache.get(matchupChannelId);
           matchupChannel.send({ embeds: [matchupEmbed] });
           message.channel.send({ embeds: [successEmbed] });
-          collector.stop("success");
+          collector.stop();
           setTimeout(() => {
             message.channel.bulkDelete(15);
           }, 5000);
@@ -120,4 +119,4 @@ function challengeFunction(message) {
   collector.on("end", () => message.channel.send({ embeds: [endEmbed] }));
 }
 
-module.exports = challengeFunction;
+module.exports = scrimFunction;

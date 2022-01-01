@@ -1,10 +1,10 @@
 const Discord = require("discord.js");
-const readAliasFile = require("../alias-functions/JSONParser");
+const hf = require("../helperFunctions");
 const teamImages = require("../imageURLs");
 const rostersChannelId = process.env.ROSTERS_ID;
 
 function rosterEmbed(filePath, message) {
-  readAliasFile(filePath, (error, data) => {
+  hf.readAliasFile(filePath, (error, data) => {
     if (error) {
       console.log(error);
     }

@@ -1,17 +1,14 @@
-const readAliasFile = require("./JSONParser");
+
 const fs = require("fs");
-const {
-  cautionEmbed,
-  successEmbed,
-  noActionRequiredEmbed,
-} = require("../discord-functions/generalEmbed");
+const em = require("../../discord-functions/generalEmbed");
+const hf = require("../../helperFunctions");
 const LeaguePlayerRoleId = process.env.LP_ID;
 
 function unRegisterUser(filePath, message, discordId, discordName) {
   let title;
   let uniqueMessage;
 
-  readAliasFile(filePath, (error, data) => {
+  hf.readAliasFile(filePath, (error, data) => {
     if (error) {
       console.log(error);
     } else {
@@ -50,13 +47,13 @@ function unRegisterUser(filePath, message, discordId, discordName) {
           }
           title = `Goodbye, **${discordName}**`;
           uniqueMessage = "You can always re-register at any time!";
-          return successEmbed(message, title, uniqueMessage);
+          return em.successEmbed(message, title, uniqueMessage);
         });
       } else {
         title = "This is awkward...";
         uniqueMessage =
           "You're not actually registered, so there's no need for action.";
-        return noActionRequiredEmbed(message, title, uniqueMessage);
+        return em.noActionRequiredEmbed(message, title, uniqueMessage);
       }
     }
   });

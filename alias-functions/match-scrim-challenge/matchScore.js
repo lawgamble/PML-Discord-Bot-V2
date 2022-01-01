@@ -1,9 +1,9 @@
 const Discord = require("discord.js");
 const scoresChannelId = process.env.SCORES_CHANNEL_ID;
-const teamImages = require("../imageURLs");
-const { challengePmlLogo } = require("../imageURLs");
+const teamImages = require("../../imageURLs");
+const { matchPmlLogo } = require("../../imageURLs");
 
-function challengeScore(message) {
+function matchScore(message) {
   let userInputArray = [];
   let counter = 0;
   let winner;
@@ -24,22 +24,22 @@ function challengeScore(message) {
   ];
 
   const cancelEmbed = new Discord.MessageEmbed()
-    .setTitle("Cancelled Challenge Score")
+    .setTitle("Cancelled Score Submission")
     .addField(
-      "Try Again with '!challengeScore'",
+      "Try Again with '!matchScore'",
       "**NOTE:** Editing messages will do absolutely nothing."
     )
     .setColor("#FF0000");
   const successEmbed = new Discord.MessageEmbed()
     .setTitle("Success!")
     .addField(
-      "Scores successfully submitted",
+      "Score successfully submitted.",
       "Check the appropriate channel to see the scores!"
     )
     .setColor("#00FF00");
 
   const endEmbed = new Discord.MessageEmbed()
-    .setTitle("Score submission has ended")
+    .setTitle("Score Submission Process Has Ended")
     .setColor("#FF0000");
 
   const instructionsStartEmbed = new Discord.MessageEmbed()
@@ -72,15 +72,15 @@ function challengeScore(message) {
       return;
     }
 
-    // two game collector
+    // two game embed
     if (m.content === "none" || m.content === "None" || m.content === "NONE") {
       winner = teamImages[userInputArray[7]];
       const twoGameEmbed = new Discord.MessageEmbed()
         .setTitle(
-          `Challenge Match Score:\n${userInputArray[0]}  vs.  ${userInputArray[1]}`
+          `League Match Score:\n${userInputArray[0]}  vs.  ${userInputArray[1]}`
         )
         .setImage(winner)
-        .setThumbnail(challengePmlLogo)
+        .setThumbnail(matchPmlLogo)
         .addFields(
           {
             name: `${userInputArray[2]}`,
@@ -91,11 +91,11 @@ function challengeScore(message) {
             value: `${userInputArray[6]} - ${userInputArray[7]}`,
           },
           {
-            name: "Challenge Winner:",
+            name: "Match Winner:",
             value: `${userInputArray[7]}`,
           }
         )
-        .setColor("#FFFF00");
+        .setColor("#ce3d00");
 
       message.channel.send({ embeds: [twoGameEmbed] });
       message.channel.send({ embeds: [confirmEmbed] });
@@ -151,9 +151,9 @@ function challengeScore(message) {
       winner = userInputArray[10];
       const threeGameEmbed = new Discord.MessageEmbed()
         .setTitle(
-          `Challenge Match Score:\n${userInputArray[0]}  vs.  ${userInputArray[1]}`
+          `League Match Score:\n${userInputArray[0]}  vs.  ${userInputArray[1]}`
         )
-        .setThumbnail(challengePmlLogo)
+        .setThumbnail(matchPmlLogo)
         .setImage(teamImages[winner])
         .addFields(
           {
@@ -170,11 +170,11 @@ function challengeScore(message) {
             value: `${userInputArray[9] + "-" + userInputArray[10]}`,
           },
           {
-            name: "Challenge Winner:",
+            name: "Match Winner:",
             value: `${userInputArray[10]}`,
           }
         )
-        .setColor("#FFFF00");
+        .setColor("#ce3d00");
 
       const confirmEmbed = new Discord.MessageEmbed()
         .setTitle("Please Confirm")
@@ -196,7 +196,7 @@ function challengeScore(message) {
             message.guild.channels.cache.get(scoresChannelId);
           scoresChannel.send({ embeds: [threeGameEmbed] });
           message.channel.send({ embeds: [successEmbed] });
-          collector.stop("success");
+          collector.stop("Success");
           setTimeout(() => {
             message.channel.bulkDelete(99);
           }, 5000);
@@ -218,4 +218,4 @@ function challengeScore(message) {
   });
 }
 
-module.exports = challengeScore;
+module.exports = matchScore;

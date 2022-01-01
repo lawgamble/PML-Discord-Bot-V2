@@ -1,11 +1,8 @@
-async function createRole(message, arguments) {
+function createRole(message, arguments) {
     let teamName = arguments.join(" ");
- let newRole = await message.guild.roles.create({
+ let newRole = message.guild.roles.create({
         name: teamName,
      })
 }
-
-
-
 
 module.exports = createRole;

@@ -1,6 +1,5 @@
 const fs = require("fs");
 const { MessageEmbed } = require("discord.js");
-const readAliasFile = require("../alias-functions/JSONParser");
 const teamImages = require("../imageURLs");
 const pickupGameImage = teamImages["pickupPmlLogo"];
 
@@ -59,4 +58,9 @@ function blackAndGoldMatchupEmbed(message, title, data) {
   });
 }
 
-module.exports = { redAndBlueMatchupEmbed, blackAndGoldMatchupEmbed };
+const pem = {
+  redAndBlueMatchupEmbed,
+  blackAndGoldMatchupEmbed,
+}
+
+module.exports = pem;

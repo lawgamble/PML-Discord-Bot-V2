@@ -1,10 +1,10 @@
-const readAliasFile = require("./JSONParser");
+const hf = require("../../helperFunctions")
 const fs = require("fs");
-const rosterEmbed = require("../discord-functions/rosterEmbed");
-const { cautionEmbed, successEmbed, noActionRequiredEmbed } = require("../discord-functions/generalEmbed");
+const rosterEmbed = require("../../discord-functions/rosterEmbed");
+const em = require("../../discord-functions/generalEmbed");
 const LeaguePlayerRoleId = process.env.LP_ID;
 const teamNewsId = process.env.TEAM_NEWS_ID;
-const rostersChannelId = process.env.ROSTERS_ID;
+
 
 const PREFIX = "!";
 
@@ -28,7 +28,7 @@ function removePlayerFromTeam(filePath, message) {
     let discordIdArray = [];
 
 
-    readAliasFile(filePath, (error, data) => {
+    hf.readAliasFile(filePath, (error, data) => {
         if (error) {
             console.log(error)
         } else {
@@ -70,12 +70,12 @@ function removePlayerFromTeam(filePath, message) {
                 if(arguments.length === 0) {
                     title = "Caution";
                     uniqueMessage = `You need to specify a team! \n This is **case/space sensitive**, so check spelling and casing. For Example:\n *!removeplayer <teamName> @DiscordUser*`
-                    return cautionEmbed(message, title, uniqueMessage); 
+                    return em.cautionEmbed(message, title, uniqueMessage); 
                    
                 }
                 title = "Caution";
                 uniqueMessage = `The team name **${teamName}** doesn't exist. This is **case sensitive**, so check spelling and casing.`
-                return cautionEmbed(message, title, uniqueMessage);
+                return em.cautionEmbed(message, title, uniqueMessage);
             }
 
 
@@ -85,16 +85,16 @@ function removePlayerFromTeam(filePath, message) {
             if (deletedArray.length === 0 && notDeletedArray.length > 0) {
                 title = "Caution";
                 uniqueMessage = `The members you gave to be deleted **(${notDeletedArray.join(", ")})** aren't actually on the **${teamName}**!`;
-                cautionEmbed(message, title, uniqueMessage);
+                em.cautionEmbed(message, title, uniqueMessage);
             }
             if (deletedArray.length > 0 && notDeletedArray.length > 0) {
                 title = "They're gone...";
                 uniqueMessage = `These players were deleted from the team **${teamName}**: ${deletedArray.join(", ")}.`;
-                successEmbed(message, title, uniqueMessage);
+                em.successEmbed(message, title, uniqueMessage);
 
                 title = "Caution";
                 uniqueMessage = `Player(s) **${notDeletedArray.join(", ")}** weren't actually registered, therefore aren't on any team!`
-                cautionEmbed(message, title, uniqueMessage);
+                em.cautionEmbed(message, title, uniqueMessage);
 
                 newsChannel.send(`${discordUserData} has left ${teamName}`).catch(console.error);
                 rosterEmbed(filePath, message);
@@ -103,7 +103,7 @@ function removePlayerFromTeam(filePath, message) {
             if (deletedArray.length > 0 && notDeletedArray.length === 0) {
                 title = "They're gone...";
                 uniqueMessage = `These players have been deleted from the team **${teamName}**: **${deletedArray.join(", ")}**.`;
-                successEmbed(message, title, uniqueMessage);
+                em.successEmbed(message, title, uniqueMessage);
 
                 newsChannel.send(`${discordUserData} has left ${teamName}`).catch(console.error);
                 
