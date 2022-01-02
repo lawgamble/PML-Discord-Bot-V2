@@ -1,8 +1,11 @@
 const fs = require("fs");
 const filePath = process.env.ALIASES_FILEPATH;
 const em = require("./discord-functions/generalEmbed");
-const { thirtyFiveMinuteTimer, ninetyMinuteTimer } = require("./alias-functions/pickups/pickupGame");
-
+const pg = require("./alias-functions/pickups/pickupGame");
+const pickupChannelId = process.env.PICKUP_CHANNEL_ID;
+const leagueManagerRoleId = process.env.LEAGUE_MANAGER_ROLE_ID;
+const captainRoleId = process.env.CAPTAIN_ROLE_ID;
+const coCaptainRoleId = process.env.CO_CAPTAIN_ROLE_ID;
 
 
 function deletePickupTeams(data) {
@@ -12,8 +15,8 @@ function deletePickupTeams(data) {
 }
 
 function clearAllTimeouts() {
-    clearTimeout(thirtyFiveMinuteTimer);
-    clearTimeout(ninetyMinuteTimer);
+    clearTimeout(pg.thirtyFiveMinuteTimer);
+    clearTimeout(pg.ninetyMinuteTimer);
 }
 
 function writeToAliasFile(data) {
@@ -25,7 +28,7 @@ function writeToAliasFile(data) {
 }
 
 
-function isLeagueManager() {
+function isLeagueManager(message, command) {
   if (message.member.roles.cache.find((role) => role.id === leagueManagerRoleId)) {
       return true
   } else {
@@ -34,7 +37,7 @@ function isLeagueManager() {
   }
 }
 
-function isCapOrCoCaptain() {
+function isCapOrCoCaptain(message, command) {
   if (message.member.roles.cache.find((role) => role.id === captainRoleId || role.id === coCaptainRoleId)) {
       return true
   } else {
@@ -43,15 +46,13 @@ function isCapOrCoCaptain() {
   }
 }
 // can add commands to this before the else statement to re-use this function for multiple channels.
-function msgFromCorrectChannel() {
-  if(command === "pickup") {
-      if(message.channel.id === pickupChannelId || message.channel.id === pickupChannel2Id) {
+function msgFromPickupChannel(message) {
+      if(message.channel.id === pickupChannelId) {
           return true;
       } else {
           em.cautionEmbed(message, "FAILED", `You can only use the pickup game commands in the #pickup-games channel!`);
           return false;
       }
-  }
 }
 
 function removeTeamRole(message, arguments) {
@@ -99,17 +100,22 @@ function readAliasFile(filePath, callback) {
   });
 }
 
+function msgDeleter(message, count) {
+  return message.channel.bulkDelete(count);
+}
+
 const hf = {
   deletePickupTeams,
   clearAllTimeouts,
   writeToAliasFile,
   isLeagueManager,
   isCapOrCoCaptain,
-  msgFromCorrectChannel,
+  msgFromPickupChannel: msgFromPickupChannel,
   removeTeamRole,
   playerOnAnotherTeam,
   clearMessages,
-  readAliasFile
+  readAliasFile,
+  msgDeleter
 }
 
 module.exports = hf;

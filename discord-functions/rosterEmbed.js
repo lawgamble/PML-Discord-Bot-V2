@@ -4,6 +4,7 @@ const teamImages = require("../imageURLs");
 const rostersChannelId = process.env.ROSTERS_ID;
 
 function rosterEmbed(filePath, message) {
+  message.channel.bulkDelete(1);
   hf.readAliasFile(filePath, (error, data) => {
     if (error) {
       console.log(error);

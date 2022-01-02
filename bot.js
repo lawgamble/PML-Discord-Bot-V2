@@ -12,45 +12,39 @@ const challengeFunction = require("./alias-functions/match-scrim-challenge/chall
 const matchScore = require("./alias-functions/match-scrim-challenge/matchScore");
 const challengeScore = require("./alias-functions/match-scrim-challenge/challengeScore")
 const botRepeat = require("./discord-functions/botRepeat");
-const { pickupGame, wipeRedAndBlueTeams, thirtyFiveMinuteTimer, ninetyMinuteTimer } = require("./alias-functions/pickups/pickupGame");
 const rosterEmbed = require("./discord-functions/rosterEmbed");
-const hf  = require("./helperFunctions")
+const pg = require("./alias-functions/pickups/pickupGame");
+const hf  = require("./helperFunctions");
+const phf = require("./alias-functions/pickups/pickupHelperFunctions");
 
 
 
 
 
-
+const PREFIX = "!";
 const teamNewsId = process.env.TEAM_NEWS_ID;
+const filePath = process.env.ALIASES_FILEPATH;
+const BOT_ID = process.env.BOT_ID;
 
-const Discord = require("discord.js");
+
+
 const {
     Client,
     Intents,
 } = require("discord.js");
 
 
-const filePath = process.env.ALIASES_FILEPATH;
-const BOT_ID = process.env.BOT_ID;
-const pickupChannelId = process.env.PICKUP_CHANNEL_ID;
-
-
-
 const client = new Client({
     intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_MEMBERS],
 });
 
-const PREFIX = "!";
 
-
-
-// When bot logs in and is "ready"
+// When bot logs in 
 client.on("ready", () => {
     hf.readAliasFile(filePath, (error, data) => {
         if (error) {
           console.log(error);
         }
-        
         hf.deletePickupTeams(data) 
         hf.clearAllTimeouts()
         hf.writeToAliasFile(data);
@@ -58,9 +52,11 @@ client.on("ready", () => {
     console.log("We Are LIVE!");
 });
 
+
 process.on('unhandledRejection', error => {
     console.error('Unhandled promise rejection:', error);
 });
+
 
 // when a message is sent on discord, it is checked by this function
 client.on("messageCreate", (message) => {
@@ -92,25 +88,25 @@ client.on("messageCreate", (message) => {
             break;
             
         case "createteam":
-            if(hf.isLeagueManager()) {
+            if(hf.isLeagueManager(message, command)) {
                 createTeam(filePath, message, arguments)
             };
             break;
             
         case "removeteam":
-            if(hf.isLeagueManager()) {
+            if(hf.isLeagueManager(message, command)) {
                 removeTeam(filePath, message, arguments)
             }; 
             break;
 
         case "addplayer":
-            if(hf.isCapOrCoCaptain()) {
+            if(hf.isCapOrCoCaptain(message, command)) {
                 addPlayerToTeam(filePath, message)
             }; 
             break;
 
         case "removeplayer":
-            if(hf.isCapOrCoCaptain()) {
+            if(hf.isCapOrCoCaptain(message, command)) {
                 removePlayerFromTeam(filePath, message)
             };
             break;
@@ -120,73 +116,52 @@ client.on("messageCreate", (message) => {
             break;
 
         case "matchtime":
-            if(hf.isCapOrCoCaptain()) {
+            if(hf.isCapOrCoCaptain(message, command)) {
                 matchFunction(message)
             };
             break;
             
         case "scrimtime":
-            if(hf.isCapOrCoCaptain()) {
+            if(hf.isCapOrCoCaptain(message, command)) {
                 scrimFunction(message)
              };
              break;
              
         case "challengetime":
-            if(hf.isCapOrCoCaptain()) {
+            if(hf.isCapOrCoCaptain(message, command)) {
                 challengeFunction(message)
              };
              break;
              
         case "matchscore":
-            if(hf.isCapOrCoCaptain()) {
+            if(hf.isCapOrCoCaptain(message, command)) {
                 matchScore(message)
              };
              break;
              
         case "challengescore":
-            if(hf.isCapOrCoCaptain()) {
+            if(hf.isCapOrCoCaptain(message, command)) {
                 challengeScore(message)
              };
              break;
              
         case "pickup":
-            if(hf.msgFromCorrectChannel()) {
-                if(message.channel.id === pickupChannelId) { 
-                    pickupGame(filePath, message, arguments, command);
-                }
-                if(message.channel.id === pickupChannel2Id) {
-                    pickupGame2(filePath, message, arguments, command);
-                }
+            if(hf.msgFromPickupChannel(message)) {
+                    pg.pickupGame(filePath, message, arguments, command);
             };
             break;
             
-        case "wipernb":
-            wipeRedAndBlueTeams(message, filePath, thirtyFiveMinuteTimer, ninetyMinuteTimer);
+        case "deletemsg" :
+            hf.msgDeleter(message, arguments[0]);    
             break;
-
-        case "wipebng":
-            wipeBlackAndGoldTeams(message, filePath, thirtyFiveMinuteTimer2, ninetyMinuteTimer2);
-            break;
-
         default:
             break;
     }
-    
-
-    
-
 });
 
+
+// logs in the bot
 client.login(process.env.BOT_TOKEN);
-
-
-
-
-
-
-
-
-
 
 module.exports = {
     filePath,

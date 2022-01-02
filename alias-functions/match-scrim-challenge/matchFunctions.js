@@ -53,7 +53,7 @@ function matchFunction(message) {
       collector.stop("Cancelled");
       message.channel.send({ embeds: [cancelEmbed] });
       setTimeout(() => {
-        message.channel.bulkDelete(15);
+        message.channel.bulkDelete(18);
       }, 5000);
       return;
     }
@@ -104,14 +104,14 @@ function matchFunction(message) {
           message.channel.send({ embeds: [successEmbed] });
           collector.stop("success");
           setTimeout(() => {
-            message.channel.bulkDelete(15);
+            message.channel.bulkDelete(18);
           }, 5000);
           return;
         } else if (word.content === "no") {
           message.channel.send({ embeds: [cancelEmbed] });
           collector.stop("canceled");
           setTimeout(() => {
-            message.channel.bulkDelete(15);
+            message.channel.bulkDelete(18);
           }, 5000);
           return;
         }

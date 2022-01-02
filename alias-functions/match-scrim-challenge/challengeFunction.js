@@ -7,8 +7,8 @@ function challengeFunction(message) {
   const disclaimer =
     "Do NOT make message edits. If you made a mistake, just input 'cancel', press ENTER and try again.";
   const botMsgArray = [
-    "Input Team 1 and Press ENTER",
-    "Input Team 2 and Press ENTER",
+    "Input team using their challenge and Press ENTER",
+    "Input team being challenged and Press ENTER",
     "Input DATE and Press ENTER (01/01/2021)",
     "Input TIME and Press Enter (12:00 AM/PM)",
     "Input Time Zone and Press Enter (EST, BST...)",
@@ -53,7 +53,7 @@ function challengeFunction(message) {
       collector.stop("Cancelled");
       message.channel.send({ embeds: [cancelEmbed] });
       setTimeout(() => {
-        message.channel.bulkDelete(15);
+        message.channel.bulkDelete(19);
       }, 5000);
       return;
     }
@@ -102,14 +102,14 @@ function challengeFunction(message) {
           message.channel.send({ embeds: [successEmbed] });
           collector.stop("success");
           setTimeout(() => {
-            message.channel.bulkDelete(15);
+            message.channel.bulkDelete(19);
           }, 5000);
           return;
         } else if (word.content === "no") {
           message.channel.send({ embeds: [cancelEmbed] });
           collector.stop("canceled");
           setTimeout(() => {
-            message.channel.bulkDelete(15);
+            message.channel.bulkDelete(19);
           }, 5000);
           return;
         }

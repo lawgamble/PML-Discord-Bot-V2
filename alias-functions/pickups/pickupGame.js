@@ -1,34 +1,35 @@
-  const fs = require("fs");
-  const net = require("net");
-  const { Timer } = require('timer-node');
-  const exec = require("child_process").exec;
-  const hf = require("../../helperFunctions")
-  const em = require("../../discord-functions/generalEmbed")
-  const pem = require("../../discord-functions/pickupGameMatchupEmbed");
-  const checkInactivePlayers = require("./removeInactivePlayers")
+const fs = require("fs");
+const readAliasFile = require("../../JSONParser")
+const { Timer } = require('timer-node');  
+const hf = require("../../helperFunctions")
+const phf = require("./pickupHelperFunctions");
+const connectToServer = require("./rcon");
+const em = require("../../discord-functions/generalEmbed")
+const pem = require("../../discord-functions/pickupGameMatchupEmbed");
+const pickupKicker = require("./pickupKicker");
+const checkInactivePlayers = require("./removeInactivePlayers")
   
  
   
-  const pickupCaptainRoleId = process.env.PICKUP_CAPTAIN_ROLE_ID;
+const pickupCaptainRoleId = process.env.PICKUP_CAPTAIN_ROLE_ID;
   
   
-  const teamFilter = ["red", "blue"];
-  const otherArgumentsFilter = ["leave", "teams"];
-  const botRebootCommand = process.env.BOT_REBOOT_COMMAND;
+const teamFilter = ["red", "blue"];
+const otherArgumentsFilter = ["leave", "teams"];
+
   
   
-  let thirtyFiveMinuteTimer;
-  let ninetyMinuteTimer;
-  let teamName;
-  let playerToAdd;
-  let firstReadNumber;
-  let secondReadNumber;
-  let pin;
-  
-  
-  let playerData;
-  let gameStarted = false;
-  const timer = new Timer();
+let thirtyFiveMinuteTimer;
+let ninetyMinuteTimer;
+let teamName;
+let playerToAdd;
+let firstReadNumber;
+let secondReadNumber;
+let pin;
+let playerData;
+let gameStarted = false;
+
+const timer = new Timer();
 
 const serverPort = process.env.SERVER_PORT;
 const serverIp = process.env.PICKUP_SERVER_IP;
@@ -42,27 +43,26 @@ const server = {
   ip: serverIp,
   password: serverPassword,
 };
+
+let teamToBeCreated = {
+  [teamName]: [],
+};
   
   function pickupGame(filePath, message, arguments, command) {
-   
     if(gameStarted && arguments[0] === "start") return em.cautionEmbed(message, "", "A game is already in progress!");
-
     if(!gameStarted && arguments[0] === "end") return em.cautionEmbed(message, "", "There is no game currently running!"); 
-
-   // if(gameStarted && arguments[0] !== "end") return cautionEmbed(message, "", "The Pickup Game has already started!\nYou can't make any commands other than '!pickup end' while a game is running.");
 
     if(gameStarted && arguments[0] === "end") {
       if(message.member.roles.cache.find((role) => role.id === pickupCaptainRoleId)) {
         clearTimeout(ninetyMinuteTimer);
         ninetyMinuteTimer = null;
-        wipeRedAndBlueTeams(message, filePath, thirtyFiveMinuteTimer, ninetyMinuteTimer);
+        phf.wipeRedAndBlueTeams(message, filePath, thirtyFiveMinuteTimer, ninetyMinuteTimer);
         gameStarted = false;
         timer.stop();
         return;
       }
       return;
     } 
-
     // startPickup game args are the message, the filePath and if conditions should be skipped
      if(arguments[0] === "start") {
        return startPickupGame(message, filePath, false);
@@ -73,7 +73,7 @@ const server = {
     const authorId = message.author.id;
   
     // check if valid argument first.
-    if (!otherArgumentsFilter.includes(arguments[0]?.toLowerCase()) && !teamFilter.includes(arguments[0]?.toLowerCase())) {
+    if (!otherArgumentsFilter.includes(arguments[0].toLowerCase()) && !teamFilter.includes(arguments[0].toLowerCase())) {
       return em.cautionEmbed(
         message,
         "", `!${command} ${arguments[0]} is not a valid !pickup command!\n **Valid Commands**\n!pickup red \n*puts you on RED Team*\n!pickup blue \n*puts you on BLUE Team*\n!pickup leave \n*removes you from either team*`
@@ -85,11 +85,9 @@ const server = {
       teamName = `${arguments[0].toUpperCase()} Team`;
     }
   
-    let teamToBeCreated = {
-      [teamName]: [],
-    };
+ 
   
-    hf.readAliasFile(filePath, (error, data) => {
+    readAliasFile(filePath, (error, data) => {
       if (error) {
         console.log(error);
       }
@@ -130,7 +128,7 @@ const server = {
       if (!data.teams.hasOwnProperty("RED Team") && !data.teams.hasOwnProperty("BLUE Team")) {
         timer.start();
         thirtyFiveMinuteTimer = setTimeout(() => {
-          wipeRedAndBlueTeams(message, filePath, thirtyFiveMinuteTimer, ninetyMinuteTimer);
+          phf.wipeRedAndBlueTeams(message, filePath, thirtyFiveMinuteTimer, ninetyMinuteTimer);
           timer.stop();
           thirtyFiveMinuteTimer = null;
         }, 2100000);
@@ -156,7 +154,7 @@ const server = {
                 user.send(`Pickup Game servername: PML Pickup Games! [PavlovMasterLeague.com]\nPickup Game Pin: ${pin}`);
             })
             // restart other bot
-            restartOtherBot();
+            phf.restartOtherBot();
           }
         }
         else {
@@ -192,14 +190,14 @@ const server = {
             clearTimeout(thirtyFiveMinuteTimer);
             thirtyFiveMinuteTimer = null;
             timer.stop();
-            return wipeRedAndBlueTeams(message, filePath, thirtyFiveMinuteTimer, ninetyMinuteTimer);
+            return phf.wipeRedAndBlueTeams(message, filePath, thirtyFiveMinuteTimer, ninetyMinuteTimer);
           }
         }
   
         if (data.teams.hasOwnProperty("RED Team")) {
           if (data.teams["RED Team"][0] != undefined) {
             const redTeamCaptianUserName = data.teams["RED Team"][0];
-            const redTeamCaptainDiscordId = getUserIdByUserName(data.players, redTeamCaptianUserName);
+            const redTeamCaptainDiscordId = phf.getUserIdByUserName(data.players, redTeamCaptianUserName);
             const foundUserRedTeam = message.guild.members.cache.find((user) => user.id === redTeamCaptainDiscordId);
             foundUserRedTeam.roles.add(pickupGameCaptainRole);
           };
@@ -207,7 +205,7 @@ const server = {
         if (data.teams.hasOwnProperty("BLUE Team")) {
           if (data.teams["BLUE Team"][0] != undefined) {
             const blueTeamCaptianUserName = data.teams["BLUE Team"][0];
-            const blueTeamCaptainDiscordId = getUserIdByUserName(data.players, blueTeamCaptianUserName);
+            const blueTeamCaptainDiscordId = phf.getUserIdByUserName(data.players, blueTeamCaptianUserName);
             const foundUserBlueTeam = message.guild.members.cache.find((user) => user.id === blueTeamCaptainDiscordId);
             foundUserBlueTeam.roles.add(pickupGameCaptainRole);
           }
@@ -233,9 +231,7 @@ const server = {
 
 
 
-  function getUserIdByUserName(players, userName) {
-    return Object.keys(players).find(key => players[key] === userName);
-  }
+
   
   function leavePickupGame(message, data, playersListData, blueTeam, redTeam, authorId, filePath) {
     // if user has pickupCaptain role, remove it 
@@ -324,7 +320,7 @@ const server = {
       }
     }
     // if user has PickupCaptainRole, make sure both teams exist and that there are at least 1 player on each team.
-    hf.readAliasFile(filePath, (error, data) => {
+    readAliasFile(filePath, (error, data) => {
       if (error) {
         console.log(error);
         return;
@@ -353,7 +349,7 @@ const server = {
       }
 
       ninetyMinuteTimer = setTimeout(() => {
-        wipeRedAndBlueTeams(message, filePath, thirtyFiveMinuteTimer, ninetyMinuteTimer);
+        phf.wipeRedAndBlueTeams(message, filePath, thirtyFiveMinuteTimer, ninetyMinuteTimer);
         ninetyMinuteTimer = null;
         gameStarted = false;
       }, 5400000);
@@ -362,7 +358,7 @@ const server = {
 
       gameStarted = true;
     
-      restartOtherBot();
+      phf.restartOtherBot();
   
       // stops the twenty min timer
       clearTimeout(thirtyFiveMinuteTimer);
@@ -379,7 +375,7 @@ const server = {
       // loop through redTeam and getUserIdByUserName. For Each user send DM of the pin.
       const redTeam = data.teams["RED Team"];
       redTeam.forEach((userName, index) => {
-        const userId = getUserIdByUserName(playerData, userName);
+        const userId = phf.getUserIdByUserName(playerData, userName);
 
 
   
@@ -394,7 +390,7 @@ const server = {
       });
       const blueTeam = data.teams["BLUE Team"];
       blueTeam.forEach((user, index) => {
-        const userId = getUserIdByUserName(playerData, user);
+        const userId = phf.getUserIdByUserName(playerData, user);
   
         // send DM to user with pin
         message.client.users.fetch(userId).then((user) => {
@@ -407,7 +403,7 @@ const server = {
         });
       });
 
-      em.startPickupGameEmbed(message, "Pickup Game Has Started!", "You've been given specific instructions on how to play this pickup game.");
+      em.startPickupGameEmbed(message, "Pickup Game Has Started!", "You've been DM'd specific instructions on how to play this pickup game.");
       pem.redAndBlueMatchupEmbed(message, "RED v. BLUE", data);
 
       
@@ -423,158 +419,13 @@ const server = {
     });
   }
 
-  // starts after 5 minutes, checks every 1 min interval.
-function pickupKicker(filePath, gameStarted, message) {
-  let gameEnded;
-  setTimeout(() => {
-    const interval = setInterval(() => {
-
-      readAliasFile(filePath, (error, data) => {
-        if (error) {
-          console.log(error);
-        }
-        gameEnded = checkInactivePlayers(filePath, data, message, gameStarted);
-      })
-      if(!gameStarted || gameEnded === true) {
-          wipeRedAndBlueTeams(message, filePath, thirtyFiveMinuteTimer, ninetyMinuteTimer)
-          clearInterval(interval);
-          return;
-      }
-    }, 15000); // 1 min
-  }, 30000); // 5 min
-}
-  
-  
-
-  function connectToServer(server, pin) {
-    return new Promise((resolve) => {
-      socket = net.Socket();
-  
-      socket.connect(server.port, server.ip, () => {});
-  
-      socket.on("error", function (err) {
-        console.log(err);
-        resolve(socket);
-      });
-  
-      socket.on("data", function (data) {
-
-        if (data.toString().startsWith("Password:")) {
-          socket.write(server.password);
-        }
-        if (data.toString().startsWith("Authenticated=1")) {
-          console.log("Logged in!");
-          (async () => {
-            socket.function = await commandHandler(socket, `setpin ${pin}`);
-            if (socket.function.Successful) {
-              socket.end();
-              socket.destroy();
-            }
-            return resolve(socket);
-          })();
-        }
-        if (data.toString().startsWith("Authenticated=0")) {
-          console.log(data, "RCON login not authenticated!");
-        }
-      });
-    });
-  }
-  async function commandHandler(socket, command) {
-    const try1 = await commandExecute(socket, command);
-    if (try1) {
-      return try1;
-    } else {
-      const try2 = await commandExecute(socket, command);
-      return try2;
-    }
-  }
-  
-  function commandExecute(socket, command) {
-    return new Promise((resolve) => {
-      socket.write(command);
-      socket.once("data", function (data) {
-        const dataResult = data.toString();
-        try {
-          const jsonResult = JSON.parse(dataResult);
-          return resolve(jsonResult);
-        } catch (e) {
-          console.log(e, "Bad rcon Response:", command, dataResult);
-          return resolve(null);
-        }
-      });
-    });
-  }
-  
-  // run when someone runs start or auto start happens
-  function restartOtherBot() {
-    exec(botRebootCommand, (error, stdout, stderr) => {
-      if (error) {
-        console.log(`error: ${error.message}`);
-        return;
-      }
-      if (stderr) {
-        console.log(`stderr: ${stderr}`);
-        return;
-      }
-      console.log(`stdout: ${stdout}`);
-    });
-  }
-
-
-  ///////////////////////////////// Wipe Red and Blue Teams /////////////////////////////////
-
-  function wipeRedAndBlueTeams(message, filePath, thirtyFiveMinuteTimer, ninetyMinuteTimer) {
-    readAliasFile(filePath, (error, data) => {
-      if (error) {
-        console.log(error);
-      }
-
-      removeCapRoles(data, "RED Team" ,message)
-      removeCapRoles(data, "BLUE Team", message)
-
-      setTimeout(() => {
-        hf.deletePickupTeams(data)
-
-        clearTimeout(thirtyFiveMinuteTimer);
-        clearTimeout(ninetyMinuteTimer);
-
-        fs.writeFile(filePath, JSON.stringify(data, null, 2), (error) => {
-          if (error) {
-            console.log(error);
-          }
-          return em.wipeTeamsEmbed(message, "Teams Wiped: Game Cancelled.");
-        });
-      }, 500);
-    });
-  }
-
-
-  function removeCapRoles(data, team, message) {
-    if (data.teams[team]) {
-      if (data.teams[team][0]) {
-        const teamCaptain = data.teams[team][0];
-
-        const userId = getUserIdByUserName(
-          data.players,
-          teamCaptain
-        );
-        const foundUser = message.guild.members.fetch(userId);
-        role.members.forEach((member) =>
-          member.roles.remove(pickupCaptainRoleId)
-        );
-      }
-    }
-  }
-
-
-
-
-
-  module.exports = {
+  const pg = {
     pickupGame,
-    wipeRedAndBlueTeams,
     thirtyFiveMinuteTimer,
     ninetyMinuteTimer,
-    gameStarted
+    gameStarted,
   }
+
+
+  module.exports = pg;
   

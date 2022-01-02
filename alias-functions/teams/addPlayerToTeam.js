@@ -33,7 +33,7 @@ function addPlayerToTeam(filePath, message) {
     }
 
 
-    readAliasFile(filePath, (error, data) => {
+    hf.readAliasFile(filePath, (error, data) => {
         if (error) {
             console.log(error)
         } else {

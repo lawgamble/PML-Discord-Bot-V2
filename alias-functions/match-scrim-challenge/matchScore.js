@@ -67,7 +67,7 @@ function matchScore(message) {
       collector.stop("Cancelled");
       message.channel.send({ embeds: [cancelEmbed] });
       setTimeout(() => {
-        message.channel.bulkDelete(99);
+        message.channel.bulkDelete(18);
       }, 5000);
       return;
     }
@@ -112,14 +112,14 @@ function matchScore(message) {
             message.channel.send({ embeds: [successEmbed] });
             confirmCollector.stop("Successfully Created");
             setTimeout(() => {
-              message.channel.bulkDelete(99);
+              message.channel.bulkDelete(18);
             }, 5000);
             return;
           } else if (word.content === "no") {
             message.channel.send({ embeds: [cancelEmbed] });
             confirmCollector.stop("cancelled");
             setTimeout(() => {
-              message.channel.bulkDelete(99);
+              message.channel.bulkDelete(18);
             }, 5000);
             return;
           }
@@ -198,14 +198,14 @@ function matchScore(message) {
           message.channel.send({ embeds: [successEmbed] });
           collector.stop("Success");
           setTimeout(() => {
-            message.channel.bulkDelete(99);
+            message.channel.bulkDelete(18);
           }, 5000);
           return;
         } else if (word.content === "no") {
           message.channel.send({ embeds: [cancelEmbed] });
           collector.stop("canceled");
           setTimeout(() => {
-            message.channel.bulkDelete(99);
+            message.channel.bulkDelete(18);
           }, 5000);
           return;
         }

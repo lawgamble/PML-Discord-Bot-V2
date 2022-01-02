@@ -10,8 +10,8 @@ function challengeScore(message) {
   const scoresChannel = message.guild.channels.cache.get(scoresChannelId);
 
   const botMsgArray = [
-    "Name of the Team 1",
-    "Name of Team 2",
+    "Name of the Challenger: ",
+    "Name of the team being challenged:",
     "What was the first map?",
     `What was the score on Map 1? \n(Example: 10-5)`,
     `Who won on Map 1?`,
@@ -67,7 +67,7 @@ function challengeScore(message) {
       collector.stop("Cancelled");
       message.channel.send({ embeds: [cancelEmbed] });
       setTimeout(() => {
-        message.channel.bulkDelete(99);
+        message.channel.bulkDelete(27);
       }, 5000);
       return;
     }
@@ -112,14 +112,14 @@ function challengeScore(message) {
             message.channel.send({ embeds: [successEmbed] });
             confirmCollector.stop("Successfully Created");
             setTimeout(() => {
-              message.channel.bulkDelete(99);
+              message.channel.bulkDelete(27);
             }, 5000);
             return;
           } else if (word.content === "no") {
             message.channel.send({ embeds: [cancelEmbed] });
             confirmCollector.stop("cancelled");
             setTimeout(() => {
-              message.channel.bulkDelete(99);
+              message.channel.bulkDelete(27);
             }, 5000);
             return;
           }
@@ -198,14 +198,14 @@ function challengeScore(message) {
           message.channel.send({ embeds: [successEmbed] });
           collector.stop("success");
           setTimeout(() => {
-            message.channel.bulkDelete(99);
+            message.channel.bulkDelete(27);
           }, 5000);
           return;
         } else if (word.content === "no") {
           message.channel.send({ embeds: [cancelEmbed] });
           collector.stop("canceled");
           setTimeout(() => {
-            message.channel.bulkDelete(99);
+            message.channel.bulkDelete(27);
           }, 5000);
           return;
         }

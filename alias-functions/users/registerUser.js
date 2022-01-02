@@ -1,6 +1,7 @@
-const readAliasFile = require("../../JSONParser");
+
 const fs = require("fs");
 const em = require("../../discord-functions/generalEmbed")
+const hf = require("../../helperFunctions");
 
 
 
@@ -17,7 +18,7 @@ function registerUser(filePath, message, arguments, discordId, discordName) {
         [discordId]: "q-" + arguments.join(" ")
     };
 
-    readAliasFile(filePath, (error, data) => {
+    hf.readAliasFile(filePath, (error, data) => {
         if (error) {
             console.log(error)
         } else {
