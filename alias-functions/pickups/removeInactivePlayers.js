@@ -2,16 +2,16 @@ const rconPlayersListForPickups = require("../../rcon-functions/checkRconUserCou
 const { redAndBlueTeamEmbed } = require("../../discord-functions/generalEmbed");
 const hf = require("../../helperFunctions");
 const fs = require("fs");
-const { Console } = require("console");
+
 
 const pkFilePath = process.env.PICKUP_KICKER_LOG_FILEPATH;
 
-const guildId = process.env.GUILD_ID;
 const pickupCaptainRoleId = process.env.PICKUP_CAPTAIN_ROLE_ID;
 
 let redTeam;
 let blueTeam;
 let pickupQueue;
+let gameEnded;
 
 let removalArray = [[], [], [], [], []];
 let checkList = [];
@@ -19,14 +19,10 @@ let checkList = [];
 let i = 0;
 let j = 1;
 
-async function checkInactivePlayers(filePath, data, message, gameStarted) {
+async function checkInactivePlayers(filePath, data, message) {
   redTeam = data.teams["RED Team"];
   blueTeam = data.teams["BLUE Team"];
   pickupQueue = data.teams["PICKUP Queue"];
-
-  if (redTeam.length === 0 || blueTeam.length === 0) {
-    return true;
-  }
 
   if (i > 4) i = 0;
 
@@ -182,5 +178,6 @@ function letTheWorldKnow(userDiscordId, message) {
     `<@${userDiscordId}> was kicked from the pickup game due to inactivity.`
   );
 }
+
 
 module.exports = checkInactivePlayers;

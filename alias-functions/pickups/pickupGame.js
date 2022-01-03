@@ -1,40 +1,40 @@
-const fs = require("fs");
-const readAliasFile = require("../../JSONParser")
-const { Timer } = require('timer-node');  
-const hf = require("../../helperFunctions")
-const phf = require("./pickupHelperFunctions");
-const connectToServer = require("./rcon");
-const em = require("../../discord-functions/generalEmbed")
-const pem = require("../../discord-functions/pickupGameMatchupEmbed");
-const pickupKicker = require("./pickupKicker");
-const checkInactivePlayers = require("./removeInactivePlayers")
-  
+
+  const fs = require("fs");
+  const net = require("net");
+  const { Timer } = require('timer-node');
+  const readAliasFile = require("../../JSONParser");
+  const checkInactivePlayers = require("./removeInactivePlayers")
+  const connectToServer = require("./rcon")
+  const em = require("../../discord-functions/generalEmbed");
+  const pem = require("../../discord-functions/pickupGameMatchupEmbed");
+  const phf = require("./pickupHelperFunctions");
+const hf = require("../../helperFunctions");
  
   
-const pickupCaptainRoleId = process.env.PICKUP_CAPTAIN_ROLE_ID;
+  const pickupCaptainRoleId = process.env.PICKUP_CAPTAIN_ROLE_ID;
   
   
-const teamFilter = ["red", "blue"];
-const otherArgumentsFilter = ["leave", "teams"];
-
+  const teamFilter = ["red", "blue"];
+  const otherArgumentsFilter = ["leave", "teams"];
   
   
-let thirtyFiveMinuteTimer;
-let ninetyMinuteTimer;
-let teamName;
-let playerToAdd;
-let firstReadNumber;
-let secondReadNumber;
-let pin;
-let playerData;
-let gameStarted = false;
-
-const timer = new Timer();
+  let thirtyFiveMinuteTimer;
+  let ninetyMinuteTimer;
+  let teamName;
+  let playerToAdd;
+  let firstReadNumber;
+  let secondReadNumber;
+  let pin;
+ 
+  
+  let playerData;
+  let gameStarted = false;
+  const timer = new Timer();
 
 const serverPort = process.env.SERVER_PORT;
 const serverIp = process.env.PICKUP_SERVER_IP;
 const serverPassword = process.env.SERVER_PASSWORD;
-
+//const pickupChannelId = process.env.PICKUP_CHANNEL_ID;
 
 let socket = {};
 
@@ -43,26 +43,19 @@ const server = {
   ip: serverIp,
   password: serverPassword,
 };
-
-let teamToBeCreated = {
-  [teamName]: [],
-};
   
   function pickupGame(filePath, message, arguments, command) {
+   
     if(gameStarted && arguments[0] === "start") return em.cautionEmbed(message, "", "A game is already in progress!");
+
     if(!gameStarted && arguments[0] === "end") return em.cautionEmbed(message, "", "There is no game currently running!"); 
 
+   // if(gameStarted && arguments[0] !== "end") return em.cautionEmbed(message, "", "The Pickup Game has already started!\nYou can't make any commands other than '!pickup end' while a game is running.");
+
     if(gameStarted && arguments[0] === "end") {
-      if(message.member.roles.cache.find((role) => role.id === pickupCaptainRoleId)) {
-        clearTimeout(ninetyMinuteTimer);
-        ninetyMinuteTimer = null;
-        phf.wipeRedAndBlueTeams(message, filePath, thirtyFiveMinuteTimer, ninetyMinuteTimer);
-        gameStarted = false;
-        timer.stop();
-        return;
-      }
-      return;
+      return phf.stopPickupGame(message, ninetyMinuteTimer, thirtyFiveMinuteTimer, gameStarted, filePath, timer);
     } 
+
     // startPickup game args are the message, the filePath and if conditions should be skipped
      if(arguments[0] === "start") {
        return startPickupGame(message, filePath, false);
@@ -73,7 +66,7 @@ let teamToBeCreated = {
     const authorId = message.author.id;
   
     // check if valid argument first.
-    if (!otherArgumentsFilter.includes(arguments[0].toLowerCase()) && !teamFilter.includes(arguments[0].toLowerCase())) {
+    if (!otherArgumentsFilter.includes(arguments[0]?.toLowerCase()) && !teamFilter.includes(arguments[0]?.toLowerCase())) {
       return em.cautionEmbed(
         message,
         "", `!${command} ${arguments[0]} is not a valid !pickup command!\n **Valid Commands**\n!pickup red \n*puts you on RED Team*\n!pickup blue \n*puts you on BLUE Team*\n!pickup leave \n*removes you from either team*`
@@ -85,7 +78,9 @@ let teamToBeCreated = {
       teamName = `${arguments[0].toUpperCase()} Team`;
     }
   
- 
+    let teamToBeCreated = {
+      [teamName]: [],
+    };
   
     readAliasFile(filePath, (error, data) => {
       if (error) {
@@ -197,7 +192,7 @@ let teamToBeCreated = {
         if (data.teams.hasOwnProperty("RED Team")) {
           if (data.teams["RED Team"][0] != undefined) {
             const redTeamCaptianUserName = data.teams["RED Team"][0];
-            const redTeamCaptainDiscordId = phf.getUserIdByUserName(data.players, redTeamCaptianUserName);
+            const redTeamCaptainDiscordId = getUserIdByUserName(data.players, redTeamCaptianUserName);
             const foundUserRedTeam = message.guild.members.cache.find((user) => user.id === redTeamCaptainDiscordId);
             foundUserRedTeam.roles.add(pickupGameCaptainRole);
           };
@@ -205,7 +200,7 @@ let teamToBeCreated = {
         if (data.teams.hasOwnProperty("BLUE Team")) {
           if (data.teams["BLUE Team"][0] != undefined) {
             const blueTeamCaptianUserName = data.teams["BLUE Team"][0];
-            const blueTeamCaptainDiscordId = phf.getUserIdByUserName(data.players, blueTeamCaptianUserName);
+            const blueTeamCaptainDiscordId = getUserIdByUserName(data.players, blueTeamCaptianUserName);
             const foundUserBlueTeam = message.guild.members.cache.find((user) => user.id === blueTeamCaptainDiscordId);
             foundUserBlueTeam.roles.add(pickupGameCaptainRole);
           }
@@ -231,7 +226,9 @@ let teamToBeCreated = {
 
 
 
-
+  function getUserIdByUserName(players, userName) {
+    return Object.keys(players).find(key => players[key] === userName);
+  }
   
   function leavePickupGame(message, data, playersListData, blueTeam, redTeam, authorId, filePath) {
     // if user has pickupCaptain role, remove it 
@@ -375,7 +372,7 @@ let teamToBeCreated = {
       // loop through redTeam and getUserIdByUserName. For Each user send DM of the pin.
       const redTeam = data.teams["RED Team"];
       redTeam.forEach((userName, index) => {
-        const userId = phf.getUserIdByUserName(playerData, userName);
+        const userId = getUserIdByUserName(playerData, userName);
 
 
   
@@ -390,7 +387,7 @@ let teamToBeCreated = {
       });
       const blueTeam = data.teams["BLUE Team"];
       blueTeam.forEach((user, index) => {
-        const userId = phf.getUserIdByUserName(playerData, user);
+        const userId = getUserIdByUserName(playerData, user);
   
         // send DM to user with pin
         message.client.users.fetch(userId).then((user) => {
@@ -403,7 +400,7 @@ let teamToBeCreated = {
         });
       });
 
-      em.startPickupGameEmbed(message, "Pickup Game Has Started!", "You've been DM'd specific instructions on how to play this pickup game.");
+      em.startPickupGameEmbed(message, "Pickup Game Has Started!", "You've been given specific instructions on how to play this pickup game.");
       pem.redAndBlueMatchupEmbed(message, "RED v. BLUE", data);
 
       
@@ -415,16 +412,56 @@ let teamToBeCreated = {
           console.log(error);
         }
       });
-      pickupKicker(filePath, gameStarted, message);
+      pickupKicker(filePath, gameStarted, message, hf);
     });
   }
 
-  const pg = {
-    pickupGame,
-    thirtyFiveMinuteTimer,
-    ninetyMinuteTimer,
-    gameStarted,
+  // starts after 5 minutes, checks every 1 min interval.
+  function pickupKicker(filePath, gameStarted, message) {
+  setTimeout(() => {
+    const interval = setInterval(() => {
+
+      
+      const data = readAliasData(filePath);
+      gameEnded = checkIfGameEnded(data)
+        checkInactivePlayers(filePath, data, message);
+        if(!gameStarted || gameEnded === true) {
+        phf.wipeRedAndBlueTeams(message, filePath, thirtyFiveMinuteTimer, ninetyMinuteTimer)
+        clearInterval(interval);
+        return;
+      }
+      
+    }, 15000); // 1 min
+  }, 5000); // 5 min
+}
+
+function checkIfGameEnded(data) {
+  const redTeam = data.teams["RED Team"];
+  const blueTeam = data.teams["BLUE Team"];
+  if (redTeam.length === 0 || blueTeam.length === 0) {
+    return true;
+  } else {
+    return false;
   }
+}
+  
+
+function readAliasData(filePath) {
+  const aliases = fs.readFileSync(filePath);
+  const data = JSON.parse(aliases);
+  return data;
+}
+
+function writeAliasesData(filePath, data) {
+  return fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+}
+
+const pg = {
+  pickupGame,
+  thirtyFiveMinuteTimer,
+  ninetyMinuteTimer,
+  gameStarted,
+}
 
 
   module.exports = pg;
