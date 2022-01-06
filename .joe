@@ -1,9 +1,11 @@
 # BOT Creds
+
 BOT_TOKEN=
 BOT_ID=
 
-
 # DISCORD Creds
+
+GUILD_ID=
 LP_ID=
 RR_ID=
 TEAM_NEWS_ID=
@@ -18,22 +20,19 @@ PICKUP_CHANNEL_ID=
 PICKUP_CHANNEL_ID2=
 
 # FILE_PATH Creds
+
 ALIASES_FILEPATH="./aliases.json"
-LOGFILE_PATH="./Pavlov.log"
+PICKUP_KICKER_LOG_FILEPATH="./pickupKickerLogs.txt"
 
-
-# DATABASE Creds
-DB_PASSWORD=
-
-                 
 # PML Server RCON Server Creds
+
 SERVER_PORT=
 PICKUP_SERVER_IP=
 PML1_SERVER=
 PML2_SERVER=
 PML3_SERVER=
-SERVER_PASSWORD=         
-
+SERVER_PASSWORD=
 
 # Exec Creds
+
 BOT_REBOOT_COMMAND=

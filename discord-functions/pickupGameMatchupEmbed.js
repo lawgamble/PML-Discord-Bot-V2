@@ -1,4 +1,4 @@
-const fs = require("fs");
+
 const { MessageEmbed } = require("discord.js");
 const teamImages = require("../imageURLs");
 const pickupGameImage = teamImages["pickupPmlLogo"];
@@ -32,35 +32,10 @@ function redAndBlueMatchupEmbed(message, title, data) {
   });
 }
 
-function blackAndGoldMatchupEmbed(message, title, data) {
-  blackTeam = data.teams["BLACK Team"];
-  goldTeam = data.teams["GOLD Team"];
-  let blackTeamRoster = "";
-  let goldTeamRoster = "";
 
-  blackTeam.forEach((player) => {
-    blackTeamRoster += `${player.slice(2)}\n`;
-  });
-  goldTeam.forEach((player) => {
-    goldTeamRoster += `${player.slice(2)}\n`;
-  });
-
-  let embed2 = new MessageEmbed()
-    .setImage(pickupGameImage)
-    .setColor("#9932CC")
-    .setTitle(title)
-    .addFields(
-      { name: "BLACK Team", value: blackTeamRoster },
-      { name: "GOLD Team", value: goldTeamRoster }
-    );
-  message.channel.send({
-    embeds: [embed2],
-  });
-}
 
 const pem = {
   redAndBlueMatchupEmbed,
-  blackAndGoldMatchupEmbed,
 }
 
 module.exports = pem;

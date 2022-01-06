@@ -5,7 +5,7 @@ const list = [];
 async function rconPlayersListForPickups() {
   const server = {
     port: 9100,
-    ip: "45.76.233.201",
+    ip: process.env.PICKUP_SERVER_IP,
     password: "3c172215303757976efb67156a9bc207",
   };
   const playersListArray = await connectToServer(server);
@@ -65,7 +65,7 @@ async function getServerDetails(socket) {
     for (const p of playerList) {
       const userName = p.UniqueId;
 
-      if (!list.includes(playerName)) list.push(userName);
+      if (!list.includes(userName)) list.push(userName);
     }
   }
   const serverInfo = await commandHandler(socket, "");

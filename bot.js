@@ -13,10 +13,9 @@ const matchScore = require("./alias-functions/match-scrim-challenge/matchScore")
 const challengeScore = require("./alias-functions/match-scrim-challenge/challengeScore")
 const botRepeat = require("./discord-functions/botRepeat");
 const rosterEmbed = require("./discord-functions/rosterEmbed");
-const pg = require("./alias-functions/pickups/pickupGame");
-const hf  = require("./helperFunctions");
-const phf = require("./alias-functions/pickups/pickupHelperFunctions");
-
+const pg = require("./alias-functions/pickups/pickups.js");
+const hf  = require("./helperFunctions")
+const phf = require("./alias-functions/pickups/pickupHelperFunctions")
 
 
 
@@ -151,6 +150,10 @@ client.on("messageCreate", (message) => {
             };
             break;
             
+        case "wipernb":
+            pg.wipeRedAndBlueTeams(message, filePath, pg.thirtyFiveMinuteTimer, pg.ninetyMinuteTimer, command);
+            break;
+
         case "deletemsg" :
             hf.msgDeleter(message, arguments[0]);    
             break;
@@ -164,5 +167,5 @@ client.on("messageCreate", (message) => {
 client.login(process.env.BOT_TOKEN);
 
 module.exports = {
-    filePath,
+    filePath
 }

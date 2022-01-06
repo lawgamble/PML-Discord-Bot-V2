@@ -24,6 +24,9 @@ function rosterEmbed(filePath, message) {
     clear();
 
     for (let teamName in teams) {
+      if (teamName === "RED Team" || teamName === "BLUE Team" || teamName === "PICKUP Queue") {
+        continue;
+      }
       const allRosters = Object.values(teams);
       const teamImage = teamImages[teamName];
       let singleTeamRoster = allRosters[index];

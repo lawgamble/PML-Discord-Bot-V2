@@ -15,4 +15,10 @@ function readAliasFile(filePath, callback) {
   });
 }
 
-module.exports = readAliasFile;
+function getAliasData(filePath) {
+  const aliases = fs.readFileSync(filePath);
+  const data = JSON.parse(aliases);
+  return data;
+}
+
+module.exports = readAliasFile, getAliasData;

@@ -2,6 +2,7 @@ const rconPlayersListForPickups = require("../../rcon-functions/checkRconUserCou
 const { redAndBlueTeamEmbed } = require("../../discord-functions/generalEmbed");
 const hf = require("../../helperFunctions");
 const fs = require("fs");
+const readAliasFile = require("../../JSONParser");
 
 
 const pkFilePath = process.env.PICKUP_KICKER_LOG_FILEPATH;
@@ -11,7 +12,6 @@ const pickupCaptainRoleId = process.env.PICKUP_CAPTAIN_ROLE_ID;
 let redTeam;
 let blueTeam;
 let pickupQueue;
-let gameEnded;
 
 let removalArray = [[], [], [], [], []];
 let checkList = [];
@@ -127,7 +127,15 @@ function removePlayer(
     }
   });
   // sends the team embed again after someone is kicked and a player is moved from queue
-  redAndBlueTeamEmbed(message, data, null, true); // might need to read file again before?
+  readAliasFile(filePath, (error, data) => {
+    if (error) {
+      console.log(error);
+      return;
+    }
+    if (data.teams["RED Team"].length + data.teams["BLUE Team"].length !== 0) { 
+      redAndBlueTeamEmbed(message, data, null, true); // might need to read file again before?
+    }
+  });
 }
 
 function checkAndReassignRoles(player, data, message, team) {

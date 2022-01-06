@@ -68,6 +68,9 @@ function removeTeamRole(message, arguments) {
 function playerOnAnotherTeam(message, teams, playerName, DiscordName) {
   for (const teamName in teams) {
     const teamWithPlayers = { [teamName]: teams[teamName] };
+    if (teamName === "RED Team") continue;
+    if (teamName === "BLUE Team") continue;
+    if (teamName === "PICKUP Queue") continue;
     if (Object.values(teamWithPlayers).length === 0) continue;
     if (Object.values(teamWithPlayers)[0].includes(playerName)) {
       let title = "No-can-do!";
@@ -100,8 +103,19 @@ function readAliasFile(filePath, callback) {
   });
 }
 
+
 function msgDeleter(message, count) {
   return message.channel.bulkDelete(count);
+}
+
+function readAliasData(filePath) {
+  const aliases = fs.readFileSync(filePath);
+  const data = JSON.parse(aliases);
+  return data;
+}
+
+function writeAliasesData(filePath, data) {
+  return fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
 }
 
 const hf = {
@@ -115,7 +129,9 @@ const hf = {
   playerOnAnotherTeam,
   clearMessages,
   readAliasFile,
-  msgDeleter
+  msgDeleter,
+  readAliasData,
+  writeAliasesData
 }
 
 module.exports = hf;

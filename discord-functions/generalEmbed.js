@@ -40,8 +40,11 @@ function teamNewsEmbed(channel, title) {
 function redAndBlueTeamEmbed(message, data, timeLeft, gameStarted) {
   const redTeam = data.teams["RED Team"];
   const blueTeam = data.teams["BLUE Team"];
+  const queueTeam = data.teams["PICKUP Queue"];
   let redTeamString = "(c)";
   let blueTeamString = "(c)";
+  let queueTeamString = "---\n"
+  
   const timerMsg = `There are ${timeLeft} minute(s) left to fill the teams before they're flushed!`;
   const gameStartedMsg = `This Pickup Game is currently running!`;
 
@@ -55,6 +58,12 @@ function redAndBlueTeamEmbed(message, data, timeLeft, gameStarted) {
     blueTeam.forEach((member) => {
       const mem = member.slice(2);
       blueTeamString += mem + "\n";
+    });
+  }
+  if (queueTeam != undefined) {
+    queueTeam.forEach((member) => {
+      const mem = member.slice(2);
+      queueTeamString += mem + "\n";
     });
   }
 
@@ -77,6 +86,10 @@ function redAndBlueTeamEmbed(message, data, timeLeft, gameStarted) {
             : `5 spots left`
         }) \n`,
         value: blueTeamString,
+      },
+      {
+        name: "Queue:",
+        value: queueTeamString,
       },
       {
         name: "_____",
