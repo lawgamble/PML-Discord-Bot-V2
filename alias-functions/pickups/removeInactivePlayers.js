@@ -109,23 +109,8 @@ function removePlayer(
 
   removalArray[index] = []; // after players are kicked, reset removal array at index j
 
-  // this will alternate teams while adding from queue
-  while (
-    (pickupQueue.length > 0 && redTeam.length < 5) ||
-    (pickupQueue.length > 0 && blueTeam.length < 5)
-  ) {
-    if (pickupQueue.length > 0 && redTeam.length < 5) {
-      redTeam.push(pickupQueue.shift());
-    }
-    if (pickupQueue.length > 0 && blueTeam.length < 5) {
-      blueTeam.push(pickupQueue.shift());
-    }
-  }
-  fs.writeFile(filePath, JSON.stringify(data, null, 2), (error) => {
-    if (error) {
-      console.log(error);
-    }
-  });
+  movePlayerFromQueue(filePath);
+
   // sends the team embed again after someone is kicked and a player is moved from queue
   readAliasFile(filePath, (error, data) => {
     if (error) {
@@ -188,4 +173,39 @@ function letTheWorldKnow(userDiscordId, message) {
 }
 
 
-module.exports = checkInactivePlayers;
+function movePlayerFromQueue(filePath) {
+  readAliasFile(filePath, (error, data) => {
+    if(error) {
+      console.log(error);
+      return;
+    }
+    const redTeam =  data.teams["RED Team"];
+    const blueTeam = data.teams["BLUE Team"];
+    const pickupQueue = data.teams["PICKUP Queue"];
+      // this will alternate teams while adding from queue
+  while (
+    (pickupQueue.length > 0 && redTeam.length < 5) ||
+    (pickupQueue.length > 0 && blueTeam.length < 5)
+  ) {
+    if (pickupQueue.length > 0 && redTeam.length < 5) {
+      redTeam.push(pickupQueue.shift());
+    }
+    if (pickupQueue.length > 0 && blueTeam.length < 5) {
+      blueTeam.push(pickupQueue.shift());
+    }
+  }
+  fs.writeFile(filePath, JSON.stringify(data, null, 2), (error) => {
+    if (error) {
+      console.log(error);
+    }
+  });
+  });
+}
+
+const rip = {
+  checkInactivePlayers,
+  movePlayerFromQueue,
+}
+
+
+module.exports = rip;

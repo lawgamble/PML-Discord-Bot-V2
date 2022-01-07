@@ -2,7 +2,7 @@ const fs = require("fs");
   const net = require("net");
   const { Timer } = require('timer-node');
   const exec = require("child_process").exec;
-  const checkInactivePlayers = require("./removeInactivePlayers")
+  // const checkInactivePlayers = require("./removeInactivePlayers")
   const {
     cautionEmbed,
     successEmbed,
@@ -13,6 +13,7 @@ const fs = require("fs");
   } = require("../../discord-functions/generalEmbed");
   const readAliasFile = require("../../JSONParser");
 const{ redAndBlueMatchupEmbed } = require("../../discord-functions/pickupGameMatchupEmbed");
+const rip = require("./removeInactivePlayers")
  
   
 const pickupCaptainRoleId = process.env.PICKUP_CAPTAIN_ROLE_ID;
@@ -91,18 +92,32 @@ const server = {
 
       // if gameStarted and teams are full, add player to QUEUE Team
   if (gameStarted && arguments[0] === "red" || gameStarted && arguments[0] === "blue") {
-    let data = readAliasData(filePath);
-    if(data.teams["RED Team"].length === 5 && data.teams["BLUE Team"].length === 5) {
-      if (checkIfUserIsRegistered(message, data.players, authorId)) {
-        playerToAdd = data.players[authorId];
-        let queueTeam = data.teams["PICKUP Queue"];
-        queueTeam.push(playerToAdd);
-        //removes duplicate players if they are stupid enough to add themselves more than once
-        queueTeam = [...new Set(queueTeam)]
-        writeAliasesData(filePath, data);
-        return;
+    readAliasFile(filePath, (error, data) => {
+      if (error) {
+        console.log(error);
       }
-    }  
+      const redTeam = data.teams["RED Team"];
+      const blueTeam = data.teams["BLUE Team"];
+      playerToAdd = data.players[authorId];
+      if(data.teams["RED Team"].length === 1 || data.teams["BLUE Team"].length === 1 && !redTeam.includes(playerToAdd) && !blueTeam.includes(playerToAdd)) {
+        if (checkIfUserIsRegistered(message, data.players, authorId)) {
+          let queueTeam = data.teams["PICKUP Queue"];
+          if (queueTeam.includes(playerToAdd)) {
+            return cautionEmbed(message, "", "You're already queued up!");
+          } else {
+            queueTeam.push(playerToAdd);
+            redAndBlueTeamEmbed(message, data, null, gameStarted);
+          }
+          //removes duplicate players if they are stupid enough to add themselves more than once
+          //queueTeam = [...new Set(queueTeam)]
+        }
+      }  
+      fs.writeFile(filePath, JSON.stringify(data, null, 2), (error) => {
+        if (error) {
+          console.log(error);
+        }
+      });
+    });
   }
     // check if valid argument first.
     if (!otherArgumentsFilter.includes(arguments[0]?.toLowerCase()) && !teamFilter.includes(arguments[0]?.toLowerCase())) {
@@ -274,6 +289,7 @@ const server = {
             console.log(error);
           }
         });
+        rip.movePlayerFromQueue(filePath);
         return successEmbed(message, "Seeya!", "You've been removed from the RED Team");
       }
     }
@@ -286,6 +302,7 @@ const server = {
             console.log(error);
           }
         });
+        rip.movePlayerFromQueue(filePath);
         return successEmbed(message, "Seeya!", "You've been removed from the BLUE Team");
       }
     }
@@ -458,8 +475,8 @@ const server = {
     setTimeout(() => {
       interval = setInterval(() => {
         intervalChecks(filePath, message, interval);  
-      }, 60000); // 1 min
-     }, 600000); // 5 min
+      }, 30000); // 1 min
+     }, 5000); // 5 min
     }
 
 
@@ -473,7 +490,7 @@ function intervalChecks(filePath, message, interval) {
           return;
         }
      gameEnded = checkIfGameEnded(filePath);
-     checkInactivePlayers(filePath, data, message);
+     rip.checkInactivePlayers(filePath, data, message);
      if(!gameStarted || gameEnded === true) {
          gameStarted = false;
         wipeRedAndBlueTeams(message, filePath, thirtyFiveMinuteTimer, gameStarted)
