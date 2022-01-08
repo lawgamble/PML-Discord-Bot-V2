@@ -99,7 +99,7 @@ const server = {
       const redTeam = data.teams["RED Team"];
       const blueTeam = data.teams["BLUE Team"];
       playerToAdd = data.players[authorId];
-      if((data.teams["RED Team"].length === 1 || data.teams["BLUE Team"].length === 1) && (!redTeam.includes(playerToAdd) && !blueTeam.includes(playerToAdd))) {
+      if((data.teams["RED Team"].length === 5 || data.teams["BLUE Team"].length === 5) || (!redTeam.includes(playerToAdd) && !blueTeam.includes(playerToAdd))) {
         if (checkIfUserIsRegistered(message, data.players, authorId)) {
           let queueTeam = data.teams["PICKUP Queue"];
           if (queueTeam.includes(playerToAdd)) {
@@ -446,7 +446,7 @@ const server = {
           }
         });
       });
-      
+
       data.teams = {...data.teams, "PICKUP Queue": []};
 
       redAndBlueMatchupEmbed(message, "RED v. BLUE", data);
