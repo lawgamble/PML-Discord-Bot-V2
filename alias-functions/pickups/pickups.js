@@ -446,8 +446,8 @@ const server = {
           }
         });
       });
-
-      data.teams = {...data.teams, "PICKUP Queue": ["q-XxPunisher78xX"]};
+      
+      data.teams = {...data.teams, "PICKUP Queue": []};
 
       redAndBlueMatchupEmbed(message, "RED v. BLUE", data);
 
@@ -477,8 +477,8 @@ const server = {
     setTimeout(() => {
       interval = setInterval(() => {
         intervalChecks(filePath, message, interval);  
-      }, 20000); // 1 min
-     }, 5000); // 5 min
+      }, 30000); // 1 min
+     }, 10000); // 5 min
     }
 
 
