@@ -1,19 +1,5 @@
-const readAliasFile = require("../../JSONParser")
 const exec = require("child_process").exec;
-const fs = require("fs");
-const hf = require("../../helperFunctions");
-const em = require("../../discord-functions/generalEmbed");
-const pickupCaptainRoleId = process.env.PICKUP_CAPTAIN_ROLE_ID;
 const botRebootCommand = process.env.BOT_REBOOT_COMMAND;
-
-
-
-
-
-
-
-
-
 
     // run when someone runs start or auto start happens
     function restartOtherBot() {
@@ -37,9 +23,6 @@ const botRebootCommand = process.env.BOT_REBOOT_COMMAND;
           return true;
         }
       };
-
-
-
 
 
 

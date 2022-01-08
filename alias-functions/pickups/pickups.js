@@ -99,7 +99,7 @@ const server = {
       const redTeam = data.teams["RED Team"];
       const blueTeam = data.teams["BLUE Team"];
       playerToAdd = data.players[authorId];
-      if(data.teams["RED Team"].length === 1 || data.teams["BLUE Team"].length === 1 && !redTeam.includes(playerToAdd) && !blueTeam.includes(playerToAdd)) {
+      if((data.teams["RED Team"].length === 1 || data.teams["BLUE Team"].length === 1) && (!redTeam.includes(playerToAdd) && !blueTeam.includes(playerToAdd))) {
         if (checkIfUserIsRegistered(message, data.players, authorId)) {
           let queueTeam = data.teams["PICKUP Queue"];
           if (queueTeam.includes(playerToAdd)) {
@@ -268,7 +268,7 @@ const server = {
           redAndBlueTeamEmbed(message, data, timeLeft, gameStarted);
         }
       })
-    }, 1000);
+    }, 500);
   };
   
   function getUserIdByUserName(players, userName) {
@@ -373,7 +373,7 @@ const server = {
       // teamData = data.teams;
       playerData = data.players;
   
-      if (!data.teams.hasOwnProperty("RED Team") ||!data.teams.hasOwnProperty("BLUE Team")) {
+      if (!data.teams.hasOwnProperty("RED Team") || !data.teams.hasOwnProperty("BLUE Team")) {
         return cautionEmbed(
           message,
           "",
@@ -449,16 +449,18 @@ const server = {
 
       data.teams = {...data.teams, "PICKUP Queue": ["q-XxPunisher78xX"]};
 
-      startPickupGameEmbed(message, "Pickup Game Has Started!", "You've been given specific instructions on how to play this pickup game.");
       redAndBlueMatchupEmbed(message, "RED v. BLUE", data);
+
 
       fs.writeFile(filePath, JSON.stringify(data, null, 2), (error) => {
         if (error) {
           console.log(error);
         }
       });
+      startPickupGameEmbed(message, "Pickup Game Has Started!", "You've been given specific instructions on how to play this pickup game.");
       pickupKicker(filePath, message); 
     });
+    
   }
 
 
@@ -475,7 +477,7 @@ const server = {
     setTimeout(() => {
       interval = setInterval(() => {
         intervalChecks(filePath, message, interval);  
-      }, 30000); // 1 min
+      }, 20000); // 1 min
      }, 5000); // 5 min
     }
 
@@ -662,7 +664,7 @@ function checkIfGameEnded(filePath) {
               }
               return wipeTeamsEmbed(message, "Teams Wiped: Game Cancelled.");
             });
-        }, 500);
+        }, 1000);
     });
   }
 
