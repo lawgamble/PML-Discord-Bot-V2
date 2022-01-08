@@ -118,6 +118,7 @@ const server = {
         }
       });
     });
+    return;
   }
     // check if valid argument first.
     if (!otherArgumentsFilter.includes(arguments[0]?.toLowerCase()) && !teamFilter.includes(arguments[0]?.toLowerCase())) {
