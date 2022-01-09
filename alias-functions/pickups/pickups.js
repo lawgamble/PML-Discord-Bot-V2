@@ -202,7 +202,8 @@ const server = {
 
           if(gameStarted === true) {
             message.client.users.fetch(authorId).then((user) => {
-                user.send(`Pickup Game servername: PML Pickup Games! [PavlovMasterLeague.com]\nPickup Game Pin: ${pin}`);
+                user.send(`Pickup Game servername: PCL Pickups! [PavlovChampionsLegaue.com]\nPickup Game Pin: ${pin}`);
+                
             })
             // restart other bot
             restartOtherBot();
@@ -493,7 +494,7 @@ function intervalChecks(filePath, message, interval) {
           return;
         }
      gameEnded = checkIfGameEnded(filePath);
-     rip.checkInactivePlayers(filePath, data, message);
+     rip.checkInactivePlayers(filePath, data, message, pin);
      if(!gameStarted || gameEnded === true) {
          gameStarted = false;
         wipeRedAndBlueTeams(message, filePath, thirtyFiveMinuteTimer, gameStarted)

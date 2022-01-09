@@ -28,7 +28,7 @@ let checkList = [];
 let i = 0;
 let j = 1;
 
-async function checkInactivePlayers(filePath, data, message) {
+async function checkInactivePlayers(filePath, data, message, pin) {
     redTeam = data.teams["RED Team"];
     blueTeam = data.teams["BLUE Team"];
     pickupQueue = data.teams["PICKUP Queue"];
@@ -59,14 +59,14 @@ async function checkInactivePlayers(filePath, data, message) {
     console.log(removalArray);
 
     // interval runs every 5 min until game ends
-    removePlayer(data, j, rconPlayersList, message, filePath);
+    removePlayer(data, j, rconPlayersList, message, filePath, pin);
 
     i++; // incriments every time checkInactivePlayers() is called -- every minute
-    j++; 
+    j++;
     if (j > 4) j = 0;
 }
 
-function removePlayer(data, indexToRemove, rconPlayersList, message, filePath) {
+function removePlayer(data, indexToRemove, rconPlayersList, message, filePath, pin) {
     if (removalArray[indexToRemove].length === 0) {
         // if nobody is on the removal list index, return.
         return;
@@ -75,7 +75,7 @@ function removePlayer(data, indexToRemove, rconPlayersList, message, filePath) {
         let blueTeam = data.teams["BLUE Team"];
 
         removalArray[indexToRemove].forEach((player) => {
-            
+
 
             const userDiscordId = getUserIdByUserName(data.players, "q-" + player);
 
@@ -84,9 +84,9 @@ function removePlayer(data, indexToRemove, rconPlayersList, message, filePath) {
             const indexInCheckList = checkList.indexOf("q-" + player); // will return -1 if player is not in the array
 
             if (rconPlayersList.includes(player)) {
-              checkList.splice(indexInCheckList, 1);
-              return; // this just moves to the next player in the removal array
-          }
+                checkList.splice(indexInCheckList, 1);
+                return; // this just moves to the next player in the removal array
+            }
 
             if (redTeamPlayerIndex > -1) {
                 if (redTeamPlayerIndex === 0)
@@ -117,13 +117,10 @@ function removePlayer(data, indexToRemove, rconPlayersList, message, filePath) {
         });
     }
 
-
-
     removalArray[indexToRemove] = []; // after players are kicked, reset removal array at index j
-
-    movePlayerFromQueue(filePath);
-    sendTeamEmbed(filePath, message)
-
+    setTimeout(() => {
+        movePlayerFromQueue(filePath, message, pin);
+    }, 500);
 }
 
 function checkAndReassignRoles(player, data, message, team) {
@@ -140,7 +137,7 @@ function checkAndReassignRoles(player, data, message, team) {
         const foundUser2 = message.guild.members.fetch(newCaptId).then((user) => {
             user.roles.add(pickupCaptainRoleId).then((user) => {
                 user.send(
-                    "You were automatically assigned a captain role during the pickup game. Please make sure you close the game when you are finished!"
+                    "You were automatically assigned a captain role during the pickup game. With great power comes great responsibility."
                 );
             });
         });
@@ -170,7 +167,7 @@ function letTheWorldKnow(userDiscordId, message) {
 }
 
 
-function movePlayerFromQueue(filePath) {
+function movePlayerFromQueue(filePath, message, pin) {
     readAliasFile(filePath, (error, data) => {
         if (error) {
             console.log(error);
@@ -189,10 +186,16 @@ function movePlayerFromQueue(filePath) {
             (pickupQueue.length > 0 && blueTeam.length < 5)
         ) {
             if (pickupQueue.length > 0 && redTeam.length < 5) {
-                redTeam.push(pickupQueue.shift());
+                // find the player and send them a msg
+                let queuePlayer = pickupQueue.shift();
+                redTeam.push(queuePlayer);
+                sendUserThePin(data.players, queuePlayer, message, pin, "RED Team");
+
             }
             if (pickupQueue.length > 0 && blueTeam.length < 5) {
-                blueTeam.push(pickupQueue.shift());
+                let queuePlayer = pickupQueue.shift();
+                blueTeam.push(queuePlayer);
+                sendUserThePin(data.players, queuePlayer, message, pin, "BLUE Team");
             }
         }
         fs.writeFile(filePath, JSON.stringify(data, null, 2), (error) => {
@@ -201,6 +204,9 @@ function movePlayerFromQueue(filePath) {
             }
         });
     });
+    setTimeout(() => {
+        sendTeamEmbed(filePath, message);
+    }, 500);
 }
 
 function sendTeamEmbed(filePath, message) {
@@ -212,6 +218,15 @@ function sendTeamEmbed(filePath, message) {
         if (data.teams["RED Team"].length + data.teams["BLUE Team"].length !== 0) {
             redAndBlueTeamEmbed(message, data, null, true); // might need to read file again before?
         }
+    });
+}
+
+function sendUserThePin(players, queuePlayer, message, pin, team) {
+    const userDiscordId = getUserIdByUserName(players, queuePlayer);
+    const foundUser = message.guild.members.fetch(userDiscordId).then((user) => {
+        user.send(
+            `You have been added to the pickup game from the queue. You're on the ${team}. Here is the pin for the server: ${pin}`
+        );
     });
 }
 
