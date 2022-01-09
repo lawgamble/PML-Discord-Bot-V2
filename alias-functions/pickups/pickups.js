@@ -108,10 +108,20 @@ const server = {
             queueTeam.push(playerToAdd);
             redAndBlueTeamEmbed(message, data, null, gameStarted);
           }
-          //removes duplicate players if they are stupid enough to add themselves more than once
-          //queueTeam = [...new Set(queueTeam)]
         }
-      }  
+      }  else {
+        if (checkIfUserIsRegistered(message, data.players, authorId)) {
+          if (checkIfUserOnOtherTeam(data, arguments, authorId, message)) {
+            if ((arguments[0] === "red" && redTeam.length < 5) && (!redTeam.includes(playerToAdd) && !blueTeam.includes(playerToAdd))) {
+              redTeam.push(playerToAdd);
+              redAndBlueTeamEmbed(message, data, null, gameStarted);
+            } else if ((arguments[0] === "blue" && redTeam.length < 5) && (!redTeam.includes(playerToAdd) && !blueTeam.includes(playerToAdd))) {
+              blueTeam.push(playerToAdd);
+              redAndBlueTeamEmbed(message, data, null, gameStarted);
+            }
+          }
+        }
+      }
       fs.writeFile(filePath, JSON.stringify(data, null, 2), (error) => {
         if (error) {
           console.log(error);
