@@ -163,7 +163,7 @@ const server = {
   
       // check if player wants to leave
       if (arguments[0].toLowerCase() === "leave") {
-        return leavePickupGame(message, data, playersListData, blueTeam = data.teams["BLUE Team"], redTeam = data.teams["RED Team"], authorId, filePath);
+        return leavePickupGame(message, data, playersListData, blueTeam = data.teams["BLUE Team"], redTeam = data.teams["RED Team"], authorId, filePath, pin);
       }
   
       // check if user is registered
@@ -277,7 +277,7 @@ const server = {
     return Object.keys(players).find(key => players[key] === userName);
   }
   
-  function leavePickupGame(message, data, playersListData, blueTeam, redTeam, authorId, filePath) {
+  function leavePickupGame(message, data, playersListData, blueTeam, redTeam, authorId, filePath, pin) {
     // if user has pickupCaptain role, remove it 
     if (message.member.roles.cache.find((role) => role.id === pickupCaptainRoleId)) {
       message.member.roles.remove(pickupCaptainRoleId);
@@ -291,7 +291,7 @@ const server = {
             console.log(error);
           }
         });
-        rip.movePlayerFromQueue(filePath);
+        rip.movePlayerFromQueue(filePath, message, pin);
         return successEmbed(message, "Seeya!", "You've been removed from the RED Team");
       }
     }
@@ -304,7 +304,7 @@ const server = {
             console.log(error);
           }
         });
-        rip.movePlayerFromQueue(filePath);
+        rip.movePlayerFromQueue(filePath, message, pin);
         return successEmbed(message, "Seeya!", "You've been removed from the BLUE Team");
       }
     }
@@ -479,8 +479,8 @@ const server = {
     setTimeout(() => {
       interval = setInterval(() => {
         intervalChecks(filePath, message, interval);  
-      }, 60000); // 1 min
-     }, 600000); // 10 min
+      }, 20000); // 1 min
+     }, 20000); // 10 min
     }
 
 
