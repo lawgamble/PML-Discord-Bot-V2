@@ -492,8 +492,8 @@ const server = {
     setTimeout(() => {
       interval = setInterval(() => {
         intervalChecks(filePath, message, interval);  
-      }, 20000); // 1 min
-     }, 5000); // 10 min
+      }, 60000); // 1 min
+     }, 600000); // 10 min
     }
 
 

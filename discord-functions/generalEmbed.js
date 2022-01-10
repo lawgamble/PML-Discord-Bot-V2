@@ -96,7 +96,7 @@ function redAndBlueTeamEmbed(message, data, timeLeft, gameStarted) {
         value: `${gameStarted ? gameStartedMsg : timerMsg}`,
       }
     );
-  message.reply({
+  message.channel.send({
     embeds: [embed],
   });
 }
