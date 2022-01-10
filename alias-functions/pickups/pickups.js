@@ -493,7 +493,7 @@ const server = {
       interval = setInterval(() => {
         intervalChecks(filePath, message, interval);  
       }, 60000); // 1 min
-     }, 600000); // 10 min
+     }, 300000); // 10 min
     }
 
 
