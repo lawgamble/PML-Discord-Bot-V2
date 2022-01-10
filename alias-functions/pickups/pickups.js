@@ -111,15 +111,16 @@ const server = {
         }
       }  else {
         if (checkIfUserIsRegistered(message, data.players, authorId)) {
-          if (checkIfUserOnOtherTeam(data, arguments, authorId, message)) {
             if ((arguments[0] === "red" && redTeam.length < 5) && (!redTeam.includes(playerToAdd) && !blueTeam.includes(playerToAdd))) {
               redTeam.push(playerToAdd);
+              rip.sendUserThePin(data.players, playerToAdd, message, pin, "RED Team");
               redAndBlueTeamEmbed(message, data, null, gameStarted);
-            } else if ((arguments[0] === "blue" && redTeam.length < 5) && (!redTeam.includes(playerToAdd) && !blueTeam.includes(playerToAdd))) {
+            } 
+            if ((arguments[0] === "blue" && redTeam.length < 5) && (!redTeam.includes(playerToAdd) && !blueTeam.includes(playerToAdd))) {
               blueTeam.push(playerToAdd);
+              rip.sendUserThePin(data.players, playerToAdd, message, pin, "BLUE Team");
               redAndBlueTeamEmbed(message, data, null, gameStarted);
             }
-          }
         }
       }
       fs.writeFile(filePath, JSON.stringify(data, null, 2), (error) => {
@@ -130,6 +131,8 @@ const server = {
     });
     return;
   }
+
+
     // check if valid argument first.
     if (!otherArgumentsFilter.includes(arguments[0]?.toLowerCase()) && !teamFilter.includes(arguments[0]?.toLowerCase())) {
       return cautionEmbed(
@@ -490,7 +493,7 @@ const server = {
       interval = setInterval(() => {
         intervalChecks(filePath, message, interval);  
       }, 20000); // 1 min
-     }, 20000); // 10 min
+     }, 5000); // 10 min
     }
 
 

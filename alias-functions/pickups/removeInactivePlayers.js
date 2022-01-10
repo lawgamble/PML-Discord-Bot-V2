@@ -9,20 +9,13 @@ const readAliasFile = require("../../JSONParser");
 
 
 const pkFilePath = process.env.PICKUP_KICKER_LOG_FILEPATH;
-
 const pickupCaptainRoleId = process.env.PICKUP_CAPTAIN_ROLE_ID;
 
 let redTeam;
 let blueTeam;
 let pickupQueue;
 
-let removalArray = [
-    [],
-    [],
-    [],
-    [],
-    []
-];
+let removalArray = [[], [], [], [], []];
 let checkList = [];
 
 let i = 0;
@@ -57,16 +50,18 @@ async function checkInactivePlayers(filePath, data, message, pin) {
         }
     });
     console.log(removalArray);
+    console.log("checkList:", checkList);
 
     // interval runs every 5 min until game ends
-    removePlayer(data, j, rconPlayersList, message, filePath, pin);
+    removePlayer(data, j, rconPlayersList, message, filePath, pin, checkList);
 
     i++; // incriments every time checkInactivePlayers() is called -- every minute
     j++;
     if (j > 4) j = 0;
 }
 
-function removePlayer(data, indexToRemove, rconPlayersList, message, filePath, pin) {
+function removePlayer(data, indexToRemove, rconPlayersList, message, filePath, pin, checkList) {
+
     if (removalArray[indexToRemove].length === 0) {
         // if nobody is on the removal list index, return.
         return;
@@ -75,7 +70,7 @@ function removePlayer(data, indexToRemove, rconPlayersList, message, filePath, p
         let blueTeam = data.teams["BLUE Team"];
 
         removalArray[indexToRemove].forEach((player) => {
-
+           
 
             const userDiscordId = getUserIdByUserName(data.players, "q-" + player);
 
@@ -87,6 +82,7 @@ function removePlayer(data, indexToRemove, rconPlayersList, message, filePath, p
                 checkList.splice(indexInCheckList, 1);
                 return; // this just moves to the next player in the removal array
             }
+        
 
             if (redTeamPlayerIndex > -1) {
                 if (redTeamPlayerIndex === 0)
@@ -109,7 +105,11 @@ function removePlayer(data, indexToRemove, rconPlayersList, message, filePath, p
                 letTheWorldKnow(userDiscordId, message); // sends channel msg and tags user that says he was kicked
                 logKickedUser("q-" + player, userDiscordId);
             }
+            if(checkList.includes(player)) {
+                checkList.splice(checkList.indexOf(player), 1);
+            }
         });
+            
         fs.writeFile(filePath, JSON.stringify(data, null, 2), (error) => {
             if (error) {
                 console.log(error);
@@ -209,14 +209,17 @@ function movePlayerFromQueue(filePath, message, pin) {
     }, 500);
 }
 
+
 function sendTeamEmbed(filePath, message) {
     readAliasFile(filePath, (error, data) => {
         if (error) {
             console.log(error);
             return;
         }
-        if (data.teams["RED Team"].length + data.teams["BLUE Team"].length !== 0) {
-            redAndBlueTeamEmbed(message, data, null, true); // might need to read file again before?
+        if(data.teams.hasOwnProperty("RED Team") && data.teams.hasOwnProperty("BLUE Team")) {
+            if (data.teams["RED Team"].length + data.teams["BLUE Team"].length !== 0) {
+                redAndBlueTeamEmbed(message, data, null, true); // might need to read file again before?
+            }
         }
     });
 }
@@ -225,7 +228,7 @@ function sendUserThePin(players, queuePlayer, message, pin, team) {
     const userDiscordId = getUserIdByUserName(players, queuePlayer);
     const foundUser = message.guild.members.fetch(userDiscordId).then((user) => {
         user.send(
-            `You have been added to the pickup game from the queue. You're on the ${team}. Here is the pin for the server: ${pin}`
+            `You have been added to the pickup game! You're on the ${team}. Here is the pin for the server: ${pin}`
         );
     });
 }
@@ -233,6 +236,7 @@ function sendUserThePin(players, queuePlayer, message, pin, team) {
 const rip = {
     checkInactivePlayers,
     movePlayerFromQueue,
+    sendUserThePin,
 }
 
 
