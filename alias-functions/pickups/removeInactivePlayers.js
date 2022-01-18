@@ -204,9 +204,8 @@ function movePlayerFromQueue(filePath, message, pin) {
             }
         });
     });
-    setTimeout(() => {
         sendTeamEmbed(filePath, message);
-    }, 500);
+        return;
 }
 
 

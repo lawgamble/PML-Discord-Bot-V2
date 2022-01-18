@@ -1,4 +1,5 @@
 const net = require("net");
+const exec = require("child_process").exec;
 
 
 
@@ -61,4 +62,18 @@ function connectToServer(server, pin) {
     });
   }
 
-  module.exports = connectToServer;
+  function restartOtherBot() {
+    exec(botRebootCommand, (error, stdout, stderr) => {
+      if (error) {
+        console.log(`error: ${error.message}`);
+        return;
+      }
+      if (stderr) {
+        console.log(`stderr: ${stderr}`);
+        return;
+      }
+      console.log(`stdout: ${stdout}`);
+    });
+  }
+
+  module.exports = {connectToServer, restartOtherBot};

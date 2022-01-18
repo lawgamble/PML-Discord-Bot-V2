@@ -321,6 +321,19 @@ const server = {
         return successEmbed(message, "Seeya!", "You've been removed from the BLUE Team");
       }
     }
+    if(data.teams.hasOwnProperty("PICKUP Queue")) {
+      if (data.teams["PICKUP Queue"].includes(playersListData[authorId])) {
+        const indexOfPlayer = data.teams["PICKUP Queue"].indexOf(playersListData[authorId]);
+        data.teams["PICKUP Queue"].splice(indexOfPlayer, 1);
+        fs.writeFile(filePath, JSON.stringify(data, null, 2), (error) => {
+          if (error) {
+            console.log(error);
+          }
+        });
+        rip.movePlayerFromQueue(filePath, message, pin);
+        return successEmbed(message, "Seeya!", "You've been removed from the PICKUP Queue");
+      }
+    }
     return cautionEmbed(message, "Awkward!", "You aren't actually on a team...")
   }
   
@@ -441,7 +454,7 @@ const server = {
         // send DM to user with pin
         message.client.users.fetch(userId).then((user) => {
           if (index === 0) {
-            user.send(`-You are a captain for this pickup game.\n-Use "!switchmap <mapname> SND pickup" to pick your map and "!pickupsetup" to start the game!\n-Please Join the "PML Pickup Games" Server\nPickup Game Pin: ${pin}`);
+            user.send(`You are a captain for this pickup game.\n-Use "!switchmap <mapname> SND pickup" to pick your map and "!pickupsetup" to start the game!\n-Please Join the "PCL Pickup Games" Server\nPickup Game Pin: ${pin}`);
           } else {
             user.send(`Pickup Game servername: PML Pickup Games! [PavlovMasterLeague.com]\nPickup Game Pin: ${pin}`);
           }
@@ -547,64 +560,64 @@ function checkIfGameEnded(filePath) {
   
   
 
-  function connectToServer(server, pin) {
-    return new Promise((resolve) => {
-      socket = net.Socket();
-  
-      socket.connect(server.port, server.ip, () => {});
-  
-      socket.on("error", function (err) {
-        console.log(err);
-        resolve(socket);
-      });
-  
-      socket.on("data", function (data) {
+    function connectToServer(server, pin) {
+      return new Promise((resolve) => {
+        socket = net.Socket();
+    
+        socket.connect(server.port, server.ip, () => {});
+    
+        socket.on("error", function (err) {
+          console.log(err);
+          resolve(socket);
+        });
+    
+        socket.on("data", function (data) {
 
-        if (data.toString().startsWith("Password:")) {
-          socket.write(server.password);
-        }
-        if (data.toString().startsWith("Authenticated=1")) {
-          console.log("Logged in!");
-          (async () => {
-            socket.function = await commandHandler(socket, `setpin ${pin}`);
-            if (socket.function.Successful) {
-              socket.end();
-              socket.destroy();
-            }
-            return resolve(socket);
-          })();
-        }
-        if (data.toString().startsWith("Authenticated=0")) {
-          console.log(data, "RCON login not authenticated!");
-        }
+          if (data.toString().startsWith("Password:")) {
+            socket.write(server.password);
+          }
+          if (data.toString().startsWith("Authenticated=1")) {
+            console.log("Logged in!");
+            (async () => {
+              socket.function = await commandHandler(socket, `setpin ${pin}`);
+              if (socket.function.Successful) {
+                socket.end();
+                socket.destroy();
+              }
+              return resolve(socket);
+            })();
+          }
+          if (data.toString().startsWith("Authenticated=0")) {
+            console.log(data, "RCON login not authenticated!");
+          }
+        });
       });
-    });
-  }
-  async function commandHandler(socket, command) {
-    const try1 = await commandExecute(socket, command);
-    if (try1) {
-      return try1;
-    } else {
-      const try2 = await commandExecute(socket, command);
-      return try2;
     }
-  }
-  
-  function commandExecute(socket, command) {
-    return new Promise((resolve) => {
-      socket.write(command);
-      socket.once("data", function (data) {
-        const dataResult = data.toString();
-        try {
-          const jsonResult = JSON.parse(dataResult);
-          return resolve(jsonResult);
-        } catch (e) {
-          console.log(e, "Bad rcon Response:", command, dataResult);
-          return resolve(null);
-        }
+    async function commandHandler(socket, command) {
+      const try1 = await commandExecute(socket, command);
+      if (try1) {
+        return try1;
+      } else {
+        const try2 = await commandExecute(socket, command);
+        return try2;
+      }
+    }
+    
+    function commandExecute(socket, command) {
+      return new Promise((resolve) => {
+        socket.write(command);
+        socket.once("data", function (data) {
+          const dataResult = data.toString();
+          try {
+            const jsonResult = JSON.parse(dataResult);
+            return resolve(jsonResult);
+          } catch (e) {
+            console.log(e, "Bad rcon Response:", command, dataResult);
+            return resolve(null);
+          }
+        });
       });
-    });
-  }
+    }
   
   // run when someone runs start or auto start happens
   function restartOtherBot() {

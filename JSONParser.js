@@ -21,4 +21,8 @@ function getAliasData(filePath) {
   return data;
 }
 
-module.exports = readAliasFile, getAliasData;
+function writeAliasData(filePath, data) {
+  return fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+  }
+
+module.exports = {readAliasFile, getAliasData, writeAliasData};

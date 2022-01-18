@@ -4,9 +4,9 @@ const list = [];
 
 async function rconPlayersListForPickups() {
   const server = {
-    port: 9100,
+    port: process.env.SERVER_PORT,
     ip: process.env.PICKUP_SERVER_IP,
-    password: "3c172215303757976efb67156a9bc207",
+    password: process.env.SERVER_PASSWORD,
   };
   const playersListArray = await connectToServer(server);
   console.log("LIST:", list);
@@ -44,17 +44,6 @@ function connectToServer(server) {
   });
 }
 
-// function commandRouter(socket, userCommand) {
-//   const verb = userCommand.split(" ")[0].toLowerCase();
-//   console.log("VERB", verb);
-//   const commandObject = {
-//     serverinfo: getServerDetails(socket, userCommand),
-//     switchmap: switchMap(socket, userCommand),
-//     rotatemap: commandHandler,
-//   };
-//   console.log(commandObject[verb]);
-//   return commandObject[verb];
-// }
 
 async function getServerDetails(socket) {
   const refreshList = await commandHandler(socket, "RefreshList");

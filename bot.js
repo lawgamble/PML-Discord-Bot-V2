@@ -14,6 +14,7 @@ const challengeScore = require("./alias-functions/match-scrim-challenge/challeng
 const botRepeat = require("./discord-functions/botRepeat");
 const rosterEmbed = require("./discord-functions/rosterEmbed");
 const pg = require("./alias-functions/pickups/pickups.js");
+const pickupGame = require("./alias-functions/pickups/pickupRefactor.js");
 const hf  = require("./helperFunctions")
 const phf = require("./alias-functions/pickups/pickupHelperFunctions")
 
@@ -45,7 +46,7 @@ client.on("ready", () => {
           console.log(error);
         }
         hf.deletePickupTeams(data) 
-        hf.clearAllTimeouts()
+        // hf.clearAllTimeouts()
         hf.writeToAliasFile(data);
     });
     console.log("We Are LIVE!");
@@ -146,7 +147,7 @@ client.on("messageCreate", (message) => {
              
         case "pickup":
             if(hf.msgFromPickupChannel(message)) {
-                    pg.pickupGame(filePath, message, arguments, command);
+                    pickupGame(message, arguments, command);
             };
             break;
             

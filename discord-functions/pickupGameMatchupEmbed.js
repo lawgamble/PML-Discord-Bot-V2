@@ -1,4 +1,3 @@
-
 const { MessageEmbed } = require("discord.js");
 const teamImages = require("../imageURLs");
 const pickupGameImage = teamImages["pickupPmlLogo"];

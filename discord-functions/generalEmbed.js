@@ -41,11 +41,11 @@ function redAndBlueTeamEmbed(message, data, timeLeft, gameStarted) {
   const redTeam = data.teams["RED Team"];
   const blueTeam = data.teams["BLUE Team"];
   const queueTeam = data.teams["PICKUP Queue"];
-  let redTeamString = "(c)";
-  let blueTeamString = "(c)";
+  let redTeamString = "`C`";
+  let blueTeamString = "`C`";
   let queueTeamString = "---\n"
   
-  const timerMsg = `There are ${timeLeft} minute(s) left to fill the teams before they're flushed!`;
+  const timerMsg = `${timeLeft} minutes left to fill the teams`;
   const gameStartedMsg = `This Pickup Game is currently running!`;
 
   if (redTeam != undefined) {
@@ -69,22 +69,22 @@ function redAndBlueTeamEmbed(message, data, timeLeft, gameStarted) {
 
   let embed = new MessageEmbed()
     .setColor("#A020F0")
-    .setTitle("Team RED / Team BLUE")
+    .setTitle("RED  vs  BLUE")
     .addFields(
       {
-        name: `RED Team: --- (${
+        name: `_RED_     -${
           redTeam != undefined
             ? `${5 - redTeam.length} spots left`
             : `5 spots left`
-        }) \n`,
+        }- \n`,
         value: redTeamString,
       },
       {
-        name: `BLUE Team: --- (${
+        name: `_BLUE_     -${
           blueTeam != undefined
             ? `${5 - blueTeam.length} spots left`
             : `5 spots left`
-        }) \n`,
+        }- \n`,
         value: blueTeamString,
       },
       {
