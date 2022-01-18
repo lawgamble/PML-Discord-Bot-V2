@@ -9,6 +9,7 @@ require("dotenv").config();
 const filePath = process.env.ALIASES_FILEPATH;
 const pickupCaptainRoleId = process.env.PICKUP_CAPTAIN_ROLE_ID;
 const leagueManagerRoleId = process.env.LEAGUE_MANAGER_ROLE_ID;
+const pkFilePath = process.env.PICKUP_KICKER_LOG_FILEPATH;
 
 let gameIsActive = false;
 let initialized = false;
@@ -341,7 +342,7 @@ function pickupKicker(message) {
         data = getAliasData(filePath);
 
         checkPlayerLists(data.teams["RED Team"], data.teams["BLUE Team"], rconPlayerList);
-        kickPlayers(data.teams["RED Team"], data.teams["BLUE Team"], rconPlayerList);
+        kickPlayers(data.teams["RED Team"], data.teams["BLUE Team"], rconPlayerList, data, message);
 
        const queueNumber = movePlayersFromQueue(data.teams["RED Team"], data.teams["BLUE Team"], data.teams["PICKUP Queue"], message);
 
@@ -369,7 +370,7 @@ function checkPlayerLists(redTeam, blueTeam, rconPlayerList) {
     i++;
 };
 
-function kickPlayers(redTeam, blueTeam, rconPlayerList) {
+function kickPlayers(redTeam, blueTeam, rconPlayerList, data, message) {
     if (j > 4) j = 0;
     if(removalArray[j].length === 0) return j++;
     
@@ -377,6 +378,8 @@ function kickPlayers(redTeam, blueTeam, rconPlayerList) {
         if(redTeam.includes(player)) redTeam.splice(redTeam.indexOf(player), 1);
         if(blueTeam.includes(player)) blueTeam.splice(blueTeam.indexOf(player), 1);
 
+        logKickedUser(player, data, message);
+       
         checkList.delete(player);
         // remove captain role
 
@@ -406,6 +409,24 @@ function movePlayersFromQueue(redTeam, blueTeam, pickupQueue, message) {
     }
     return queueNumber;
 };
+
+function logKickedUser(player, data, message) {
+    const userDiscordId = getUserIdByUserName(player, data.players);
+    const date = new Date().toLocaleString();
+    const log = `${date} - ${userDiscordId} - ${player}\n`;
+    fs.appendFile(pkFilePath, log, (error) => {
+        if (error) {
+            console.log(error);
+        }
+    });
+    letTheWorldKnow(userDiscordId, message);
+}
+
+function letTheWorldKnow(userDiscordId, message) {
+    message.channel.send(
+        `<@${userDiscordId}> was kicked from the pickup game due to inactivity.`
+    );
+}
 
 
 module.exports = pickupGame;
