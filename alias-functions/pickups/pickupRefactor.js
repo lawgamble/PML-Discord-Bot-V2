@@ -2,8 +2,8 @@ const fs = require('fs');
 const { getAliasData, writeAliasData } = require("../../JSONParser")
 const pem = require("../../discord-functions/pickupGameMatchupEmbed")
 const em = require("../../discord-functions/generalEmbed");
-const { restartOtherBot } = require("./rcon.js");
 const rconPlayersListForPickups = require("../../rcon-functions/checkRconUserCount");
+const exec = require("child_process").exec;
 require("dotenv").config();
 
 const filePath = process.env.ALIASES_FILEPATH;
@@ -17,6 +17,7 @@ let data;
 let pin;
 const { Timer } = require('timer-node');
 
+const botRebootCommand = process.env.BOT_REBOOT_COMMAND;
 let preGameTimeout;
 let preGameTimer = new Timer();
 
@@ -61,7 +62,7 @@ function pickupGame(message, arguments, command) {
             break;
 
         case "end":
-            if (userIsLeagueManager(message)) endPickupGame(message);
+            if (userIsCaptain(message)&& gameIsActive) resetPickupGame(message);
             else closure(message, "notLeagueManager", "!pickup end");
             break;
 
@@ -128,9 +129,40 @@ function startGame(message) {
     clearTimeout(preGameTimeout);
     restartOtherBot();
     pem.redAndBlueMatchupEmbed(message, "RED vs BLUE", data);
-    pickupKicker(filePath, message, gameIsActive, pin)
+    pickupKicker(message);
 
 }
+
+async function resetPickupGame(message) {
+    gameIsActive = false;
+    preGameTimer.start();
+    const rconPlayerList = await rconPlayersListForPickups();
+    data = getAliasData(filePath);
+
+    const redTeam = data.teams["RED Team"];
+    const blueTeam = data.teams["BLUE Team"];
+    const queue = data.teams["PICKUP Queue"];
+
+    redTeam.forEach((user, index) =>  {
+        if (!rconPlayerList.includes(user)) {
+            data.teams["RED Team"].splice(data.teams["RED Team"].indexOf(user), 1);
+            if(index === 0) removeCaptainRole(data, "RED Team", user, message);
+        }
+    });
+    blueTeam.forEach((user, index) =>  {
+        if (!rconPlayerList.includes(user)) {
+            data.teams["BLUE Team"].splice(data.teams["BLUE Team"].indexOf(user), 1);
+            if(index === 0) removeCaptainRole(data, "BLUE Team", user, message);
+        }
+    });
+    movePlayersFromQueue(redTeam, blueTeam, queue, message);
+    writeAliasData(filePath, data);
+
+    if(totalPlayers() === 0) return wipeAllTeams(message);
+
+    em.simpleReplyEmbed(message, "The Pickup Game was reset!");
+    sendTeamsEmbed(message);
+};
 
 
 function userIsRegistered(discordId) {
@@ -181,7 +213,7 @@ function initializeGame(message) {
     data = getAliasData(filePath);
     data.teams["RED Team"] = [];
     data.teams["BLUE Team"] = [];
-    data.teams["PICKUP Queue"] = [];
+    data.teams["PICKUP Queue"] = ["q-D1G1TALWraith"];
     initialized = true;
     writeAliasData(filePath, data);
     preGameTimer.start();
@@ -244,8 +276,8 @@ function wipeAllTeams(message) {
     if (!gameIsActive) {
         const data = getAliasData(filePath);
 
-        if (thereIsACaptain(data, "RED Team")) removeCaptainRole(data, "RED Team", data.teams["RED Team"][0], message);
-        if (thereIsACaptain(data, "BLUE Team")) removeCaptainRole(data, "BLUE Team", data.teams["BLUE Team"][0], message);
+        if (thereIsACaptain(data, "RED Team")) autoRemoveCaptainRole(data, message); 
+        if (thereIsACaptain(data, "BLUE Team")) autoRemoveCaptainRole(data, message); 
 
         delete data.teams["RED Team"];
         delete data.teams["BLUE Team"];
@@ -254,6 +286,7 @@ function wipeAllTeams(message) {
         writeAliasData(filePath, data);
         em.simpleReplyEmbed(message, "The Pickup Game has ended. All teams have been wiped.");
         initialized = false;
+        preGameTimer.stop();
     }
 };
 
@@ -261,7 +294,7 @@ function addCaptainRole(data, team, userName, message) {
     if (data.teams[team][0] === userName) message.member.roles.add(pickupCaptainRoleId);
 };
 
-function removeCaptainRole(data, team, userName, message) {
+function removeCaptainRole(data, team, userName, message) { 
     if (data.teams[team][0] === userName) {
         const discordId = getUserIdByUserName(userName, data.players);
         message.guild.members.fetch(discordId).then((user) => {
@@ -270,14 +303,44 @@ function removeCaptainRole(data, team, userName, message) {
     }
 }
 
-function endPickupGame(message) {
-    gameIsActive = false;
-    wipeAllTeams(message);
-};
+function autoRemoveCaptainRole(data, message) { 
+        let discordId = getUserIdByUserName(data.teams["RED Team"][0], data.players);
+        console.log(discordId);
+        message.guild.members.fetch(discordId).then((user) => {
+            user.roles.remove(pickupCaptainRoleId);
+        }).catch((error) => { console.log(error) });
+   
+        discordId = getUserIdByUserName(data.teams["BLUE Team"][0], data.players);
+        console.log(discordId);
+
+        message.guild.members.fetch(discordId).then((user) => {
+            user.roles.remove(pickupCaptainRoleId);
+        }).catch((error) => { console.log(error) });
+      
+}
+
+// function endPickupGame(message) {
+//     gameIsActive = false;
+//     wipeAllTeams(message);
+// };
 
 function thereIsACaptain(data, team) {
     return data?.teams?.[team]?.[0] !== undefined;
 }
+
+function restartOtherBot() {
+    exec(botRebootCommand, (error, stdout, stderr) => {
+      if (error) {
+        console.log(`error: ${error.message}`);
+        return;
+      }
+      if (stderr) {
+        console.log(`stderr: ${stderr}`);
+        return;
+      }
+      console.log(`stdout: ${stdout}`);
+    });
+  }
 
 function closure(message, closureArguments, command, arguments) {
     switch (closureArguments) {
@@ -331,7 +394,7 @@ function pickupKicker(message) {
     setTimeout(() => {
       interval = setInterval(() => {
         intervalChecks(message);  
-      }, 10000); // 1 min 60000
+      }, 60000); // 1 min 60000
      }, 15000); // 10 min 300000
     };
 
@@ -339,6 +402,10 @@ function pickupKicker(message) {
         if (!gameIsActive) return clearInterval(interval);
 
         const rconPlayerList = await rconPlayersListForPickups();
+
+        console.log("RCON List:", rconPlayerList, "\n", "Check List:", checkList);
+        console.log("j = " + j, "i = " + i, "\n", "RemovalArray:", removalArray);
+
         data = getAliasData(filePath);
 
         checkPlayerLists(data.teams["RED Team"], data.teams["BLUE Team"], rconPlayerList);
@@ -348,7 +415,7 @@ function pickupKicker(message) {
 
         writeAliasData(filePath, data);
 
-        if (totalPlayers() <= 1) { gameIsActive = false; return wipeAllTeams(message); };
+        if (totalPlayers() === 0) { gameIsActive = false; return wipeAllTeams(message); };
         
         if(queueNumber > 0) sendTeamsEmbed(message);
     };
@@ -357,13 +424,13 @@ function pickupKicker(message) {
 function checkPlayerLists(redTeam, blueTeam, rconPlayerList) {
     if (i > 4) i = 0;
     redTeam.forEach((player) => {
-        // does rcon list contain the "q-" player?
-         if (!rconPlayerList.includes(player) && !checkList.includes(player)) {
+        // does rcon list contain the "q-" player? NOOOOOO
+         if (!rconPlayerList.includes(player) && !checkList.has(player)) {
             removalArray[i].push(player); checkList.add(player);
         }
     });
     blueTeam.forEach((player) => {
-        if (!rconPlayerList.includes(player) && !checkList.includes(player)) {
+        if (!rconPlayerList.includes(player) && !checkList.has(player)) {
             removalArray[i].push(player); checkList.add(player); 
         }
     });
@@ -397,13 +464,15 @@ function movePlayersFromQueue(redTeam, blueTeam, pickupQueue, message) {
         if(redTeam.length < 5) { 
             player = pickupQueue.shift();
             redTeam.push(player);
-            gameCodeMessage(player, data.players, message, pin, null)
+            if(gameIsActive) gameCodeMessage(player, data.players, message, pin, null)
+            else gameResetMessage(data, player, message)
             queueNumber++; 
         }
         else if(blueTeam.length < 5) {
             player = pickupQueue.shift();
             blueTeam.push(player); 
-            gameCodeMessage(player, data.players, message, pin, null)
+            if(gameIsActive) gameCodeMessage(player, data.players, message, pin, null)
+            else gameResetMessage(data, player, message)
             queueNumber++; 
         } 
     }
@@ -419,8 +488,16 @@ function logKickedUser(player, data, message) {
             console.log(error);
         }
     });
-    letTheWorldKnow(userDiscordId, message);
+    
 }
+
+function gameResetMessage(data, player, message) {
+    const userDiscordId = getUserIdByUserName(player, data.players);
+    message.guild.members.fetch(userDiscordId).then((user) => {
+        user.send(`The Pickup game that you were in queue for was ended by a captain. You've been added to a Pickup team and I'll let you know when the next Pickup game starts.\n**Check the Pickup channel to see your current team or to leave the the pickup if you can't play anymore.**`);
+    })
+    
+};
 
 function letTheWorldKnow(userDiscordId, message) {
     message.channel.send(
