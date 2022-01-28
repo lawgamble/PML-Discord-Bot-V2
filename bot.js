@@ -52,7 +52,6 @@ client.on("ready", () => {
         }
         hf.deletePickupTeams(data); 
         hf.writeToAliasFile(data);
-        clearUserVotes(voterFilePath);
 
     });
     console.log("We Are LIVE!");
