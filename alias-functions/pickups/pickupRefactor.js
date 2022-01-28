@@ -416,7 +416,7 @@ function pickupKicker(message) {
       interval = setInterval(() => {
         intervalChecks(message);  
       }, 60000); // 1 min 60000
-     }, 150000); // 5 min 300000
+     }, 300000); // 5 min 300000
     };
 
     async function intervalChecks(message) {
