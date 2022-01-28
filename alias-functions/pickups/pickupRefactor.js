@@ -2,7 +2,7 @@ const fs = require('fs');
 const { getAliasData, writeAliasData } = require("../../JSONParser")
 const pem = require("../../discord-functions/pickupGameMatchupEmbed")
 const em = require("../../discord-functions/generalEmbed");
-const rconPlayersListForPickups = require("../../rcon-functions/checkRconUserCount");
+const {rconPlayersListForPickups, connectToServer} = require("../../rcon-functions/checkRconUserCount");
 const exec = require("child_process").exec;
 const {voter} = require("./voter")
 require("dotenv").config();
@@ -17,6 +17,12 @@ let initialized = false;
 let data;
 let pin;
 const { Timer } = require('timer-node');
+
+const server = {
+    port: process.env.SERVER_PORT,
+    ip: process.env.PICKUP_SERVER_IP,
+    password: process.env.SERVER_PASSWORD,
+  };
 
 const botRebootCommand = process.env.BOT_REBOOT_COMMAND;
 let preGameTimeout;
@@ -80,6 +86,7 @@ function pickupGame(message, arguments, command) {
 
 
 function addPlayerToTeam(teamName, message) {
+    let userName;
     if (userOnAnotherTeam(message.author.id)) return closure(message, "userOnAnotherTeam");
 
      data = getAliasData(filePath);
@@ -91,24 +98,28 @@ function addPlayerToTeam(teamName, message) {
             userName = data.players[message.author.id];
             data.teams["RED Team"].push(userName);
             addCaptainRole(data, "RED Team", userName, message);
+
             break;
 
         case "blue":
             userName = data.players[message.author.id];
             data.teams["BLUE Team"].push(userName);
             addCaptainRole(data, "BLUE Team", userName, message);
+        
             break;
 
         case "queue":
             userName = data.players[message.author.id];
             data.teams["PICKUP Queue"].push(userName);
             em.successEmbed(message, "Queued Up!", "The team is full, so you've been queued up!");
+
             break;
     }
-    writeAliasData(filePath, data);
-    sendTeamsEmbed(message);
 
-    if (totalPlayers() === 10) {
+            writeAliasData(filePath, data);
+            sendTeamsEmbed(message);
+
+    if (totalPlayers() === 10 && !gameIsActive) {
         startGame(message);
     }
 }
@@ -125,38 +136,42 @@ function startGame(message) {
 
     redTeam.forEach((user, index) => {
         if (index === 0) captainCodeMessage(user, data.players, message, pin);
-        else gameCodeMessage(user, data.players, message, pin)
+        if (index != 0) gameCodeMessage(user, data.players, message, pin);
     });
     blueTeam.forEach((user, index) => {
         if (index === 0) captainCodeMessage(user, data.players, message, pin);
-        else gameCodeMessage(user, data.players, message, pin)
+        if (index != 0) gameCodeMessage(user, data.players, message, pin);
     });
+
+    connectToServer(server, pin)
 
     gameIsActive = true;
     clearTimeout(preGameTimeout);
     restartOtherBot();
+
     pem.redAndBlueMatchupEmbed(message, "RED vs BLUE", data);
     pickupKicker(message);
 }
 
 async function resetPickupGame(message) {
     gameIsActive = false;
+    preGameTimer.stop();
     preGameTimer.start();
-    const rconPlayerList = await rconPlayersListForPickups();
+    const rconPlayerList = await rconPlayersListForPickups(server);
     data = getAliasData(filePath);
 
     const redTeam = data.teams["RED Team"];
     const blueTeam = data.teams["BLUE Team"];
     const queue = data.teams["PICKUP Queue"];
-
+    
     redTeam.forEach((user, index) =>  {
-        if (!rconPlayerList.includes(user)) {
+        if (!rconPlayerList.includes(user.splice(2))) {
             data.teams["RED Team"].splice(data.teams["RED Team"].indexOf(user), 1);
             if(index === 0) removeCaptainRole(data, "RED Team", user, message);
         }
     });
     blueTeam.forEach((user, index) =>  {
-        if (!rconPlayerList.includes(user)) {
+        if (!rconPlayerList.includes(user.splice(2))) {
             data.teams["BLUE Team"].splice(data.teams["BLUE Team"].indexOf(user), 1);
             if(index === 0) removeCaptainRole(data, "BLUE Team", user, message);
         }
@@ -250,6 +265,10 @@ function leavePickupGame(authorId, message) {
 
     if (team != undefined) em.simpleReplyEmbed(message, `${userName.slice(2)} has left the ${team}`);
     else em.simpleReplyEmbed(message, `${userName.splice(2)} is not on a team`);
+    
+    if(data.teams["PICKUP Queue"].length > 0) {
+        movePlayersFromQueue(data.teams["RED Team"], data.teams["BLUE Team"], data.teams["PICKUP Queue"], message);
+    }
 
     writeAliasData(filePath, data);
     if (totalPlayers() === 0) wipeAllTeams(message)
@@ -397,13 +416,13 @@ function pickupKicker(message) {
       interval = setInterval(() => {
         intervalChecks(message);  
       }, 60000); // 1 min 60000
-     }, 150000); // 10 min 300000
+     }, 150000); // 5 min 300000
     };
 
     async function intervalChecks(message) {
         if (!gameIsActive) return clearInterval(interval);
 
-        const rconPlayerList = await rconPlayersListForPickups();
+        const rconPlayerList = await rconPlayersListForPickups(server);
 
         console.log("RCON List:", rconPlayerList, "\n", "Check List:", checkList);
         console.log("j = " + j, "i = " + i, "\n", "RemovalArray:", removalArray);
@@ -427,13 +446,13 @@ function checkPlayerLists(redTeam, blueTeam, rconPlayerList) {
     if (i > 4) i = 0;
     redTeam.forEach((player) => {
         // does rcon list contain the "q-" player? NOOOOOO
-         if (!rconPlayerList.includes(player) && !checkList.has(player)) {
-            removalArray[i].push(player); checkList.add(player);
+         if (!rconPlayerList.includes(player.splice(2)) && !checkList.has(player.splice(2))) {
+            removalArray[i].push(player); checkList.add(player.splice(2));
         }
     });
     blueTeam.forEach((player) => {
-        if (!rconPlayerList.includes(player) && !checkList.has(player)) {
-            removalArray[i].push(player); checkList.add(player); 
+        if (!rconPlayerList.includes(player.splice(2)) && !checkList.has(player.splice(2))) {
+            removalArray[i].push(player); checkList.add(player.splice(2)); 
         }
     });
     i++;
@@ -443,14 +462,14 @@ function kickPlayers(redTeam, blueTeam, rconPlayerList, data, message) {
     if (j > 4) j = 0;
     if(removalArray[j].length === 0) return j++;
     
-    removalArray[j].filter(player => !rconPlayerList.includes(player)).forEach((player) => {
+    removalArray[j].filter(player => !rconPlayerList.includes(player.splice(2))).forEach((player) => {
         if(redTeam.includes(player)) redTeam.splice(redTeam.indexOf(player), 1);
         if(blueTeam.includes(player)) blueTeam.splice(blueTeam.indexOf(player), 1);
 
         let discordId = getUserIdByUserName(player, data.players);
         letTheWorldKnow(discordId, message);
     
-        checkList.delete(player);
+        checkList.delete(player.splice(2));
     });
     removalArray[j] = [];
     j++
@@ -467,13 +486,15 @@ function movePlayersFromQueue(redTeam, blueTeam, pickupQueue, message) {
             redTeam.push(player);
             if(gameIsActive) gameCodeMessage(player, data.players, message, pin, null)
             else gameResetMessage(data, player, message)
+            addCaptainRole(data, "RED Team", player, message);
             queueNumber++; 
         }
-        else if(blueTeam.length < 5) {
+        if(blueTeam.length < 5) {
             player = pickupQueue.shift();
             blueTeam.push(player); 
             if(gameIsActive) gameCodeMessage(player, data.players, message, pin, null)
             else gameResetMessage(data, player, message)
+            addCaptainRole(data, "RED Team", player, message);
             queueNumber++; 
         } 
     }

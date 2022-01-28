@@ -2,12 +2,7 @@ const net = require("net");
 
 const list = [];
 
-async function rconPlayersListForPickups() {
-  const server = {
-    port: process.env.SERVER_PORT,
-    ip: process.env.PICKUP_SERVER_IP,
-    password: process.env.SERVER_PASSWORD,
-  };
+async function rconPlayersListForPickups(server) {
   const playersListArray = await connectToServer(server);
   console.log("LIST:", list);
   return list;
@@ -94,4 +89,63 @@ function commandExecute(socket, userCommand) {
   });
 }
 
-module.exports = rconPlayersListForPickups;
+function connectToServer(server, pin) {
+  return new Promise((resolve) => {
+    socket = net.Socket();
+
+    socket.connect(server.port, server.ip, () => {});
+
+    socket.on("error", function (err) {
+      console.log(err);
+      resolve(socket);
+    });
+
+    socket.on("data", function (data) {
+
+      if (data.toString().startsWith("Password:")) {
+        socket.write(server.password);
+      }
+      if (data.toString().startsWith("Authenticated=1")) {
+        console.log("Logged in!");
+        (async () => {
+          socket.function = await cmdHandler(socket, `setpin ${pin}`);
+          if (socket.function.Successful) {
+            socket.end();
+            socket.destroy();
+          }
+          return resolve(socket);
+        })();
+      }
+      if (data.toString().startsWith("Authenticated=0")) {
+        console.log(data, "RCON login not authenticated!");
+      }
+    });
+  });
+}
+async function cmdHandler(socket, command) {
+  const try1 = await cmdExecute(socket, command);
+  if (try1) {
+    return try1;
+  } else {
+    const try2 = await cmdExecute(socket, command);
+    return try2;
+  }
+}
+
+function cmdExecute(socket, command) {
+  return new Promise((resolve) => {
+    socket.write(command);
+    socket.once("data", function (data) {
+      const dataResult = data.toString();
+      try {
+        const jsonResult = JSON.parse(dataResult);
+        return resolve(jsonResult);
+      } catch (e) {
+        console.log(e, "Bad rcon Response:", command, dataResult);
+        return resolve(null);
+      }
+    });
+  });
+}
+
+module.exports = {rconPlayersListForPickups, connectToServer};

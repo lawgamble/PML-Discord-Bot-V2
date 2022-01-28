@@ -579,7 +579,7 @@ function checkIfGameEnded(filePath) {
           if (data.toString().startsWith("Authenticated=1")) {
             console.log("Logged in!");
             (async () => {
-              socket.function = await commandHandler(socket, `setpin ${pin}`);
+              socket.function = await cmdHandler(socket, `setpin ${pin}`);
               if (socket.function.Successful) {
                 socket.end();
                 socket.destroy();
@@ -593,17 +593,17 @@ function checkIfGameEnded(filePath) {
         });
       });
     }
-    async function commandHandler(socket, command) {
-      const try1 = await commandExecute(socket, command);
+    async function cmdHandler(socket, command) {
+      const try1 = await cmdExecute(socket, command);
       if (try1) {
         return try1;
       } else {
-        const try2 = await commandExecute(socket, command);
+        const try2 = await cmdExecute(socket, command);
         return try2;
       }
     }
     
-    function commandExecute(socket, command) {
+    function cmdExecute(socket, command) {
       return new Promise((resolve) => {
         socket.write(command);
         socket.once("data", function (data) {
