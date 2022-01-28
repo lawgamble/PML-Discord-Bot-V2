@@ -70,7 +70,7 @@ function pickupGame(message, arguments, command) {
 
         case "vote":
             voter(message)
-            
+
             break;
 
         default:
@@ -397,7 +397,7 @@ function pickupKicker(message) {
       interval = setInterval(() => {
         intervalChecks(message);  
       }, 60000); // 1 min 60000
-     }, 15000); // 10 min 300000
+     }, 150000); // 10 min 300000
     };
 
     async function intervalChecks(message) {
