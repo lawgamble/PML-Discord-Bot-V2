@@ -4,6 +4,7 @@ const pem = require("../../discord-functions/pickupGameMatchupEmbed")
 const em = require("../../discord-functions/generalEmbed");
 const rconPlayersListForPickups = require("../../rcon-functions/checkRconUserCount");
 const exec = require("child_process").exec;
+const {voter} = require("./voter")
 require("dotenv").config();
 
 const filePath = process.env.ALIASES_FILEPATH;
@@ -62,8 +63,14 @@ function pickupGame(message, arguments, command) {
             break;
 
         case "end":
-            if (userIsCaptain(message)&& gameIsActive) resetPickupGame(message);
-            else closure(message, "notLeagueManager", "!pickup end");
+            if (userIsCaptain(message) && gameIsActive) resetPickupGame(message);
+            else closure(message, "notCaptain", "!pickup end");
+
+            break;
+
+        case "vote":
+            voter(message)
+            
             break;
 
         default:
@@ -130,7 +137,6 @@ function startGame(message) {
     restartOtherBot();
     pem.redAndBlueMatchupEmbed(message, "RED vs BLUE", data);
     pickupKicker(message);
-
 }
 
 async function resetPickupGame(message) {
@@ -213,7 +219,7 @@ function initializeGame(message) {
     data = getAliasData(filePath);
     data.teams["RED Team"] = [];
     data.teams["BLUE Team"] = [];
-    data.teams["PICKUP Queue"] = ["q-D1G1TALWraith"];
+    data.teams["PICKUP Queue"] = [];
     initialized = true;
     writeAliasData(filePath, data);
     preGameTimer.start();
@@ -319,10 +325,6 @@ function autoRemoveCaptainRole(data, message) {
       
 }
 
-// function endPickupGame(message) {
-//     gameIsActive = false;
-//     wipeAllTeams(message);
-// };
 
 function thereIsACaptain(data, team) {
     return data?.teams?.[team]?.[0] !== undefined;
@@ -445,11 +447,10 @@ function kickPlayers(redTeam, blueTeam, rconPlayerList, data, message) {
         if(redTeam.includes(player)) redTeam.splice(redTeam.indexOf(player), 1);
         if(blueTeam.includes(player)) blueTeam.splice(blueTeam.indexOf(player), 1);
 
-        logKickedUser(player, data, message);
-       
+        let discordId = getUserIdByUserName(player, data.players);
+        letTheWorldKnow(discordId, message);
+    
         checkList.delete(player);
-        // remove captain role
-
     });
     removalArray[j] = [];
     j++

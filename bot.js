@@ -13,8 +13,8 @@ const matchScore = require("./alias-functions/match-scrim-challenge/matchScore")
 const challengeScore = require("./alias-functions/match-scrim-challenge/challengeScore")
 const botRepeat = require("./discord-functions/botRepeat");
 const rosterEmbed = require("./discord-functions/rosterEmbed");
-const pg = require("./alias-functions/pickups/pickups.js");
 const pickupGame = require("./alias-functions/pickups/pickupRefactor.js");
+const { clearVotesData, checkVoteCount, voter, clearUserVotes }= require("./alias-functions/pickups/voter.js");
 const hf  = require("./helperFunctions")
 const phf = require("./alias-functions/pickups/pickupHelperFunctions")
 
@@ -24,6 +24,7 @@ const phf = require("./alias-functions/pickups/pickupHelperFunctions")
 const PREFIX = "!";
 const teamNewsId = process.env.TEAM_NEWS_ID;
 const filePath = process.env.ALIASES_FILEPATH;
+const voterFilePath = process.env.VOTER_FILEPATH;
 const BOT_ID = process.env.BOT_ID;
 
 
@@ -45,9 +46,10 @@ client.on("ready", () => {
         if (error) {
           console.log(error);
         }
-        hf.deletePickupTeams(data) 
-        // hf.clearAllTimeouts()
+        hf.deletePickupTeams(data); 
         hf.writeToAliasFile(data);
+        clearUserVotes(voterFilePath);
+
     });
     console.log("We Are LIVE!");
 });
@@ -158,6 +160,15 @@ client.on("messageCreate", (message) => {
         case "deletemsg" :
             hf.msgDeleter(message, arguments[0]);    
             break;
+
+        case"clearvotes":
+            clearVotesData();
+            break;
+
+        case"votes":
+            checkVoteCount(message);
+            break;
+
         default:
             break;
     }

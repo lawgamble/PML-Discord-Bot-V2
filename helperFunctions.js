@@ -1,7 +1,6 @@
 const fs = require("fs");
 const filePath = process.env.ALIASES_FILEPATH;
 const em = require("./discord-functions/generalEmbed");
-const pg = require("./alias-functions/pickups/pickupGame");
 const pickupChannelId = process.env.PICKUP_CHANNEL_ID;
 const leagueManagerRoleId = process.env.LEAGUE_MANAGER_ROLE_ID;
 const captainRoleId = process.env.CAPTAIN_ROLE_ID;

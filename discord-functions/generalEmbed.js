@@ -41,8 +41,8 @@ function redAndBlueTeamEmbed(message, data, timeLeft, gameStarted) {
   const redTeam = data.teams["RED Team"];
   const blueTeam = data.teams["BLUE Team"];
   const queueTeam = data.teams["PICKUP Queue"];
-  let redTeamString = "`C`";
-  let blueTeamString = "`C`";
+  let redTeamString = "`c`";
+  let blueTeamString = "`c`";
   let queueTeamString = "---\n"
   
   const timerMsg = `${timeLeft} minutes left to fill the teams`;
@@ -51,13 +51,13 @@ function redAndBlueTeamEmbed(message, data, timeLeft, gameStarted) {
   if (redTeam != undefined) {
     redTeam.forEach((member) => {
       const mem = member.slice(2);
-      redTeamString += mem + "\n";
+      redTeamString += mem + "\n  ";
     });
   }
   if (blueTeam != undefined) {
     blueTeam.forEach((member) => {
       const mem = member.slice(2);
-      blueTeamString += mem + "\n";
+      blueTeamString += mem + "\n  ";
     });
   }
   if (queueTeam != undefined) {
