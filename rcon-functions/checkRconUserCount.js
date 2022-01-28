@@ -89,7 +89,7 @@ function commandExecute(socket, userCommand) {
   });
 }
 
-function connectToServer(server, pin) {
+function changePin(server, pin) {
   return new Promise((resolve) => {
     socket = net.Socket();
 
@@ -148,4 +148,4 @@ function cmdExecute(socket, command) {
   });
 }
 
-module.exports = {rconPlayersListForPickups, connectToServer};
+module.exports = {rconPlayersListForPickups, changePin};

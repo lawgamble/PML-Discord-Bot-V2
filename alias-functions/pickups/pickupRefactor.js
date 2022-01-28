@@ -2,7 +2,7 @@ const fs = require('fs');
 const { getAliasData, writeAliasData } = require("../../JSONParser")
 const pem = require("../../discord-functions/pickupGameMatchupEmbed")
 const em = require("../../discord-functions/generalEmbed");
-const {rconPlayersListForPickups, connectToServer} = require("../../rcon-functions/checkRconUserCount");
+const {rconPlayersListForPickups, changePin} = require("../../rcon-functions/checkRconUserCount");
 const exec = require("child_process").exec;
 const {voter} = require("./voter")
 require("dotenv").config();
@@ -69,6 +69,10 @@ function pickupGame(message, arguments, command) {
             break;
 
         case "end":
+            if(userIsCaptain(message) && !gameIsActive) {
+                closure(message, "gameNotInitialized");
+                break;
+            } 
             if (userIsCaptain(message) && gameIsActive) resetPickupGame(message);
             else closure(message, "notCaptain", "!pickup end");
 
@@ -127,6 +131,7 @@ function addPlayerToTeam(teamName, message) {
 function startGame(message) {
     if(!initialized) return closure(message, "gameNotInitialized");
     data = getAliasData(filePath);
+
     const redTeam = data.teams["RED Team"];
     const blueTeam = data.teams["BLUE Team"];
 
@@ -135,15 +140,29 @@ function startGame(message) {
     pin = generatePin();
 
     redTeam.forEach((user, index) => {
-        if (index === 0) captainCodeMessage(user, data.players, message, pin);
-        if (index != 0) gameCodeMessage(user, data.players, message, pin);
+        switch (index) {
+            case 0:
+                captainCodeMessage(user, data.players, message, pin);
+                break;
+
+            case 1:
+                gameCodeMessage(user, data.players, message, pin, null);
+                break;
+        }
     });
     blueTeam.forEach((user, index) => {
-        if (index === 0) captainCodeMessage(user, data.players, message, pin);
-        if (index != 0) gameCodeMessage(user, data.players, message, pin);
+        switch (index) {
+            case 0:
+                captainCodeMessage(user, data.players, message, pin);
+                break;
+
+            case 1:
+                gameCodeMessage(user, data.players, message, pin, null);
+                break;
+        }
     });
 
-    connectToServer(server, pin)
+    changePin(server, pin)
 
     gameIsActive = true;
     clearTimeout(preGameTimeout);
@@ -158,31 +177,51 @@ async function resetPickupGame(message) {
     preGameTimer.stop();
     preGameTimer.start();
     const rconPlayerList = await rconPlayersListForPickups(server);
+
+    
+    
     data = getAliasData(filePath);
 
     const redTeam = data.teams["RED Team"];
     const blueTeam = data.teams["BLUE Team"];
     const queue = data.teams["PICKUP Queue"];
     
-    redTeam.forEach((user, index) =>  {
-        if (!rconPlayerList.includes(user.splice(2))) {
-            data.teams["RED Team"].splice(data.teams["RED Team"].indexOf(user), 1);
-            if(index === 0) removeCaptainRole(data, "RED Team", user, message);
-        }
-    });
-    blueTeam.forEach((user, index) =>  {
-        if (!rconPlayerList.includes(user.splice(2))) {
-            data.teams["BLUE Team"].splice(data.teams["BLUE Team"].indexOf(user), 1);
-            if(index === 0) removeCaptainRole(data, "BLUE Team", user, message);
-        }
-    });
-    movePlayersFromQueue(redTeam, blueTeam, queue, message);
-    writeAliasData(filePath, data);
+    setTimeout(() => {
+        console.log(rconPlayerList);
+        redTeam.forEach((user, index) =>  {
+            let player = user.slice(2);
+            console.log("USER", user, "INDEX:", index);
+            if (!rconPlayerList.includes(player)) {
+                if(index === 0) {
+                    removeCaptainRole(data, "RED Team", user, message);
+                    redTeam.splice(redTeam.indexOf(user), 1);                    
+                    if(data.teams["RED Team"].length > 0) addCaptainRole(data, "RED Team", data.teams["RED Team"][0], message);
+                } else {
+                    redTeam.splice(redTeam.indexOf(user), 1);
+                }     
+            }
+        });
+        blueTeam.forEach((user, index) =>  {
+            let player = user.slice(2);
+            if (!rconPlayerList.includes(player)) {
+                if(index === 0) {
+                    removeCaptainRole(data, "BLUE Team", user, message);
+                    blueTeam.splice(blueTeam.indexOf(user), 1);
+                    if(data.teams["BLUE Team"].lenght > 0) addCaptainRole(data, "BLUE Team", data.teams["BLUE Team"][0], message);
+                } else {
+                    blueTeam.splice(blueTeam.indexOf(user), 1);                } 
+            }
+        });
+        movePlayersFromQueue(redTeam, blueTeam, queue, message);
+        console.log("RED TEAM LOG", data.teams["RED Team"]);
+         writeAliasData(filePath, data);
 
-    if(totalPlayers() === 0) return wipeAllTeams(message);
+        if(totalPlayers() === 0) return wipeAllTeams(message);
 
-    em.simpleReplyEmbed(message, "The Pickup Game was reset!");
-    sendTeamsEmbed(message);
+        em.simpleReplyEmbed(message, "The Pickup Game was reset!");
+        sendTeamsEmbed(message);
+    }, 1000);
+    
 };
 
 
@@ -206,8 +245,9 @@ function generatePin() {
 }
 
 function gameCodeMessage(user, players, message, pin, discordId) {
-   if (discordId = null || undefined)  discordId = getUserIdByUserName(user, players);
-    else message.client.users.fetch(discordId).then((user) => {
+   if (discordId === null || undefined)  discordId = getUserIdByUserName(user, players);
+
+    message.client.users.fetch(discordId).then((user) => {
         user.send(`Pickup Game servername: PCL Pickup Games! [PavlovMasterLeague.com]\nPickup Game Pin: ${pin}`);
     }).catch((error) => { console.log(error) });
 
@@ -215,6 +255,7 @@ function gameCodeMessage(user, players, message, pin, discordId) {
 
 function captainCodeMessage(user, players, message, pin) {
     const discordId = getUserIdByUserName(user, players);
+
     message.client.users.fetch(discordId).then((user) => {
         user.send(`You are a captain for this pickup game.\n-Use "!switchmap <mapname> SND pickup" to pick your map and "!pickupsetup" to start the game!\n-Please Join the "PCL Pickup Games" Server\nPickup Game Pin: ${pin}`);
     }).catch((error) => { console.log(error) });
@@ -260,11 +301,18 @@ function leavePickupGame(authorId, message) {
     if (data.teams["BLUE Team"].includes(userName)) team = "BLUE Team";
     if (data.teams["PICKUP Queue"].includes(userName)) team = "PICKUP Queue";
 
-    removeCaptainRole(data, team, userName, message);
+    if ((team === "RED Team" || team === "BLUE Team") && data.teams[team].indexOf(userName) === 0) {
+        removeCaptainRole(data, team, userName, message);
+
+        if(data.teams[team].length > 1) {
+            makeNewCaptain(data, team, message);   
+        }
+    } 
+
     data.teams[team].splice(data.teams[team].indexOf(userName), 1);
 
     if (team != undefined) em.simpleReplyEmbed(message, `${userName.slice(2)} has left the ${team}`);
-    else em.simpleReplyEmbed(message, `${userName.splice(2)} is not on a team`);
+    else em.simpleReplyEmbed(message, `${userName.slice(2)} is not on a team`);
     
     if(data.teams["PICKUP Queue"].length > 0) {
         movePlayersFromQueue(data.teams["RED Team"], data.teams["BLUE Team"], data.teams["PICKUP Queue"], message);
@@ -318,6 +366,14 @@ function wipeAllTeams(message) {
 function addCaptainRole(data, team, userName, message) {
     if (data.teams[team][0] === userName) message.member.roles.add(pickupCaptainRoleId);
 };
+
+function makeNewCaptain(data, team, message) {
+    const newCaptain = data.teams[team][1];
+    const user = getUserIdByUserName(newCaptain, data.players);
+    message.guild.members.fetch(user).then((user) => {
+        user.roles.add(pickupCaptainRoleId);
+    }).catch((error) => { console.log("MakeNewCaptain", error)});
+}
 
 function removeCaptainRole(data, team, userName, message) { 
     if (data.teams[team][0] === userName) {
@@ -431,28 +487,43 @@ function pickupKicker(message) {
 
         checkPlayerLists(data.teams["RED Team"], data.teams["BLUE Team"], rconPlayerList);
         kickPlayers(data.teams["RED Team"], data.teams["BLUE Team"], rconPlayerList, data, message);
+        
 
        const queueNumber = movePlayersFromQueue(data.teams["RED Team"], data.teams["BLUE Team"], data.teams["PICKUP Queue"], message);
 
         writeAliasData(filePath, data);
+        makeSureTeamsHaveCaptains(message);
+
+        data = getAliasData(filePath);
+        if (data.teams["RED Team"].length === 0 || data.teams["BLUE Team"].length === 0) resetPickupGame(message);
 
         if (totalPlayers() === 0) { gameIsActive = false; return wipeAllTeams(message); };
+
+        
+
         
         if(queueNumber > 0) sendTeamsEmbed(message);
     };
 
-
+// adds players to removalArray and checkList
 function checkPlayerLists(redTeam, blueTeam, rconPlayerList) {
     if (i > 4) i = 0;
     redTeam.forEach((player) => {
-        // does rcon list contain the "q-" player? NOOOOOO
-         if (!rconPlayerList.includes(player.splice(2)) && !checkList.has(player.splice(2))) {
-            removalArray[i].push(player); checkList.add(player.splice(2));
+
+         let pRed = player.slice(2);
+
+         if (!rconPlayerList.includes(pRed) && !checkList.has(pRed)) {
+            removalArray[i].push(pRed); 
+            checkList.add(pRed);
         }
     });
     blueTeam.forEach((player) => {
-        if (!rconPlayerList.includes(player.splice(2)) && !checkList.has(player.splice(2))) {
-            removalArray[i].push(player); checkList.add(player.splice(2)); 
+
+        let pBlue = player.slice(2);
+
+        if (!rconPlayerList.includes(pBlue) && !checkList.has(pBlue)) {
+            removalArray[i].push(pBlue);
+            checkList.add(pBlue); 
         }
     });
     i++;
@@ -461,19 +532,32 @@ function checkPlayerLists(redTeam, blueTeam, rconPlayerList) {
 function kickPlayers(redTeam, blueTeam, rconPlayerList, data, message) {
     if (j > 4) j = 0;
     if(removalArray[j].length === 0) return j++;
-    
-    removalArray[j].filter(player => !rconPlayerList.includes(player.splice(2))).forEach((player) => {
-        if(redTeam.includes(player)) redTeam.splice(redTeam.indexOf(player), 1);
-        if(blueTeam.includes(player)) blueTeam.splice(blueTeam.indexOf(player), 1);
 
-        let discordId = getUserIdByUserName(player, data.players);
+    let filteredArray = removalArray[j].filter(player => !rconPlayerList.includes(player));
+    
+    filteredArray.forEach((player) => {
+        let rmPlayer = `q-${player}`;
+        kickRemoveCapRole(data, rmPlayer, message);
+        if(redTeam.includes(rmPlayer)) redTeam.splice(redTeam.indexOf(rmPlayer), 1);
+        if(blueTeam.includes(rmPlayer)) blueTeam.splice(blueTeam.indexOf(rmPlayer), 1);
+
+        let discordId = getUserIdByUserName(rmPlayer, data.players);
         letTheWorldKnow(discordId, message);
     
-        checkList.delete(player.splice(2));
+        checkList.delete(player);
     });
     removalArray[j] = [];
     j++
 };
+
+function kickRemoveCapRole(data, player, message){
+    let discordId = getUserIdByUserName(player, data.players);
+    message.guild.members.fetch(discordId).then(member => {
+        if(member.roles.cache.has(pickupCaptainRoleId)) {
+            member.roles.remove(pickupCaptainRoleId);
+        }
+    }).catch(console.error);
+}
 
 function movePlayersFromQueue(redTeam, blueTeam, pickupQueue, message) {
     let queueNumber = 0;
@@ -486,7 +570,6 @@ function movePlayersFromQueue(redTeam, blueTeam, pickupQueue, message) {
             redTeam.push(player);
             if(gameIsActive) gameCodeMessage(player, data.players, message, pin, null)
             else gameResetMessage(data, player, message)
-            addCaptainRole(data, "RED Team", player, message);
             queueNumber++; 
         }
         if(blueTeam.length < 5) {
@@ -494,24 +577,36 @@ function movePlayersFromQueue(redTeam, blueTeam, pickupQueue, message) {
             blueTeam.push(player); 
             if(gameIsActive) gameCodeMessage(player, data.players, message, pin, null)
             else gameResetMessage(data, player, message)
-            addCaptainRole(data, "RED Team", player, message);
             queueNumber++; 
         } 
     }
     return queueNumber;
 };
 
-function logKickedUser(player, data, message) {
-    const userDiscordId = getUserIdByUserName(player, data.players);
-    const date = new Date().toLocaleString();
-    const log = `${date} - ${userDiscordId} - ${player}\n`;
-    fs.appendFile(pkFilePath, log, (error) => {
-        if (error) {
-            console.log(error);
-        }
-    });
-    
-}
+function makeSureTeamsHaveCaptains(message) {
+    data = getAliasData(filePath);
+    let redTeam = data.teams["RED Team"];
+    let blueTeam = data.teams["BLUE Team"];
+
+    if(redTeam.lenght > 0) {
+        const userId = getUserIdByUserName(redTeam[0], data.players);
+        message.guild.members.fetch(userId).then(member => {
+            if(!member.roles.cache.has(pickupCaptainRoleId)) {
+                member.roles.add(pickupCaptainRoleId);
+            }
+        }).catch(console.error);
+    }
+    if(blueTeam.lenght > 0) {
+        const userId = getUserIdByUserName(blueTeam[0], data.players);
+        message.guild.members.fetch(userId).then(member => {
+            if(!member.roles.cache.has(pickupCaptainRoleId)) {
+                member.roles.add(pickupCaptainRoleId);
+            }
+        }).catch(console.error);
+    }
+};
+
+
 
 function gameResetMessage(data, player, message) {
     const userDiscordId = getUserIdByUserName(player, data.players);
