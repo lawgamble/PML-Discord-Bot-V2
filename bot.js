@@ -13,7 +13,7 @@ const matchScore = require("./alias-functions/match-scrim-challenge/matchScore")
 const challengeScore = require("./alias-functions/match-scrim-challenge/challengeScore")
 const botRepeat = require("./discord-functions/botRepeat");
 const rosterEmbed = require("./discord-functions/rosterEmbed");
-const pickupGame = require("./alias-functions/pickups/pickupRefactor.js");
+const {pickupGame, wipeAllTeams} = require("./alias-functions/pickups/pickupRefactor.js");
 const { clearVotesData, checkVoteCount, voter, clearUserVotes }= require("./alias-functions/pickups/voter.js");
 const hf  = require("./helperFunctions")
 const phf = require("./alias-functions/pickups/pickupHelperFunctions")
@@ -163,7 +163,9 @@ client.on("messageCreate", (message) => {
             break;
             
         case "wipernb":
-            pg.wipeRedAndBlueTeams(message, filePath, pg.thirtyFiveMinuteTimer, pg.ninetyMinuteTimer, command);
+            if(hf.isLeagueManager(message, command)) {
+                wipeAllTeams(message);
+            }
             break;
 
         case "deletemsg" :

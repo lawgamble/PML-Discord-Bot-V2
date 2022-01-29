@@ -33,7 +33,6 @@ function pickupGame(message, arguments, command) {
     switch (arguments[0].toLowerCase()) {
         case "red":
         case "blue":
-
             if (!userIsRegistered(message.author.id)) {
                 closure(message, "notRegistered");
                 break;
@@ -47,7 +46,7 @@ function pickupGame(message, arguments, command) {
                 addPlayerToTeam("queue", message);
                 break;
             }
-            if (teamSize < 5) addPlayerToTeam(arguments[0], message);
+            if (teamSize < 5) addPlayerToTeam(arguments[0].toLowerCase(), message);
             else closure(message, "teamFull", command, arguments[0]);
             break;
 
@@ -70,7 +69,7 @@ function pickupGame(message, arguments, command) {
 
         case "end":
             if(userIsCaptain(message) && !gameIsActive) {
-                closure(message, "gameNotInitialized");
+                closure(message, "noActiveGame");
                 break;
             } 
             if (userIsCaptain(message) && gameIsActive) resetPickupGame(message);
@@ -93,9 +92,9 @@ function addPlayerToTeam(teamName, message) {
     let userName;
     if (userOnAnotherTeam(message.author.id)) return closure(message, "userOnAnotherTeam");
 
-     data = getAliasData(filePath);
+    data = getAliasData(filePath);
 
-    if(gameIsActive) gameCodeMessage(null, data.players, message, pin, message.author.id)
+    if(gameIsActive && teamName != "queue") gameCodeMessage(null, data.players, message, pin, message.author.id)
 
     switch (teamName) {
         case "red":
@@ -119,11 +118,14 @@ function addPlayerToTeam(teamName, message) {
 
             break;
     }
+        
 
-            writeAliasData(filePath, data);
-            sendTeamsEmbed(message);
+        writeAliasData(filePath, data);
 
-    if (totalPlayers() === 10 && !gameIsActive) {
+        let sumOfPlayers = totalPlayers();
+        if (sumOfPlayers < 10) sendTeamsEmbed(message);
+
+    if (sumOfPlayers === 10 && !gameIsActive) {
         startGame(message);
     }
 }
@@ -141,22 +143,20 @@ function startGame(message) {
 
     redTeam.forEach((user, index) => {
         switch (index) {
-            case 0:
+                case 0:
                 captainCodeMessage(user, data.players, message, pin);
                 break;
-
-            case 1:
+                default:
                 gameCodeMessage(user, data.players, message, pin, null);
-                break;
+                break; 
         }
     });
     blueTeam.forEach((user, index) => {
         switch (index) {
-            case 0:
+                case 0:
                 captainCodeMessage(user, data.players, message, pin);
                 break;
-
-            case 1:
+                default:
                 gameCodeMessage(user, data.players, message, pin, null);
                 break;
         }
@@ -174,12 +174,10 @@ function startGame(message) {
 
 async function resetPickupGame(message) {
     gameIsActive = false;
-    preGameTimer.stop();
-    preGameTimer.start();
+    resetPreGameTimers();
+    startPreGameTimers(message);
     const rconPlayerList = await rconPlayersListForPickups(server);
 
-    
-    
     data = getAliasData(filePath);
 
     const redTeam = data.teams["RED Team"];
@@ -278,8 +276,7 @@ function initializeGame(message) {
     data.teams["PICKUP Queue"] = [];
     initialized = true;
     writeAliasData(filePath, data);
-    preGameTimer.start();
-    startPreGameTimeout(message);
+    startPreGameTimers(message);
 };
 
 function userIsCaptain(message) {
@@ -337,13 +334,22 @@ function checkPregameTimer(timer) {
     return timeLeft;
 };
 
-function startPreGameTimeout(message) {
+function startPreGameTimers(message) {
+    preGameTimer.start();
     preGameTimeout = setTimeout(() => {
-        preGameTimer.stop();
         wipeAllTeams(message);
-        preGameTimeout = null;
+        resetPreGameTimers();
     }, 2100000); // 35 minutes 2100000
 };
+
+
+function resetPreGameTimers() {
+    if (preGameTimeout !== null) {
+        clearTimeout(preGameTimeout);
+        preGameTimeout = null;
+    }
+    preGameTimer.stop();
+}
 
 function wipeAllTeams(message) {
     if (!gameIsActive) {
@@ -357,9 +363,9 @@ function wipeAllTeams(message) {
         delete data.teams["PICKUP Queue"];
 
         writeAliasData(filePath, data);
-        em.simpleReplyEmbed(message, "The Pickup Game has ended. All teams have been wiped.");
+        em.simpleReplyEmbed(message, "All teams have been wiped.");
         initialized = false;
-        preGameTimer.stop();
+        resetPreGameTimers();
     }
 };
 
@@ -421,41 +427,45 @@ function restartOtherBot() {
 
 function closure(message, closureArguments, command, arguments) {
     switch (closureArguments) {
-        case "notRegistered":
-            em.cautionEmbed(message, "NOT REGISTERED", "You must register with the `!register` command before you can join a team.");
+            case "notRegistered":
+            em.cautionEmbed(message, "``NOT REGISTERED``", "You must register with the `!register` command before you can join a team.");
             break;
 
-        case "notValidCommand":
-            em.cautionEmbed(message, "NOT VALID COMMAND", `!${command} ${arguments} is not a valid !pickup command!\n **Valid Commands**\n!pickup red \n*puts you on RED Team*\n!pickup blue \n*puts you on BLUE Team*\n!pickup leave \n*removes you from either team*`);
+            case "notValidCommand":
+            em.cautionEmbed(message, "``NOT VALID COMMAND``", `!${command} ${arguments} is not a valid !pickup command!\n` + "**Valid Commands**\n``!pickup red`` *puts you on RED Team*\n``!pickup blue`` *puts you on BLUE Team*\n``!pickup leave`` *removes you from either team*\n``!pickup teams`` *shows you the current lineup*");
             break;
 
-        case "userOnAnotherTeam":
-            em.cautionEmbed(message, "You're already on a team!", "Use `!pickup leave` to leave your current team.");
+            case "userOnAnotherTeam":
+            em.cautionEmbed(message, "``YOU'RE ALREADY ON A TEAM``", "Use `!pickup leave` to leave your current team.");
             break;
 
-        case "teamFull":
+            case "teamFull":
             em.cautionEmbed(message, `${arguments.toUpperCase()} Team FULL!`, `The ${arguments.toUpperCase()} Team already has 5 players!`);
             break;
 
-        case "gameAlreadyStarted":
-            em.cautionEmbed(message, "GAME ALREADY STARTED", "There's already an active game!");
+            case "gameAlreadyStarted":
+            em.cautionEmbed(message, "``GAME ALREADY STARTED``", "There's already an active game!");
             break;
 
-        case "gameNotInitialized":
-            em.cautionEmbed(message, "GAME NOT INITIALIZED", "There is no active game!");
+            case "gameNotInitialized":
+            em.cautionEmbed(message, "``GAME NOT INITIALIZED``", "There is no active game!");
             break;
 
-        case "notLeagueManager":
-            em.cautionEmbed(message, "NOPE!", `You must be a **League Manager** to use the ${command} command.`);
+            case "notLeagueManager":
+            em.cautionEmbed(message, "``NOT A LEAGUE MANAGE``!", `You must be a **League Manager** to use the ${command} command.`);
             break;
 
-        case "notCaptain":
-            em.cautionEmbed(message, "NOPE!", `You must be a **Pickup Captain** to use the ${command} command.`);
+            case "notCaptain":
+            em.cautionEmbed(message, "``NOT A CAPTAIN``", `You must be a **Pickup Captain** to use the ${command} command.`);
             break;
 
-        case "notEnoughPlayers":
-            em.cautionEmbed(message, "NOT ENOUGH PLAYERS", "There are not enough players to start the game.");
+            case "notEnoughPlayers":
+            em.cautionEmbed(message, "``NOT ENOUGH PLAYERS``", "There are not enough players to start the game.");
             break;
+
+            case "noActiveGame":
+            em.cautionEmbed(message, "``NO ACTIVE GAME``", "There is no active game!"); 
+            break;   
     }
 }
 
@@ -471,8 +481,8 @@ function pickupKicker(message) {
     setTimeout(() => {
       interval = setInterval(() => {
         intervalChecks(message);  
-      }, 60000); // 1 min 60000
-     }, 300000); // 5 min 300000
+      }, 15000); // 1 min 60000
+     }, 15000); // 5 min 300000
     };
 
     async function intervalChecks(message) {
@@ -488,20 +498,16 @@ function pickupKicker(message) {
         checkPlayerLists(data.teams["RED Team"], data.teams["BLUE Team"], rconPlayerList);
         kickPlayers(data.teams["RED Team"], data.teams["BLUE Team"], rconPlayerList, data, message);
         
-
        const queueNumber = movePlayersFromQueue(data.teams["RED Team"], data.teams["BLUE Team"], data.teams["PICKUP Queue"], message);
 
         writeAliasData(filePath, data);
-        makeSureTeamsHaveCaptains(message);
-
+        
         data = getAliasData(filePath);
-        if (data.teams["RED Team"].length === 0 || data.teams["BLUE Team"].length === 0) resetPickupGame(message);
+
+        if ((data.teams["RED Team"].length === 0 || data.teams["BLUE Team"].length === 0) && data.teams["PICKUP Queue"].length === 0) resetPickupGame(message);
 
         if (totalPlayers() === 0) { gameIsActive = false; return wipeAllTeams(message); };
 
-        
-
-        
         if(queueNumber > 0) sendTeamsEmbed(message);
     };
 
@@ -548,6 +554,7 @@ function kickPlayers(redTeam, blueTeam, rconPlayerList, data, message) {
     });
     removalArray[j] = [];
     j++
+    makeSureTeamsHaveCaptains(message);
 };
 
 function kickRemoveCapRole(data, player, message){
@@ -566,6 +573,7 @@ function movePlayersFromQueue(redTeam, blueTeam, pickupQueue, message) {
 
     while (pickupQueue.length > 0 && (redTeam.length < 5 || blueTeam.length < 5)) {
         if(redTeam.length < 5) { 
+            if(pickupQueue.length === 0) return;
             player = pickupQueue.shift();
             redTeam.push(player);
             if(gameIsActive) gameCodeMessage(player, data.players, message, pin, null)
@@ -573,6 +581,7 @@ function movePlayersFromQueue(redTeam, blueTeam, pickupQueue, message) {
             queueNumber++; 
         }
         if(blueTeam.length < 5) {
+            if(pickupQueue.length === 0) return;
             player = pickupQueue.shift();
             blueTeam.push(player); 
             if(gameIsActive) gameCodeMessage(player, data.players, message, pin, null)
@@ -623,4 +632,4 @@ function letTheWorldKnow(userDiscordId, message) {
 }
 
 
-module.exports = pickupGame;
+module.exports = {pickupGame, wipeAllTeams};
