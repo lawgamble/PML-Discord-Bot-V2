@@ -298,6 +298,9 @@ function leavePickupGame(authorId, message) {
     data = getAliasData(filePath);
 
     const userName = data.players[authorId];
+
+    if (!userOnAnotherTeam(authorId)) return closure(message, "notOnATeam");
+    
     if (data.teams["RED Team"].includes(userName)) team = "RED Team";
     if (data.teams["BLUE Team"].includes(userName)) team = "BLUE Team";
     if (data.teams["PICKUP Queue"].includes(userName)) team = "PICKUP Queue";
@@ -470,6 +473,10 @@ function closure(message, closureArguments, command, arguments) {
             case "noActiveGame":
             em.cautionEmbed(message, "``NO ACTIVE GAME``", "There is no active game!"); 
             break;   
+
+            case "notOnATeam" :
+            em.cautionEmbed(message, "``NOT ON A TEAM``", "You must be on a team to use this command.");
+            break; 
     }
 }
 
