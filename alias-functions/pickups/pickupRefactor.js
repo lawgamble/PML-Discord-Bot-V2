@@ -20,7 +20,7 @@ const { Timer } = require('timer-node');
 
 const server = {
     port: process.env.SERVER_PORT,
-    ip: process.env.PICKUP_SERVER_IP2,
+    ip: process.env.PICKUP_SERVER_IP,
     password: process.env.SERVER_PASSWORD,
   };
 
