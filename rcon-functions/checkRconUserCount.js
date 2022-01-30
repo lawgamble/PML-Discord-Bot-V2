@@ -1,11 +1,9 @@
 const net = require("net");
 
-let list;
+let list = [];
 
 async function rconPlayersListForPickups(server) {
-  list = [];
   const playersListArray = await connectToServer(server);
-  console.log("LIST:", list);
   return list;
 }
 
@@ -47,17 +45,20 @@ async function getServerDetails(socket) {
   const playerList = refreshList.PlayerList;
 
   if (playerList.length > 0) {
+    list = [];
+    console.log("List Prior to adding rcom players (should be empty!):", list);
     for (const p of playerList) {
       const userName = p.UniqueId;
 
-      if (!list.includes(userName)) list.push(userName);
+      list.push(userName);
+
+      // if (!list.includes(userName)) 
     }
   }
   const serverInfo = await commandHandler(socket, "");
 
   socket.end();
   socket.destroy();
-  // return playersList;
 }
 
 // Command Handler
