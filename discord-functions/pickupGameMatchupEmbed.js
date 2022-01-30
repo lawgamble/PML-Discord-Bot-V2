@@ -23,8 +23,8 @@ function redAndBlueMatchupEmbed(message, title, data) {
     .setColor("#9932CC")
     .setTitle(title)
     .addFields(
-      { name: "RED Team", value: redTeamRoster },
-      { name: "BLUE Team", value: blueTeamRoster }
+      { name: "``RED Team``", value: redTeamRoster },
+      { name: "``BLUE Team``", value: blueTeamRoster }
     );
   message.channel.send({
     embeds: [embed],

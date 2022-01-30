@@ -167,7 +167,7 @@ function startGame(message) {
     gameIsActive = true;
     clearTimeout(preGameTimeout);
     restartOtherBot();
-
+    em.startPickupGameEmbed(message, "``Pickup Game Has Started``", "Check you DM's for specific instructions on how to play this pickup game.");
     pem.redAndBlueMatchupEmbed(message, "RED vs BLUE", data);
     pickupKicker(message);
 }
@@ -218,6 +218,10 @@ async function resetPickupGame(message) {
 
         em.simpleReplyEmbed(message, "The Pickup Game was reset!");
         sendTeamsEmbed(message);
+
+        if (totalPlayers() === 10 && !gameIsActive) {
+            startGame(message);
+        }
     }, 1000);
     
 };
@@ -481,8 +485,8 @@ function pickupKicker(message) {
     setTimeout(() => {
       interval = setInterval(() => {
         intervalChecks(message);  
-      }, 15000); // 1 min 60000
-     }, 15000); // 5 min 300000
+      }, 60000); // 1 min 60000
+     }, 300000); // 5 min 300000
     };
 
     async function intervalChecks(message) {

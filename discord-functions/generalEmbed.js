@@ -41,8 +41,8 @@ function redAndBlueTeamEmbed(message, data, timeLeft, gameStarted) {
   const redTeam = data.teams["RED Team"];
   const blueTeam = data.teams["BLUE Team"];
   const queueTeam = data.teams["PICKUP Queue"];
-  let redTeamString = "`c`";
-  let blueTeamString = "`c`";
+  let redTeamString = "`c`\t";
+  let blueTeamString = "`c`\t";
   let queueTeamString = "---\n"
   
   const timerMsg = `${timeLeft} minutes left to fill the teams`;
@@ -51,13 +51,13 @@ function redAndBlueTeamEmbed(message, data, timeLeft, gameStarted) {
   if (redTeam != undefined) {
     redTeam.forEach((member) => {
       const mem = member.slice(2);
-      redTeamString += mem + "\n  ";
+      redTeamString += mem + "\n\t\t";
     });
   }
   if (blueTeam != undefined) {
     blueTeam.forEach((member) => {
       const mem = member.slice(2);
-      blueTeamString += mem + "\n  ";
+      blueTeamString += mem + "\n\t\t";
     });
   }
   if (queueTeam != undefined) {
@@ -68,11 +68,11 @@ function redAndBlueTeamEmbed(message, data, timeLeft, gameStarted) {
   }
 
   let embed = new MessageEmbed()
-    .setColor("#A020F0")
-    .setTitle("RED  vs  BLUE")
+    .setColor("#8500be")
+    .setTitle("`RED  vs  BLUE`")
     .addFields(
       {
-        name: `_RED_     -${
+        name: "``RED``" +`    -${
           redTeam != undefined
             ? `${5 - redTeam.length} spots left`
             : `5 spots left`
@@ -80,7 +80,7 @@ function redAndBlueTeamEmbed(message, data, timeLeft, gameStarted) {
         value: redTeamString,
       },
       {
-        name: `_BLUE_     -${
+        name: "``BLUE``" +`     -${
           blueTeam != undefined
             ? `${5 - blueTeam.length} spots left`
             : `5 spots left`
@@ -88,7 +88,7 @@ function redAndBlueTeamEmbed(message, data, timeLeft, gameStarted) {
         value: blueTeamString,
       },
       {
-        name: "Queue:",
+        name: "`QUEUE:`",
         value: queueTeamString,
       },
       {
