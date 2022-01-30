@@ -207,7 +207,8 @@ async function resetPickupGame(message) {
                     blueTeam.splice(blueTeam.indexOf(user), 1);
                     if(data.teams["BLUE Team"].lenght > 0) addCaptainRole(data, "BLUE Team", data.teams["BLUE Team"][0], message);
                 } else {
-                    blueTeam.splice(blueTeam.indexOf(user), 1);                } 
+                    blueTeam.splice(blueTeam.indexOf(user), 1);                
+                } 
             }
         });
         movePlayersFromQueue(redTeam, blueTeam, queue, message);

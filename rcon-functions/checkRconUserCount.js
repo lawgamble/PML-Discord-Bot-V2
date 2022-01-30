@@ -1,8 +1,9 @@
 const net = require("net");
 
-const list = [];
+let list;
 
 async function rconPlayersListForPickups(server) {
+  list = [];
   const playersListArray = await connectToServer(server);
   console.log("LIST:", list);
   return list;
