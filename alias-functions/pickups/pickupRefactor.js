@@ -323,7 +323,8 @@ function leavePickupGame(authorId, message) {
     }
 
     writeAliasData(filePath, data);
-    if (totalPlayers() === 0) wipeAllTeams(message)
+    if (totalPlayers() === 0) return wipeAllTeams(message)
+    sendTeamsEmbed(message);
 };
 
 function sendTeamsEmbed(message) {
