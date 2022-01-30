@@ -219,7 +219,7 @@ async function resetPickupGame(message) {
         em.simpleReplyEmbed(message, "The Pickup Game was reset!");
         sendTeamsEmbed(message);
 
-        if (totalPlayers() === 10 && !gameIsActive) {
+        if (totalPlayers() >= 10 && !gameIsActive) {
             startGame(message);
         }
     }, 1000);
@@ -239,7 +239,7 @@ function checkTeamSize(teamName) {
 
 function totalPlayers() {
     const data = getAliasData(filePath);
-    return data.teams["RED Team"].length + data.teams["BLUE Team"].length;
+    return data.teams["RED Team"].length + data.teams["BLUE Team"].length + data.teams["PICKUP Queue"].length;
 };
 
 function generatePin() {
@@ -492,8 +492,8 @@ function pickupKicker(message) {
     setTimeout(() => {
       interval = setInterval(() => {
         intervalChecks(message);  
-      }, 60000); // 1 min 60000
-     }, 300000); // 5 min 300000
+      }, 15000); // 1 min 60000
+     }, 15000); // 5 min 300000
     };
 
     async function intervalChecks(message) {
@@ -515,7 +515,7 @@ function pickupKicker(message) {
         
         data = getAliasData(filePath);
 
-        if ((data.teams["RED Team"].length === 0 || data.teams["BLUE Team"].length === 0) && data.teams["PICKUP Queue"].length === 0) resetPickupGame(message);
+        if ((data.teams["RED Team"].length === 0 || data.teams["BLUE Team"].length === 0) && data.teams["PICKUP Queue"].length !== 0) resetPickupGame(message);
 
         if (totalPlayers() === 0) { gameIsActive = false; return wipeAllTeams(message); };
 
@@ -565,7 +565,7 @@ function kickPlayers(redTeam, blueTeam, rconPlayerList, data, message) {
     });
     removalArray[j] = [];
     j++
-    makeSureTeamsHaveCaptains(message);
+    // makeSureTeamsHaveCaptains(message);
 };
 
 function kickRemoveCapRole(data, player, message){
