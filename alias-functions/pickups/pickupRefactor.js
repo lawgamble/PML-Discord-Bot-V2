@@ -13,6 +13,7 @@ const leagueManagerRoleId = process.env.LEAGUE_MANAGER_ROLE_ID;
 const pkFilePath = process.env.PICKUP_KICKER_LOG_FILEPATH;
 
 let gameIsActive = false;
+let gameResetting = false;
 let initialized = false;
 let data;
 let pin;
@@ -43,6 +44,7 @@ function pickupGame(message, arguments, command) {
 
             // this is gonna check if the game is being reset
             //if(gameIsbeingReset()) return addPlayerToTeam("queue", message);
+            if(gameResetting) return addPlayerToTeam("queue", message);
 
             const teamSize = checkTeamSize(arguments[0] === "red" ? "RED Team" : "BLUE Team");
 
@@ -180,58 +182,64 @@ async function resetPickupGame(message) {
     gameIsActive = false;
     resetPreGameTimers();
     startPreGameTimers(message);
-    const rconPlayerList = await rconPlayersListForPickups(server);
-
-    data = getAliasData(filePath);
-
-    const redTeam = data.teams["RED Team"];
-    const blueTeam = data.teams["BLUE Team"];
-    const queue = data.teams["PICKUP Queue"];
-    
+    gameResetting = true;
+    em.cautionEmbed(message, "Game Resetting", "The game will be reset in 2 minutes.\nIf you join a team, you will be added to the queue in the order you joined.");
     setTimeout(() => {
-        redTeam.forEach((user, index) =>  {
-            let player = user.slice(2);
+        gameResetting = false;
 
-            if (!rconPlayerList.includes(player)) {
-                if(index === 0) {
-                    removeCaptainRole(data, "RED Team", user, message);
-                    redTeam.splice(redTeam[0], 1);                    
-                    if(data.teams["RED Team"].length > 0) addCaptainRole(data, "RED Team", redTeam[0], message);
-                } else {
-                    redTeam.splice(redTeam.indexOf(user), 1);
-                }     
-            }
-        });
-        blueTeam.forEach((user, index) =>  {
-            let player = user.slice(2);
-            if (!rconPlayerList.includes(player)) {
-                if(index === 0) {
-                    removeCaptainRole(data, "BLUE Team", user, message);
-                    blueTeam.splice(blueTeam[0], 1);
-                    if(data.teams["BLUE Team"].lenght > 0) addCaptainRole(data, "BLUE Team", blueTeam[0], message);
-                } else {
-                    blueTeam.splice(blueTeam.indexOf(user), 1);                
-                } 
-            }
-        });
+        em.successEmbed(message, "Pickups is LIVE!", "Have fun! Make sure to join the server, or you'll get kicked!");
 
-        checkList.clear();
-
-        movePlayersFromQueue(redTeam, blueTeam, queue, message);
-
-         writeAliasData(filePath, data);
-
-        if(totalPlayers() === 0) return wipeAllTeams(message);
-
-        em.simpleReplyEmbed(message, "The Pickup Game was reset!");
-        sendTeamsEmbed(message);
-
-        if (totalPlayers() >= 10 && !gameIsActive) {
-            startGame(message);
-        }
-        makeSureTeamsHaveCaptains(message);
-    }, 1000);
+        const rconPlayerList = await rconPlayersListForPickups(server);
+        data = getAliasData(filePath);
     
+        const redTeam = data.teams["RED Team"];
+        const blueTeam = data.teams["BLUE Team"];
+        const queue = data.teams["PICKUP Queue"];
+        
+        setTimeout(() => {
+            redTeam.forEach((user, index) =>  {
+                let player = user.slice(2);
+    
+                if (!rconPlayerList.includes(player)) {
+                    if(index === 0) {
+                        removeCaptainRole(data, "RED Team", user, message);
+                        redTeam.splice(redTeam[0], 1);                    
+                        if(data.teams["RED Team"].length > 0) addCaptainRole(data, "RED Team", redTeam[0], message);
+                    } else {
+                        redTeam.splice(redTeam.indexOf(user), 1);
+                    }     
+                }
+            });
+            blueTeam.forEach((user, index) =>  {
+                let player = user.slice(2);
+                if (!rconPlayerList.includes(player)) {
+                    if(index === 0) {
+                        removeCaptainRole(data, "BLUE Team", user, message);
+                        blueTeam.splice(blueTeam[0], 1);
+                        if(data.teams["BLUE Team"].lenght > 0) addCaptainRole(data, "BLUE Team", blueTeam[0], message);
+                    } else {
+                        blueTeam.splice(blueTeam.indexOf(user), 1);                
+                    } 
+                }
+            });
+    
+            checkList.clear();
+    
+            movePlayersFromQueue(redTeam, blueTeam, queue, message);
+    
+             writeAliasData(filePath, data);
+    
+            if(totalPlayers() === 0) return wipeAllTeams(message);
+    
+            em.simpleReplyEmbed(message, "The Pickup Game was reset!");
+            sendTeamsEmbed(message);
+    
+            if (totalPlayers() >= 10 && !gameIsActive) {
+                startGame(message);
+            }
+            makeSureTeamsHaveCaptains(message);
+        }, 1000);
+    }, 120000);
 };
 
 
@@ -587,7 +595,6 @@ function kickPlayers(redTeam, blueTeam, rconPlayerList, data, message) {
     });
     removalArray[j] = [];
     j++
-    // makeSureTeamsHaveCaptains(message);
 };
 
 function kickRemoveCapRole(data, player, message){
