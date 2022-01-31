@@ -51,13 +51,13 @@ function redAndBlueTeamEmbed(message, data, timeLeft, gameStarted) {
   if (redTeam != undefined) {
     redTeam.forEach((member) => {
       const mem = member.slice(2);
-      redTeamString += mem + "\n\t\t";
+      redTeamString += mem + "\n";
     });
   }
   if (blueTeam != undefined) {
     blueTeam.forEach((member) => {
       const mem = member.slice(2);
-      blueTeamString += mem + "\n\t\t";
+      blueTeamString += mem + "\n";
     });
   }
   if (queueTeam != undefined) {
