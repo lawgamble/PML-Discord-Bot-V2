@@ -177,13 +177,13 @@ function startGame(message) {
     pem.redAndBlueMatchupEmbed(message, "RED vs BLUE", data);
 }
 
-async function resetPickupGame(message) {
+function resetPickupGame(message) {
     gameIsActive = false;
     resetPreGameTimers();
     startPreGameTimers(message);
     gameResetting = true;
     em.cautionEmbed(message, "Game Resetting", "The game will be reset in 2 minutes.\nIf you join a team, you will be added to the queue in the order you joined.");
-    setTimeout(() => {
+    setTimeout(async () => {
         gameResetting = false;
 
         em.successEmbed(message, "Pickups is LIVE!", "Have fun!");
