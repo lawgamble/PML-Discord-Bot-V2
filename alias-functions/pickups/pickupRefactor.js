@@ -175,7 +175,6 @@ function startGame(message) {
     restartOtherBot();
     em.startPickupGameEmbed(message, "``Pickup Game Has Started``", "Check you DM's for specific instructions on how to play this pickup game.");
     pem.redAndBlueMatchupEmbed(message, "RED vs BLUE", data);
-    pickupKicker(message);
 }
 
 async function resetPickupGame(message) {
@@ -187,7 +186,7 @@ async function resetPickupGame(message) {
     setTimeout(() => {
         gameResetting = false;
 
-        em.successEmbed(message, "Pickups is LIVE!", "Have fun! Make sure to join the server, or you'll get kicked!");
+        em.successEmbed(message, "Pickups is LIVE!", "Have fun!");
 
         const rconPlayerList = await rconPlayersListForPickups(server);
         data = getAliasData(filePath);
@@ -204,7 +203,7 @@ async function resetPickupGame(message) {
                     if(index === 0) {
                         removeCaptainRole(data, "RED Team", user, message);
                         redTeam.splice(redTeam[0], 1);                    
-                        if(data.teams["RED Team"].length > 0) addCaptainRole(data, "RED Team", redTeam[0], message);
+                        if(redTeam.length > 0) addCaptainRole(data, "RED Team", redTeam[0], message);
                     } else {
                         redTeam.splice(redTeam.indexOf(user), 1);
                     }     
@@ -216,22 +215,19 @@ async function resetPickupGame(message) {
                     if(index === 0) {
                         removeCaptainRole(data, "BLUE Team", user, message);
                         blueTeam.splice(blueTeam[0], 1);
-                        if(data.teams["BLUE Team"].lenght > 0) addCaptainRole(data, "BLUE Team", blueTeam[0], message);
+                        if(blueTeam.lenght > 0) addCaptainRole(data, "BLUE Team", blueTeam[0], message);
                     } else {
                         blueTeam.splice(blueTeam.indexOf(user), 1);                
                     } 
                 }
             });
     
-            checkList.clear();
-    
             movePlayersFromQueue(redTeam, blueTeam, queue, message);
     
              writeAliasData(filePath, data);
     
             if(totalPlayers() === 0) return wipeAllTeams(message);
-    
-            em.simpleReplyEmbed(message, "The Pickup Game was reset!");
+
             sendTeamsEmbed(message);
     
             if (totalPlayers() >= 10 && !gameIsActive) {
@@ -494,117 +490,7 @@ function closure(message, closureArguments, command, arguments) {
     }
 }
 
-/////////////////////////////////////////////////////// Pickup Kicker ///////////////////////////////////////////////////////
 
-let interval;
-let removalArray = [[], [], [], [], []];
-let checkList = new Set();
-let i = 0; // index to push players to removalArray
-let j = 1; // index to start kicking players from removalArray
-
-function pickupKicker(message) {
-    setTimeout(() => {
-      interval = setInterval(() => {
-        intervalChecks(message);  
-      }, 60000); // 1 min 60000
-     }, 360000); // 6 min 300000
-    };
-
-    async function intervalChecks(message) {
-        if (!gameIsActive) return clearInterval(interval); 
-
-            const rconPlayerList = await rconPlayersListForPickups(server);
-
-            data = getAliasData(filePath);
-
-            checkPlayerLists(data.teams["RED Team"], data.teams["BLUE Team"], rconPlayerList);
-            kickPlayers(data.teams["RED Team"], data.teams["BLUE Team"], rconPlayerList, data, message);
-
-            console.log("RCON List:", rconPlayerList, "\n", "Check List:", checkList);
-            console.log("j = " + j, "i = " + i, "\n", "RemovalArray:", removalArray);
-            
-            const queueNumber = movePlayersFromQueue(data.teams["RED Team"], data.teams["BLUE Team"], data.teams["PICKUP Queue"], message);
-
-            writeAliasData(filePath, data);
-            
-            data = getAliasData(filePath);
-
-
-            if (data.teams["RED Team"].length === 0 && data.teams["BLUE Team"].length === 0 && data.teams["PICKUP Queue"].length > 0)  return resetPickupGame(message);
-
-            if (data.teams["RED Team"].length === 0 && data.teams["PICKUP Queue"].length === 0) { gameIsActive = false; return wipeAllTeams(message); };
-            if (data.teams["BLUE Team"].length === 0 && data.teams["PICKUP Queue"].length === 0) { gameIsActive = false; return wipeAllTeams(message); };
-
-            if (totalPlayers() === 0) { gameIsActive = false; return wipeAllTeams(message); };
-
-            if(queueNumber > 0) sendTeamsEmbed(message);
-    };
-
-// adds players to removalArray and checkList
-function checkPlayerLists(redTeam, blueTeam, rconPlayerList) {
-    if (i > 4) i = 0;
-    redTeam.forEach((player) => {
-
-         let pRed = player.slice(2);
-
-         if (!rconPlayerList.includes(pRed) && !checkList.has(pRed)) {
-            removalArray[i].push(pRed); 
-            checkList.add(pRed);
-         if (rconPlayerList.includes(pRed)){
-            checkList.delete(pRed);
-            for (let k = 0; k < removalArray.length; k++) {
-                if (removalArray[k].includes(pRed)) removalArray[k].splice(removalArray[k].indexOf(pRed), 1);
-            };
-         }
-        }
-    });
-    blueTeam.forEach((player) => {
-
-        let pBlue = player.slice(2);
-
-        if (!rconPlayerList.includes(pBlue) && !checkList.has(pBlue)) {
-            removalArray[i].push(pBlue);
-            checkList.add(pBlue); 
-        }
-        if (rconPlayerList.includes(pBlue)){
-            checkList.delete(pBlue);
-            for (let k = 0; k < removalArray.length; k++) {
-                if (removalArray[k].includes(pBlue)) removalArray[k].splice(removalArray[k].indexOf(pBlue), 1);
-            };
-        }
-    });
-    i++;
-};
-
-function kickPlayers(redTeam, blueTeam, rconPlayerList, data, message) {
-    if (j > 4) j = 0;
-    if(removalArray[j].length === 0) return j++;
-
-    let filteredArray = removalArray[j].filter(player => !rconPlayerList.includes(player));
-    
-    filteredArray.forEach((player) => {
-        let rmPlayer = `q-${player}`;
-        kickRemoveCapRole(data, rmPlayer, message);
-        if(redTeam.includes(rmPlayer)) redTeam.splice(redTeam.indexOf(rmPlayer), 1);
-        if(blueTeam.includes(rmPlayer)) blueTeam.splice(blueTeam.indexOf(rmPlayer), 1);
-
-        let discordId = getUserIdByUserName(rmPlayer, data.players);
-        letTheWorldKnow(discordId, message);
-    
-        checkList.delete(player);
-    });
-    removalArray[j] = [];
-    j++
-};
-
-function kickRemoveCapRole(data, player, message){
-    let discordId = getUserIdByUserName(player, data.players);
-    message.guild.members.fetch(discordId).then(member => {
-        if(member.roles.cache.has(pickupCaptainRoleId)) {
-            member.roles.remove(pickupCaptainRoleId);
-        }
-    }).catch(console.error);
-}
 
 function movePlayersFromQueue(redTeam, blueTeam, pickupQueue, message) {
     let queueNumber = 0;
@@ -665,11 +551,6 @@ function gameResetMessage(data, player, message) {
     
 };
 
-function letTheWorldKnow(userDiscordId, message) {
-    message.channel.send(
-        `<@${userDiscordId}> was kicked from the pickup game due to inactivity.`
-    );
-}
 
 
 module.exports = {pickupGame, wipeAllTeams};
