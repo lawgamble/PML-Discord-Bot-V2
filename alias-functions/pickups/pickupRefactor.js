@@ -356,6 +356,7 @@ function checkPregameTimer(timer) {
 
 function startPreGameTimers(message) {
     preGameTimer.start();
+    
     preGameTimeout = setTimeout(() => {
         wipeAllTeams(message);
         resetPreGameTimers();
