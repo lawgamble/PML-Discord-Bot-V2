@@ -14,7 +14,7 @@ const challengeScore = require("./alias-functions/match-scrim-challenge/challeng
 const botRepeat = require("./discord-functions/botRepeat");
 const rosterEmbed = require("./discord-functions/rosterEmbed");
 const {pickupGame, wipeAllTeams} = require("./alias-functions/pickups/pickupRefactor.js");
-const { clearVotesData, checkVoteCount, voter, clearUserVotes }= require("./alias-functions/pickups/voter.js");
+const { clearVotesData, checkVoteCount, voter, clearUserVotes, restartCronJobs }= require("./alias-functions/pickups/voter.js");
 const hf  = require("./helperFunctions")
 const phf = require("./alias-functions/pickups/pickupHelperFunctions")
 var CronJob = require('cron').CronJob;
@@ -37,8 +37,10 @@ const {
 
 
 const client = new Client({
-    intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_MEMBERS],
+    intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_MEMBERS, Intents.FLAGS.GUILD_MESSAGE_REACTIONS],
 });
+
+
 
 
 // When bot logs in 
@@ -62,6 +64,9 @@ client.on("ready", () => {
        hf.writeAliasesData("backup.json", data);
     }).start();
 });
+
+
+//restartCronJobs(client);
 
 
 process.on('unhandledRejection', error => {

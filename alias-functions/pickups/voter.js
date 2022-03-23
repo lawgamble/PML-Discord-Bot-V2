@@ -4,6 +4,7 @@ const fs = require("fs");
 const schedule = require('node-schedule');
 var CronJob = require('cron').CronJob;
 
+
 const pto1 = process.env.PTO_1;
 const pto2 = process.env.PTO_2;
 const pto3 = process.env.PTO_3;
@@ -84,14 +85,14 @@ function checkTimoutVotes(userName, userId, message) {
             // let date = new Date();
             // date.setHours(date.getHours() + 6);
 
-            let date = new Date();
-            date.setMinutes(date.getMinutes() + 1);
+            let date1 = new Date();
+            date1.setMinutes(date1.getMinutes() + 1);
 
-            let job = new CronJob(date, function() {
+            let job1 = new CronJob(date1, function() {
                 user.roles.remove(pto1);
                 user.send("You can now re-join the pickup games. Stay out of trouble!");
             });
-            job.start();
+            job1.start();
 
 
             break;
@@ -102,14 +103,14 @@ function checkTimoutVotes(userName, userId, message) {
             user.roles.add(pto2);
             user.send("You've been banned from pickups for 24 hours. C'mon, man. Grow up!")
 
-            date = new Date();
-            date.setDate(date.getDate() + 1);
+            let date2 = new Date();
+            date2.setDate(date2.getDate() + 1);
 
-            job = new CronJob(date, function() {
+            let job2 = new CronJob(date2, function() {
                 user.roles.remove(pto2);
                 user.send("You can now re-join the pickup games. Stay out of trouble!");
             });
-            job.start();
+            job2.start();
             
             break;
         case 3:
@@ -119,14 +120,14 @@ function checkTimoutVotes(userName, userId, message) {
             user.roles.add(pto3);
             user.send("You've been banned from pickups for 48 hours. Bro, wtf is wrong with you?!")
 
-            date = new Date();
-            date.setDate(date.getDate() + 2);
+            let date3 = new Date();
+            date3.setDate(date3.getDate() + 2);
 
-            job = new CronJob(date, function() {
+           let job3 = new CronJob(date3, function() {
                 user.roles.remove(pto3);
                 user.send("You can now re-join the pickup games. Stay out of trouble!");
             });
-            job.start();
+            job3.start();
 
             break;
         case 4:
@@ -136,14 +137,14 @@ function checkTimoutVotes(userName, userId, message) {
             user.roles.add(pto4);
             user.send("You've been banned from pickups for 1 week. One more and you're perma-banned!");
 
-            date = new Date();
-            date.setDate(date.getDate() + 7);
+            let date4 = new Date();
+            date4.setDate(date4.getDate() + 7);
 
-            job = new CronJob(date, function() {
+            let job4 = new CronJob(date4, function() {
                 user.roles.remove(pto4);
                 user.send("You can now re-join the pickup games. Stay out of trouble!");
             });
-            job.start();
+            job4.start();
 
             break;
         case 5:
@@ -206,4 +207,74 @@ function clearUserVotes(filePath) {
     writeAliasData(filePath, data);
 }
 
-module.exports = {voter, clearVotesData, checkVoteCount, clearUserVotes}
+
+
+function restartCronJobs(client) {
+    let job;
+    let voterData = getAliasData(filePath);
+    
+
+    let timeouts = voterData["timeout"];  
+
+    for(let user in timeouts) {
+        let timeInit = timeouts[user].timeInit;
+        let date = new Date(timeInit.length - 1);
+
+        const discordId = timeouts[user].id;
+        const dUser = client.users.fetch(discordId).then(discordUser => {
+            switch (user.votes) {
+                case 1:
+                    date.setMinutes(date.getMinutes() + 1);
+                    // date.setHours(date.getHours() + 6);
+    
+                        job = new CronJob(date, function() {
+                        discordUser.roles.remove(pto1);
+                        discordUser.send("You can now re-join the pickup games. Stay out of trouble!");
+                    });
+                    console.log("RESTARTING JOB 1");
+                    job.start();
+                    break;
+                
+                case 2:
+                    date.setDate(date.getDate() + 1);
+    
+                        job = new CronJob(date, function() {
+                        discordUser.roles.remove(pto2);
+                        discordUser.send("You can now re-join the pickup games. Stay out of trouble!");
+                    });
+                    job.start();
+                    break;
+    
+                case 3:
+                    date.setDate(date.getDate() + 2);
+    
+                        job = new CronJob(date, function() {
+                        discordUser.roles.remove(pto3);
+                        discordUser.send("You can now re-join the pickup games. Stay out of trouble!");
+                    });
+                    job.start();
+                    break;
+    
+                case 4:
+                    date.setDate(date.getDate() + 7);
+    
+                        job = new CronJob(date, function() {
+                        discordUser.roles.remove(pto4);
+                        discordUser.send("You can now re-join the pickup games. Stay out of trouble!");
+                    });
+                    job.start();
+                    break;
+    
+                    default:
+                        return;
+            }
+        });
+
+        
+        
+
+        
+    }
+}
+
+module.exports = {voter, clearVotesData, checkVoteCount, clearUserVotes, restartCronJobs}

@@ -22,7 +22,6 @@ function createTeam(filePath, message, arguments) {
             message.reply(`You've added the team ${arguments.join(" ")}`)
         }
     })
-
 }
 
 

@@ -25,4 +25,7 @@ function writeAliasData(filePath, data) {
   return fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
   }
 
-module.exports = {readAliasFile, getAliasData, writeAliasData};
+
+const JSONFunctions = {readAliasFile, getAliasData, writeAliasData};
+
+module.exports = JSONFunctions;

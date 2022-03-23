@@ -12,6 +12,7 @@
   "dependencies": {
     "cron": "^1.8.2",
     "discord.js": "^13.0.1",
+    "discord.js-buttons": "^1.0.0",
     "dotenv": "^10.0.0",
     "event-stream": "^4.0.1",
     "gm": "^1.23.1",
@@ -19,6 +20,7 @@
     "merge-images": "^2.0.0",
     "mysql": "^2.18.1",
     "node-cron": "^3.0.0",
+    "node-fetch": "^3.2.3",
     "node-schedule": "^2.1.0",
     "nodemon": "^2.0.12",
     "npm": "^8.1.2",

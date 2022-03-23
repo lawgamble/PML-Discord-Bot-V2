@@ -5,6 +5,7 @@ const em = require("../../discord-functions/generalEmbed");
 const {rconPlayersListForPickups, changePin} = require("../../rcon-functions/checkRconUserCount");
 const exec = require("child_process").exec;
 const {voter} = require("./voter")
+const switchWithPlayer = require("./swapper")
 require("dotenv").config();
 
 const filePath = process.env.ALIASES_FILEPATH;
@@ -30,7 +31,7 @@ let preGameTimeout;
 let preGameTimer = new Timer();
 
 
-function pickupGame(message, arguments, command) {
+function pickupGame(message, arguments, command, buttons) {
     switch (arguments[0].toLowerCase()) {
         case "red":
         case "blue":
@@ -87,6 +88,11 @@ function pickupGame(message, arguments, command) {
             voter(message)
 
             break;
+
+        case "switch" :
+            switchWithPlayer(message, buttons);
+            break;
+
 
         default:
             closure(message, "notValidCommand", command, arguments[0]);
