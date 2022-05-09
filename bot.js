@@ -66,17 +66,17 @@ client.on("ready", () => {
 });
 
 
-//restartCronJobs(client);
-
-
 process.on('unhandledRejection', error => {
     console.error('Unhandled promise rejection:', error);
 });
 
 
+
 // when a message is sent on discord, it is checked by this function
 client.on("messageCreate", (message) => {
+    
     if (message.author.id === BOT_ID) return;
+
     if (message.channelId === teamNewsId) {
         message.reply("You shouldn't be typing anything in this channel.");
         hf.clearMessages(message, 2);

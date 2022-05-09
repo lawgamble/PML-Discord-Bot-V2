@@ -14,6 +14,8 @@ const pto6 = process.env.PTO_6;
 
 let data;
 
+const guildId = process.env.GUILD_ID;
+
 
 
 function voter(message) {
@@ -209,11 +211,12 @@ function clearUserVotes(filePath) {
 
 
 
-function restartCronJobs(client) {
+function restartCronJobs(message) {
     let job;
     let voterData = getAliasData(filePath);
-    
 
+    //const guild = client.guilds.fetch(guild => guild.id === guildId);
+    
     let timeouts = voterData["timeout"];  
 
     for(let user in timeouts) {
@@ -221,18 +224,20 @@ function restartCronJobs(client) {
         let date = new Date(timeInit.length - 1);
 
         const discordId = timeouts[user].id;
-        const dUser = client.users.fetch(discordId).then(discordUser => {
-            switch (user.votes) {
+
+        const dUser = message.guild.members.fetch(discordId).then(discordUser => {
+            switch (timeouts[user].votes) {
                 case 1:
-                    date.setMinutes(date.getMinutes() + 1);
+                    const newDate1 = date.setMinutes(date.getMinutes() + 1);
                     // date.setHours(date.getHours() + 6);
     
-                        job = new CronJob(date, function() {
+                        job = new CronJob(newDate1, function() {
                         discordUser.roles.remove(pto1);
                         discordUser.send("You can now re-join the pickup games. Stay out of trouble!");
                     });
                     console.log("RESTARTING JOB 1");
                     job.start();
+
                     break;
                 
                 case 2:

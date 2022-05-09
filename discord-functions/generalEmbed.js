@@ -10,12 +10,26 @@ function cautionEmbed(message, title, field) {
   });
 }
 
+
+
 function successEmbed(message, title, field) {
   let embed = new MessageEmbed()
     .setColor("00FF00")
     .setTitle(title)
     .addField("Success:", field);
   message.reply({
+    embeds: [embed],
+  });
+}
+
+
+
+function successEmbedNoReply(message, title, field) {
+  let embed = new MessageEmbed()
+    .setColor("00FF00")
+    .setTitle(title)
+    .addField("Success:", field);
+  message.channel.send({
     embeds: [embed],
   });
 }
@@ -198,6 +212,7 @@ const em = {
   wipeTeamsEmbed,
   startPickupGameEmbed,
   pickupGameMatchupEmbed,
+  successEmbedNoReply,
 }
 
 module.exports = em;

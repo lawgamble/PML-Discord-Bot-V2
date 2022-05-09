@@ -20,6 +20,15 @@ const filePath = process.env.ALIASES_FILEPATH;
 
 
 async function switchWithPlayer(message) {
+    // check to see if both teams exist
+    // if (!doBothTeamsExist()) {
+    //     return
+    // }
+    // if there is no mention, return saying you need to tag someone
+    if(!message.mentions.users.first()) {
+        message.reply("You need to tag a valid player on the opposite team in order to use this command.");
+        return;
+    }
     if (switchFlag) {
         return message.reply("Only one switch at a time. Wait for the current switch to execute, or cancel.");
     }
@@ -43,7 +52,7 @@ async function switchWithPlayer(message) {
         return message.reply("That user isn't on a team. You can't switch.");
     }
 
-    if(user2OnOppositTeam(authorId, user2Name)) {
+    if(!user2OnOppositTeam(authorId, user2Name)) {
         return message.reply("Player is not on the other team.");
     }
    return createConfirmMessage(message, authorName, authorId, user2Name, user2Id);
@@ -84,9 +93,9 @@ function user2OnOppositTeam(authorId, user2Name) {
     }
 
     if(authorTeam === swapperTeam) {
-        return true;
-    } else {
         return false;
+    } else {
+        return true;
     }
 }
 

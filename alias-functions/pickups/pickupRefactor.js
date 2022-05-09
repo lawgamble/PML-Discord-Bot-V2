@@ -93,6 +93,9 @@ function pickupGame(message, arguments, command, buttons) {
             switchWithPlayer(message, buttons);
             break;
 
+        case "rcon":
+            getRconPlayersList(message);
+            break;  
 
         default:
             closure(message, "notValidCommand", command, arguments[0]);
@@ -183,52 +186,65 @@ function startGame(message) {
     pem.redAndBlueMatchupEmbed(message, "RED vs BLUE", data);
 }
 
-function resetPickupGame(message) {
+async function resetPickupGame(message) {
     gameIsActive = false;
     resetPreGameTimers();
     startPreGameTimers(message);
     gameResetting = true;
-    em.cautionEmbed(message, "Game Resetting", "The game will be reset in 2 minutes.\nIf you join a team, you will be added to the queue in the order you joined.");
+    em.successEmbedNoReply(message, "Game Resetting", "The game will be reset in 2 minutes.\nIf you join a team, you will be added to the queue in the order you joined.");
     setTimeout(async () => {
         gameResetting = false;
 
-        em.successEmbed(message, "Pickups is LIVE!", "Have fun!");
+        em.successEmbedNoReply(message, "Pickups is LIVE!", "Have fun!");
 
         const rconPlayerList = await rconPlayersListForPickups(server);
-        data = getAliasData(filePath);
-    
-        const redTeam = data.teams["RED Team"];
-        const blueTeam = data.teams["BLUE Team"];
+        
         const queue = data.teams["PICKUP Queue"];
         
         setTimeout(() => {
-            redTeam.forEach((user, index) =>  {
-                let player = user.slice(2);
+            
+            data = getAliasData(filePath);
+
+            data.teams["RED Team"].forEach((user, index) =>  {
+
+                const player = user.slice(2);
     
                 if (!rconPlayerList.includes(player)) {
                     if(index === 0) {
                         removeCaptainRole(data, "RED Team", user, message);
-                        redTeam.splice(redTeam[0], 1);                    
-                        if(redTeam.length > 0) addCaptainRole(data, "RED Team", redTeam[0], message);
+                        data.teams["RED Team"].splice(data.teams["RED Team"][0], 1);  
+
+                        writeAliasData(filePath, data); 
+                        data = getAliasData(filePath);   
+
+                        if(data.teams["RED Team"].length > 0) addCaptainRole(data, "RED Team", data.teams["RED Team"][0], message);
                     } else {
-                        redTeam.splice(redTeam.indexOf(user), 1);
+                        data.teams["RED Team"].splice(data.teams["RED Team"].indexOf(user), 1);
+                        writeAliasData(filePath, data);
                     }     
                 }
             });
-            blueTeam.forEach((user, index) =>  {
-                let player = user.slice(2);
+            
+            data.teams["BLUE Team"].forEach((user, index) =>  {
+
+                const player = user.slice(2);
                 if (!rconPlayerList.includes(player)) {
                     if(index === 0) {
                         removeCaptainRole(data, "BLUE Team", user, message);
-                        blueTeam.splice(blueTeam[0], 1);
-                        if(blueTeam.lenght > 0) addCaptainRole(data, "BLUE Team", blueTeam[0], message);
+                        data.teams["BLUE Team"].splice(data.teams["BLUE Team"][0], 1);
+
+                        writeAliasData(filePath, data); 
+                           
+
+                        if(data.teams["BLUE Team"].length > 0) addCaptainRole(data, "BLUE Team", data.teams["BLUE Team"][0], message);
                     } else {
-                        blueTeam.splice(blueTeam.indexOf(user), 1);                
+                        data.teams["BLUE Team"].splice(data.teams["BLUE Team"].indexOf(user), 1);  
+                        writeAliasData(filePath, data);                                           
                     } 
                 }
             });
     
-            movePlayersFromQueue(redTeam, blueTeam, queue, message);
+             movePlayersFromQueue(data.teams["RED Team"], data.teams["BLUE Team"], data.teams["PICKUP Queue"], message);
     
              writeAliasData(filePath, data);
     
@@ -241,7 +257,7 @@ function resetPickupGame(message) {
             }
             makeSureTeamsHaveCaptains(message);
         }, 1000);
-    }, 120000);
+    }, 10000);
 };
 
 
@@ -557,6 +573,21 @@ function gameResetMessage(data, player, message) {
     })
     
 };
+
+
+async function getRconPlayersList(message) {
+    let sentList = "";
+    const rconList = await rconPlayersListForPickups(server)
+    if(rconList.length === 0) {
+        em.cautionEmbed(message, "``NO PLAYERS ON SERVER``", "There are no players on the server.");
+        return;
+    } else {
+        rconList.forEach((player) => {
+            sentList += `${player}\n`;
+        })
+    }
+    message.reply(sentList);
+}
 
 
 
