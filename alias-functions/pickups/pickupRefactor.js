@@ -257,7 +257,7 @@ async function resetPickupGame(message) {
             }
             makeSureTeamsHaveCaptains(message);
         }, 1000);
-    }, 10000);
+    }, 120000);
 };
 
 
