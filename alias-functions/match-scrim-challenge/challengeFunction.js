@@ -117,7 +117,9 @@ function challengeFunction(message) {
     }
   });
 
-  collector.on("end", () => message.channel.send({ embeds: [endEmbed] }));
+  setTimeout(()=> {
+    collector.on("end", () => message.channel.send({ embeds: [endEmbed] }));
+  }, 120000)
 }
 
 module.exports = challengeFunction;

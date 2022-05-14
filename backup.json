@@ -303,6 +303,13 @@
       "q-TheMUD",
       "q-LegoManStan",
       "q-XTRACTN"
-    ]
+    ],
+    "RED Team": [
+      "q-LawMan"
+    ],
+    "BLUE Team": [
+      "q-D1G1TALWraith"
+    ],
+    "PICKUP Queue": []
   }
 }
