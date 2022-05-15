@@ -582,7 +582,7 @@ async function makePickupGameResetEmbed(message, data) {
     data = getAliasData(filePath);
 
     let redBluePlayersArray = [];
-    let confirmedArray = [];
+    
 
     data.teams["RED Team"].forEach((player) => {
         const userId = getUserIdByUserName(player, data.players);
@@ -623,8 +623,12 @@ async function makePickupGameResetEmbed(message, data) {
         console.log(`Collected ${user.id}`);
     })
 
-    collector.on('end', reaction => {
-        collector.each(user => confirmedArray.push(user.id));
+    collector.on("end", async (collector) => {
+        let confirmedArray = [];
+  
+        collector.forEach(reaction =>  {
+            confirmedArray.push(reaction.user.id);
+        });
         console.log(confirmedArray);
         if (confirmedArray.length > 0) {
             const userNameArray = getUserNameArray(confirmedArray);

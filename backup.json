@@ -196,7 +196,8 @@
     "644312919089086484": "q-qenzq",
     "579866414756659255": "q-painter",
     "902954244653600799": "q-Random_-",
-    "652751313058267146": "q-LawMan"
+    "652751313058267146": "q-LawMan",
+    "770771101621551116": "q-keholly"
   },
   "teams": {
     "Legion": [
@@ -304,12 +305,11 @@
       "q-LegoManStan",
       "q-XTRACTN"
     ],
-    "RED Team": [
-      "q-LawMan"
-    ],
-    "BLUE Team": [
-      "q-D1G1TALWraith"
-    ],
-    "PICKUP Queue": []
+    "RED Team": [],
+    "BLUE Team": [],
+    "PICKUP Queue": [
+      "q-LawMan",
+      "q-keholly"
+    ]
   }
 }
