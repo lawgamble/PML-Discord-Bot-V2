@@ -305,11 +305,12 @@
       "q-LegoManStan",
       "q-XTRACTN"
     ],
-    "RED Team": [],
-    "BLUE Team": [],
-    "PICKUP Queue": [
-      "q-LawMan",
+    "RED Team": [
+      "q-LawMan"
+    ],
+    "BLUE Team": [
       "q-keholly"
-    ]
+    ],
+    "PICKUP Queue": []
   }
 }

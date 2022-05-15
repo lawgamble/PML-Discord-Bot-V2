@@ -581,11 +581,14 @@ async function getRconPlayersList(message) {
 async function makePickupGameResetEmbed(message, data) {
     data = getAliasData(filePath);
 
+    const playAgainRole = message.guild.roles.cache.find(role => role.id === replayRoleID);
+
     let redBluePlayersArray = [];
-    
+    let confirmedArray = [];
 
     data.teams["RED Team"].forEach((player) => {
         const userId = getUserIdByUserName(player, data.players);
+        giveUserHiddenPickupChannelRole(message, userId, playAgainRole);
         redBluePlayersArray.push(userId);
     });
 
@@ -620,22 +623,21 @@ async function makePickupGameResetEmbed(message, data) {
     });
 
     collector.on("collect", async (reaction, user) => {
-        console.log(`Collected ${user.id}`);
+       if (!confirmedArray.includes(user.id)) confirmedArray.push(user.id);
+       else confirmedArray = confirmedArray.splice(confirmedArray.indexOf(user.id), 1);
     })
 
-    collector.on("end", async (collector) => {
-        let confirmedArray = [];
-  
-        collector.forEach(reaction =>  {
-            confirmedArray.push(reaction.user.id);
-        });
+    collector.on('end', collector => {
+
         console.log(confirmedArray);
         if (confirmedArray.length > 0) {
             const userNameArray = getUserNameArray(confirmedArray);
             removePlayersWhoDontWantToPlayAgain(userNameArray);
         }
-        //send msg here?
-    })
+        // need to double check if this works
+        removeHiddenPickupChannelRole(playAgainRole);
+       // send msg here?
+    });
 }
 
 function getUserNameArray(confirmedArray) {
@@ -662,6 +664,17 @@ function removePlayersWhoDontWantToPlayAgain(userNameArray) {
         }
     });
     writeAliasData(filePath, data);
+}
+
+function giveUserHiddenPickupChannelRole(message, userId, role) {
+    const user = message.guild.members.cache.find((user) => user.id === userId);
+    user.roles.add(role);
+}
+
+function removeHiddenPickupChannelRole(role) {
+    role.members.forEach((member) => {
+        member.roles.remove(role);
+    })
 }
 
 module.exports = {
