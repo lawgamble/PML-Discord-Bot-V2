@@ -614,7 +614,7 @@ async function makePickupGameResetEmbed(message, data) {
 
     const collector = confirmMessage.createReactionCollector({
         filter,
-        time: 30000,
+        time: 120000,
     });
 
     message.client.on("messageReactionAdd",  (reaction, user) => {
