@@ -148,9 +148,9 @@ function addPlayerToTeam(teamName, message) {
     }
 
 
-    writeAliasData(filePath, data);
+    data = writeAliasData(filePath, data);
 
-    let sumOfPlayers = totalPlayers();
+    let sumOfPlayers = totalPlayers(data);
     if (sumOfPlayers < 10) sendTeamsEmbed(message);
 
     if (sumOfPlayers === 10 && !gameIsActive) {
@@ -204,49 +204,45 @@ async function resetPickupGame(message) {
     const confirmEmbed = makePickupGameResetEmbed(message);
 
     resetPreGameTimers();
+
     startPreGameTimers(message);
+
     gameResetting = true;
     em.successEmbedNoReply(message, "Game Resetting", "The game will be reset in 2 minutes.\nIf you join a team, you will be added to the queue in the order you joined.");
 
-
-
     setTimeout(() => {
         gameResetting = false;
-
         em.successEmbedNoReply(message, "Pickups is LIVE!", "Have fun!");
-
-
 
         data = getAliasData(filePath);
 
-        movePlayersFromQueue(data.teams["RED Team"], data.teams["BLUE Team"], data.teams["PICKUP Queue"], message);
+        movePlayersFromQueue(data, message);
 
-        writeAliasData(filePath, data);
+        data =  writeAliasData(filePath, data);
 
-        if (totalPlayers() === 0) return wipeAllTeams(message);
+        if (totalPlayers(data) === 0) return wipeAllTeams(message);
 
         sendTeamsEmbed(message);
 
-        if (totalPlayers() >= 10 && !gameIsActive) {
+        if (totalPlayers(data) >= 10 && !gameIsActive) {
             startGame(message);
         }
-        makeSureTeamsHaveCaptains(message);
+
     }, 120000);
 };
 
 
 function userIsRegistered(discordId) {
-    const data = getAliasData(filePath);
+    data = getAliasData(filePath);
     return data.players.hasOwnProperty(discordId);
 }
 
 function checkTeamSize(teamName) {
-    const data = getAliasData(filePath);
+    data = getAliasData(filePath);
     return data.teams[teamName].length;
 }
 
-function totalPlayers() {
-    const data = getAliasData(filePath);
+function totalPlayers(data) {
     return data.teams["RED Team"].length + data.teams["BLUE Team"].length + data.teams["PICKUP Queue"].length;
 };
 
@@ -280,7 +276,7 @@ function getUserIdByUserName(user, players) {
 }
 
 function userOnAnotherTeam(discordId) {
-    const data = getAliasData(filePath);
+    data = getAliasData(filePath);
     const userName = data.players[discordId];
     return data.teams["RED Team"].includes(userName) || data.teams["BLUE Team"].includes(userName) || data.teams["PICKUP Queue"].includes(userName);
 };
@@ -291,7 +287,7 @@ function initializeGame(message) {
     data.teams["BLUE Team"] = [];
     data.teams["PICKUP Queue"] = [];
     initialized = true;
-    writeAliasData(filePath, data);
+    data = writeAliasData(filePath, data);
     startPreGameTimers(message);
 };
 
@@ -330,17 +326,18 @@ function leavePickupGame(authorId, message) {
     if (team != undefined) em.simpleReplyEmbed(message, `${userName.slice(2)} has left the ${team}`);
     else em.simpleReplyEmbed(message, `${userName.slice(2)} is not on a team`);
 
+    data = writeAliasData(filePath, data);
+
     if (data.teams["PICKUP Queue"].length > 0) {
-        movePlayersFromQueue(data.teams["RED Team"], data.teams["BLUE Team"], data.teams["PICKUP Queue"], message);
+        movePlayersFromQueue(data, message);
     }
 
-    writeAliasData(filePath, data);
-    if (totalPlayers() === 0) return wipeAllTeams(message)
+    if (totalPlayers(data) === 0) return wipeAllTeams(message)
     sendTeamsEmbed(message);
 };
 
 function sendTeamsEmbed(message) {
-    const data = getAliasData(filePath);
+    data = getAliasData(filePath);
     const timeLeft = checkPregameTimer(preGameTimer)
     em.redAndBlueTeamEmbed(message, data, timeLeft, gameIsActive);
 
@@ -374,7 +371,7 @@ function resetPreGameTimers() {
 
 function wipeAllTeams(message) {
     if (!gameIsActive) {
-        const data = getAliasData(filePath);
+        data = getAliasData(filePath);
 
         if (thereIsACaptain(data, "RED Team")) autoRemoveCaptainRole(data, message);
         if (thereIsACaptain(data, "BLUE Team")) autoRemoveCaptainRole(data, message);
@@ -383,7 +380,7 @@ function wipeAllTeams(message) {
         delete data.teams["BLUE Team"];
         delete data.teams["PICKUP Queue"];
 
-        writeAliasData(filePath, data);
+        data = writeAliasData(filePath, data);
         em.simpleReplyEmbed(message, "All teams have been wiped.");
         initialized = false;
         resetPreGameTimers();
@@ -501,52 +498,47 @@ function closure(message, closureArguments, command, arguments) {
 
 
 
-function movePlayersFromQueue(redTeam, blueTeam, pickupQueue, message) {
+function movePlayersFromQueue(data, message) {
     let queueNumber = 0;
     let player;
-    if (pickupQueue.length === 0) return;
+    if (data.teams["PICKUP Queue"].length === 0) return;
 
-    while (pickupQueue.length > 0 && (redTeam.length < 5 || blueTeam.length < 5)) {
-        if (redTeam.length < 5) {
-            if (pickupQueue.length === 0) return;
-            player = pickupQueue.shift();
-            redTeam.push(player);
+    while (data.teams["PICKUP Queue"].length > 0 && (data.teams["RED Team"].length < 5 || data.teams["BLUE Team"].length < 5)) {
+        if (data.teams["RED Team"].length < 5) {
+            if (data.teams["PICKUP Queue"].length === 0) return;
+            player = data.teams["PICKUP Queue"].shift();
+            data.teams["RED Team"].push(player);
             if (gameIsActive) gameCodeMessage(player, data.players, message, pin, null)
             else gameResetMessage(data, player, message)
             queueNumber++;
         }
-        if (blueTeam.length < 5) {
-            if (pickupQueue.length === 0) return;
-            player = pickupQueue.shift();
-            blueTeam.push(player);
+        if (data.teams["BLUE Team"].length < 5) {
+            if (data.teams["PICKUP Queue"].length === 0) return;
+            player = data.teams["PICKUP Queue"].shift();
+            data.teams["BLUE Team"].push(player);
             if (gameIsActive) gameCodeMessage(player, data.players, message, pin, null)
             else gameResetMessage(data, player, message)
             queueNumber++;
         }
     }
+    data = writeAliasData(filePath, data);
+    makeSureTeamsHaveCaptains(message, data)
     return queueNumber;
 };
 
-function makeSureTeamsHaveCaptains(message) {
-    data = getAliasData(filePath);
-    let redTeam = data.teams["RED Team"];
-    let blueTeam = data.teams["BLUE Team"];
+function makeSureTeamsHaveCaptains(message, data) {
+    if (data.teams["RED Team"].length > 0) {
+        const userId = getUserIdByUserName(data.teams["RED Team"][0], data.players);
+        const user = message.guild.members.fetch(userId).then((user) => {
+            user.roles.add(pickupCaptainRoleId)
+        })
 
-    if (redTeam.lenght > 0) {
-        const userId = getUserIdByUserName(redTeam[0], data.players);
-        message.guild.members.fetch(userId).then(member => {
-            if (!member.roles.cache.has(pickupCaptainRoleId)) {
-                member.roles.add(pickupCaptainRoleId);
-            }
-        }).catch(console.error);
     }
-    if (blueTeam.lenght > 0) {
-        const userId = getUserIdByUserName(blueTeam[0], data.players);
-        message.guild.members.fetch(userId).then(member => {
-            if (!member.roles.cache.has(pickupCaptainRoleId)) {
-                member.roles.add(pickupCaptainRoleId);
-            }
-        }).catch(console.error);
+    if (data.teams["BLUE Team"].length > 0) {
+        const userId = getUserIdByUserName(data.teams["BLUE Team"][0], data.players);
+        const user = message.guild.members.fetch(userId).then((user) => {
+            user.roles.add(pickupCaptainRoleId)
+        });
     }
 };
 
@@ -589,11 +581,14 @@ async function makePickupGameResetEmbed(message, data) {
     data.teams["RED Team"].forEach((player) => {
         const userId = getUserIdByUserName(player, data.players);
         giveUserHiddenPickupChannelRole(message, userId, playAgainRole);
+        const timeout = setTimeout(() => {});
         redBluePlayersArray.push(userId);
     });
 
     data.teams["BLUE Team"].forEach((player) => {
         const userId = getUserIdByUserName(player, data.players);
+        giveUserHiddenPickupChannelRole(message, userId, playAgainRole);
+        const timeout = setTimeout(() => {});
         redBluePlayersArray.push(userId);
     })
 
@@ -619,21 +614,24 @@ async function makePickupGameResetEmbed(message, data) {
 
     const collector = confirmMessage.createReactionCollector({
         filter,
-        time: 10000,
+        time: 30000,
     });
 
-    collector.on("collect", async (reaction, user) => {
-       if (!confirmedArray.includes(user.id)) confirmedArray.push(user.id);
-       else confirmedArray = confirmedArray.splice(confirmedArray.indexOf(user.id), 1);
+    message.client.on("messageReactionAdd",  (reaction, user) => {
+        if (user.id === process.env.BOT_ID) return;
+        if (!confirmedArray.includes(user.id)) confirmedArray.push(user.id); 
+    })
+
+    message.client.on("messageReactionRemove", (reaction, user) => {
+        const index = confirmedArray.indexOf(user.id);
+        confirmedArray.splice(index, 1);
     })
 
     collector.on('end', collector => {
 
         console.log(confirmedArray);
-        if (confirmedArray.length > 0) {
-            const userNameArray = getUserNameArray(confirmedArray);
-            removePlayersWhoDontWantToPlayAgain(userNameArray);
-        }
+        const userNameArray = getUserNameArray(confirmedArray);
+        removePlayersWhoDontWantToPlayAgain(userNameArray, message);
         // need to double check if this works
         removeHiddenPickupChannelRole(playAgainRole);
        // send msg here?
@@ -651,19 +649,25 @@ function getUserNameArray(confirmedArray) {
 }
 
 
-function removePlayersWhoDontWantToPlayAgain(userNameArray) {
+function removePlayersWhoDontWantToPlayAgain(userNameArray, message) {
     data = getAliasData(filePath);
-    data.teams["RED Team"].forEach((player) => {
+    data.teams["RED Team"].forEach((player, index) => {
         if (!userNameArray.includes(player)) {
-            data.teams["RED Team"].splice(data.teams["RED Team"].indexOf(player), 1);
+            if (index === 0) {
+                removeCaptainRole(data, "RED Team", player, message)
+            }
+            data.teams["RED Team"].splice(index, 1);
         }
     });
-    data.teams["BLUE Team"].forEach((player) => {
+    data.teams["BLUE Team"].forEach((player, index) => {
         if (!userNameArray.includes(player)) {
-            data.teams["BLUE Team"].splice(data.teams["BLUE Team"].indexOf(player), 1);
+            if (index === 0) {
+                removeCaptainRole(data, "BLUE Team", player, message)
+            }
+            data.teams["BLUE Team"].splice(index, 1);
         }
     });
-    writeAliasData(filePath, data);
+   data =  writeAliasData(filePath, data);
 }
 
 function giveUserHiddenPickupChannelRole(message, userId, role) {
@@ -676,6 +680,9 @@ function removeHiddenPickupChannelRole(role) {
         member.roles.remove(role);
     })
 }
+
+
+
 
 module.exports = {
     pickupGame,

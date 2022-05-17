@@ -22,7 +22,8 @@ function getAliasData(filePath) {
 }
 
 function writeAliasData(filePath, data) {
-  return fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+  fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+  return getAliasData(filePath);
   }
 
 
