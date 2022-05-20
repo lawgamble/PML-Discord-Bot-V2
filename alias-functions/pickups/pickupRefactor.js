@@ -593,7 +593,7 @@ async function makePickupGameResetEmbed(message, data) {
     })
 
 
-    setTimeout(() => {
+    setTimeout(async () => {
         const embed = new Discord.MessageEmbed()
         .setColor("#0099ff")
         .setTitle("Play Again?")
