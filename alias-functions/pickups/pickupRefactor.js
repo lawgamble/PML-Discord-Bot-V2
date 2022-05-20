@@ -614,7 +614,7 @@ async function makePickupGameResetEmbed(message, data) {
 
     const collector = confirmMessage.createReactionCollector({
         filter,
-        time: 120000,
+        time: 115000,
     });
 
     message.client.on("messageReactionAdd",  (reaction, user) => {
@@ -682,7 +682,8 @@ function removeHiddenPickupChannelRole(role) {
 }
 
 
-
+// need team embed when I join a game that is currently running
+// need team embed after switch
 
 module.exports = {
     pickupGame,
