@@ -605,9 +605,10 @@ async function makePickupGameResetEmbed(message, data) {
     const confirmMessage = await repeatChannel.send({
         embeds: [embed]
     });
+    await confirmMessage.react("✅");
     }, 5000);
     
-    await confirmMessage.react("✅");
+   
 
 
     const filter = (reaction, user) => {
