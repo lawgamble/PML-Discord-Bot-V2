@@ -658,6 +658,7 @@ function removePlayersWhoDontWantToPlayAgain(userNameArray, message) {
                 removeCaptainRole(data, "RED Team", player, message)
             }
             data.teams["RED Team"].splice(index, 1);
+            console.log("Kicking " + player + " from RED Team");
         }
     });
     data.teams["BLUE Team"].forEach((player, index) => {
@@ -666,6 +667,7 @@ function removePlayersWhoDontWantToPlayAgain(userNameArray, message) {
                 removeCaptainRole(data, "BLUE Team", player, message)
             }
             data.teams["BLUE Team"].splice(index, 1);
+            console.log("Kicking " + player + " from BLUE Team");
         }
     });
    data =  writeAliasData(filePath, data);
