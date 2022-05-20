@@ -593,8 +593,8 @@ async function makePickupGameResetEmbed(message, data) {
     })
 
 
-
-    const embed = new Discord.MessageEmbed()
+    setTimeout(() => {
+        const embed = new Discord.MessageEmbed()
         .setColor("#0099ff")
         .setTitle("Play Again?")
         .setDescription("DESCRIPTION")
@@ -605,6 +605,8 @@ async function makePickupGameResetEmbed(message, data) {
     const confirmMessage = await repeatChannel.send({
         embeds: [embed]
     });
+    }, 5000);
+    
     await confirmMessage.react("✅");
 
 
