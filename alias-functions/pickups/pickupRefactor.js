@@ -218,7 +218,7 @@ async function resetPickupGame(message) {
         gameResetting = false;
         em.successEmbedNoReply(message, "Pickups is LIVE!", "Have fun!");
 
-        data = getAliasData(filePath);
+       data = writeAliasData(filePath, data);
 
         movePlayersFromQueue(data, message);
 
@@ -226,13 +226,12 @@ async function resetPickupGame(message) {
 
         if (totalPlayers(data) === 0) return wipeAllTeams(message);
 
-        sendTeamsEmbed(message);
-
         if (totalPlayers(data) >= 10 && !gameIsActive) {
             startGame(message);
         }
 
     }, 120000);
+    
 };
 
 
@@ -577,8 +576,6 @@ async function getRconPlayersList(message) {
 async function makePickupGameResetEmbed(message, data) {
     data = getAliasData(filePath);
 
-    let confirmMessage;
-
     const playAgainRole = message.guild.roles.cache.find(role => role.id === replayRoleID);
     const repeatChannel = message.guild.channels.cache.find((channel) => channel.id === replayChannelID);
 
@@ -610,20 +607,17 @@ async function makePickupGameResetEmbed(message, data) {
 
 
     
-    confirmMessage = await repeatChannel.send({
+    const confirmMessage = await repeatChannel.send({
         embeds: [embed]
     });
     await confirmMessage.react("✅");
-    }, 5000);
-    
-   
     const filter = (reaction, user) => {
         return redBluePlayersArray.includes(user.id) && reaction.emoji.name === "✅";
     };
 
     const collector = confirmMessage.createReactionCollector({
         filter,
-        time: 115000,
+        time: 113000,
     });
 
     message.client.on("messageReactionAdd",  (reaction, user) => {
@@ -645,7 +639,9 @@ async function makePickupGameResetEmbed(message, data) {
         removeHiddenPickupChannelRole(playAgainRole);
 
         confirmMessage.delete();
+        data = writeAliasData(filePath, data);
     });
+    }, 2000);
 }
 
 function getUserNameArray(confirmedArray) {
@@ -679,7 +675,8 @@ function removePlayersWhoDontWantToPlayAgain(array, message, data) {
             console.log("Kicking " + player + " from BLUE Team");
         }
     });
-   data =  writeAliasData(filePath, data);
+   data = writeAliasData(filePath, data);
+   sendTeamsEmbed(message);
 }
 
 function giveUserHiddenPickupChannelRole(message, userId, role) {
