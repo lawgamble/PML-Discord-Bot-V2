@@ -58,12 +58,16 @@ function pickupGame(message, arguments, command, buttons) {
 
             // this is gonna check if the game is being reset
             //if(gameIsbeingReset()) return addPlayerToTeam("queue", message);
-            if (gameResetting) return addPlayerToTeam("queue", message);
+            if (gameResetting) {
+                addPlayerToTeam("queue", message)
+                return addPlayerToTeam("queue", message);
+            } 
 
             const teamSize = checkTeamSize(arguments[0] === "red" ? "RED Team" : "BLUE Team");
 
             if (gameIsActive && teamSize === 5) {
                 addPlayerToTeam("queue", message);
+                sendTeamsEmbed(message);
                 break;
             }
             if (teamSize < 5) addPlayerToTeam(arguments[0].toLowerCase(), message);
