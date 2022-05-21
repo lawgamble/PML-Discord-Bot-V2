@@ -573,7 +573,11 @@ async function getRconPlayersList(message) {
 async function makePickupGameResetEmbed(message, data) {
     data = getAliasData(filePath);
 
+    let confirmMessage;
+
     const playAgainRole = message.guild.roles.cache.find(role => role.id === replayRoleID);
+    const repeatChannel = message.guild.channels.cache.find((channel) => channel.id === replayChannelID);
+
 
     let redBluePlayersArray = [];
     let confirmedArray = [];
@@ -601,16 +605,14 @@ async function makePickupGameResetEmbed(message, data) {
         .addField("Would you like to continue playing Pickups?", "Click ✅ to confirm.")
 
 
-    const repeatChannel = message.guild.channels.cache.find((channel) => channel.id === replayChannelID);
-    const confirmMessage = await repeatChannel.send({
+    
+    confirmMessage = await repeatChannel.send({
         embeds: [embed]
     });
     await confirmMessage.react("✅");
     }, 5000);
     
    
-
-
     const filter = (reaction, user) => {
         return redBluePlayersArray.includes(user.id) && reaction.emoji.name === "✅";
     };
@@ -633,11 +635,12 @@ async function makePickupGameResetEmbed(message, data) {
     collector.on('end', collector => {
 
         console.log(confirmedArray);
-        const userNameArray = getUserNameArray(confirmedArray);
-        removePlayersWhoDontWantToPlayAgain(userNameArray, message);
+        const userNamesArray = getUserNameArray(confirmedArray);
+        removePlayersWhoDontWantToPlayAgain(userNamesArray, message, data);
         // need to double check if this works
         removeHiddenPickupChannelRole(playAgainRole);
-       // send msg here?
+
+        confirmMessage.delete();
     });
 }
 
@@ -645,31 +648,30 @@ function getUserNameArray(confirmedArray) {
     let userNameArray = [];
 
     confirmedArray.forEach((userId) => {
-        const userName = data.players[userId];
+        let userName = data.players[userId];
         userNameArray.push(userName);
     });
     return userNameArray;
 }
 
 
-function removePlayersWhoDontWantToPlayAgain(userNameArray, message) {
-    console.log(userNameArray);
-    data = getAliasData(filePath);
+function removePlayersWhoDontWantToPlayAgain(array, message, data) {
+    console.log(array);
     data.teams["RED Team"].forEach((player, index) => {
-        if (!userNameArray.includes(player)) {
+        if (!array.includes(player)) {
             if (index === 0) {
                 removeCaptainRole(data, "RED Team", player, message)
             }
-            data.teams["RED Team"].splice(index, 1);
+            data.teams["RED Team"].splice(array.indexOf(player), 1);
             console.log("Kicking " + player + " from RED Team");
         }
     });
     data.teams["BLUE Team"].forEach((player, index) => {
-        if (!userNameArray.includes(player)) {
+        if (!array.includes(player)) {
             if (index === 0) {
                 removeCaptainRole(data, "BLUE Team", player, message)
             }
-            data.teams["BLUE Team"].splice(index, 1);
+            data.teams["BLUE Team"].splice(array.indexOf(player), 1);
             console.log("Kicking " + player + " from BLUE Team");
         }
     });
