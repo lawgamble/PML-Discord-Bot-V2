@@ -10,6 +10,7 @@
 
 const JSONFunctions = require("../../JSONParser.js");
 const Discord = require("discord.js");
+const {makeSureTeamsHaveCaptains, removeCaptainRole} = require("./pickupRefactor")
 
 
 let data;
@@ -20,10 +21,6 @@ const filePath = process.env.ALIASES_FILEPATH;
 
 
 async function switchWithPlayer(message) {
-    // check to see if both teams exist
-    // if (!doBothTeamsExist()) {
-    //     return
-    // }
     // if there is no mention, return saying you need to tag someone
     if(!message.mentions.users.first()) {
         message.reply("You need to tag a valid player on the opposite team in order to use this command.");
@@ -138,7 +135,9 @@ async function createConfirmMessage(message, authorName, authorId, user2Name, us
         if (reaction.emoji.name === '✅') {
             message.channel.send(`Players have successfully swapped.`);
             data = JSONFunctions.getAliasData(filePath);
-            
+
+           removeCaptainRole(data, userToBeSwappedTeam, data.players[authorId], message)
+
             data.teams[userToBeSwappedTeam][data.teams[userToBeSwappedTeam].indexOf(user2Name)] = data.players[authorId];
 
             userToBeSwappedTeam === "RED Team" ? userToBeSwappedTeam = "BLUE Team" : userToBeSwappedTeam = "RED Team";
@@ -146,6 +145,8 @@ async function createConfirmMessage(message, authorName, authorId, user2Name, us
             data.teams[userToBeSwappedTeam][data.teams[userToBeSwappedTeam].indexOf(data.players[authorId])] = user2Name;
 
             data = JSONFunctions.writeAliasData(filePath, data);
+
+            makeSureTeamsHaveCaptains(message, data)
 
             confirmMessage.delete();
             message.delete();

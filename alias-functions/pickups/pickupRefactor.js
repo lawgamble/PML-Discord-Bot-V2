@@ -501,9 +501,9 @@ function closure(message, closureArguments, command, arguments) {
 
 
 function movePlayersFromQueue(data, message) {
+    if (data.teams["PICKUP Queue"].length === 0) return;
     let queueNumber = 0;
     let player;
-    if (data.teams["PICKUP Queue"].length === 0) return;
 
     while (data.teams["PICKUP Queue"].length > 0 && (data.teams["RED Team"].length < 5 || data.teams["BLUE Team"].length < 5)) {
         if (data.teams["RED Team"].length < 5) {
@@ -626,7 +626,7 @@ async function createReactionCollector (redBluePlayersArray, confirmedArray, mes
         embeds: [embed]
     });
 
-    repeatChannel.send(`<@&${replayRoleID}>`)
+    const tagUsersWithRole = repeatChannel.send(`<@&${replayRoleID}>`)
     await confirmMessage.react("✅");
     const filter = (reaction, user) => {
         return redBluePlayersArray.includes(user.id) && reaction.emoji.name === "✅";
@@ -638,13 +638,16 @@ async function createReactionCollector (redBluePlayersArray, confirmedArray, mes
     });
 
     message.client.on("messageReactionAdd",  (reaction, user) => {
-        if (user.id === process.env.BOT_ID) return;
-        if (!confirmedArray.includes(user.id)) confirmedArray.push(user.id); 
+        if (filter && user.id !== process.env.BOT_ID) {
+            if (!confirmedArray.includes(user.id)) confirmedArray.push(user.id);
+        }
     })
 
     message.client.on("messageReactionRemove", (reaction, user) => {
-        const index = confirmedArray.indexOf(user.id);
-        confirmedArray.splice(index, 1);
+        if (filter) {
+            const index = confirmedArray.indexOf(user.id);
+            confirmedArray.splice(index, 1);
+        }
     })
 
     collector.on('end', () => {
@@ -652,12 +655,12 @@ async function createReactionCollector (redBluePlayersArray, confirmedArray, mes
         console.log(confirmedArray);
         const userNamesArray = getUserNameArray(confirmedArray);
         removePlayersWhoDontWantToPlayAgain(userNamesArray, message);
-        // need to double check if this works
+        // need to double-check if this works
         removeHiddenPickupChannelRole(playAgainRole);
 
         confirmMessage.delete();
+        tagUsersWithRole.delete();
         data = writeAliasData(filePath, data);
-
     });
 }
 
@@ -718,5 +721,8 @@ function removeHiddenPickupChannelRole(role) {
 
 module.exports = {
     pickupGame,
-    wipeAllTeams
+    wipeAllTeams,
+    makeSureTeamsHaveCaptains,
+    removeCaptainRole
+
 };
