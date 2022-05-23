@@ -647,7 +647,7 @@ async function createReactionCollector (redBluePlayersArray, confirmedArray, mes
 
         console.log(confirmedArray);
         const userNamesArray = getUserNameArray(confirmedArray);
-        removePlayersWhoDontWantToPlayAgain(userNamesArray, message, data);
+        removePlayersWhoDontWantToPlayAgain(userNamesArray, message);
         // need to double check if this works
         removeHiddenPickupChannelRole(playAgainRole);
 
@@ -671,7 +671,7 @@ function getUserNameArray(confirmedArray) {
 
 
 
-function removePlayersWhoDontWantToPlayAgain(array, message, data) {
+function removePlayersWhoDontWantToPlayAgain(array, message) {
     console.log(array);
     data.teams["RED Team"].forEach((player, index) => {
         if (!array.includes(player)) {
