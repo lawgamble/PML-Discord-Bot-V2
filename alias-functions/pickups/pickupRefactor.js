@@ -684,7 +684,7 @@ function removePlayersWhoDontWantToPlayAgain(array, message) {
             if (index === 0) {
                 removeCaptainRole(data, "RED Team", player, message)
             }
-            data.teams["RED Team"].splice(data.teams["RED TEAM"].indexOf(player), 1);
+            data.teams["RED Team"].splice(data.teams["RED Team"].indexOf(player), 1);
             console.log("Kicking " + player + " from RED Team");
         }
     });
