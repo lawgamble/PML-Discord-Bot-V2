@@ -59,6 +59,7 @@ function pickupGame(message, arguments, command, buttons) {
             //if(gameIsbeingReset()) return addPlayerToTeam("queue", message);
             if (gameResetting) {
                 addPlayerToTeam("queue", message)
+                sendTeamsEmbed(message);
                 return addPlayerToTeam("queue", message);
             } 
 
@@ -146,6 +147,7 @@ function addPlayerToTeam(teamName, message) {
             userName = data.players[message.author.id];
             data.teams["PICKUP Queue"].push(userName);
             em.successEmbed(message, "Queued Up!", "The team is full, so you've been queued up!");
+            sendTeamsEmbed(message);
 
             break;
     }
@@ -224,6 +226,8 @@ async function resetPickupGame(message) {
         movePlayersFromQueue(data, message);
 
         data =  writeAliasData(filePath, data);
+
+        sendTeamsEmbed(message);
 
         if (totalPlayers(data) === 0) return wipeAllTeams(message);
 
@@ -653,6 +657,7 @@ async function createReactionCollector (redBluePlayersArray, confirmedArray, mes
 
         confirmMessage.delete();
         data = writeAliasData(filePath, data);
+
     });
 }
 
@@ -679,7 +684,7 @@ function removePlayersWhoDontWantToPlayAgain(array, message) {
             if (index === 0) {
                 removeCaptainRole(data, "RED Team", player, message)
             }
-            data.teams["RED Team"].splice(array.indexOf(player), 1);
+            data.teams["RED Team"].splice(data.teams["RED TEAM"].indexOf(player), 1);
             console.log("Kicking " + player + " from RED Team");
         }
     });
@@ -688,12 +693,12 @@ function removePlayersWhoDontWantToPlayAgain(array, message) {
             if (index === 0) {
                 removeCaptainRole(data, "BLUE Team", player, message)
             }
-            data.teams["BLUE Team"].splice(array.indexOf(player), 1);
+            data.teams["BLUE Team"].splice(data.teams["BLUE Team"].indexOf(player), 1);
             console.log("Kicking " + player + " from BLUE Team");
         }
     });
    data = writeAliasData(filePath, data);
-   sendTeamsEmbed(message);
+
 }
 
 function giveUserHiddenPickupChannelRole(message, userId, role) {
