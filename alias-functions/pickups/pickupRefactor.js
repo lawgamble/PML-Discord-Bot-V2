@@ -672,6 +672,7 @@ function getUserNameArray(confirmedArray) {
 
 
 function removePlayersWhoDontWantToPlayAgain(array, message) {
+    data = getAliasData(filePath)
     console.log(array);
     data.teams["RED Team"].forEach((player, index) => {
         if (!array.includes(player)) {
