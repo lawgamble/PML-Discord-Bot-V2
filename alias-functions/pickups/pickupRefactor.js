@@ -107,7 +107,7 @@ function pickupGame(message, arguments, command, buttons) {
             break;
 
         case "switch":
-            switchWithPlayer(message, buttons).catch(e => console.log(e));
+           data = switchWithPlayer(message, buttons).catch(e => console.log(e));
             break;
 
         case "rcon":
@@ -613,6 +613,8 @@ async function makePickupGameResetEmbed(message) {
 
 async function createReactionCollector (redBluePlayersArray, confirmedArray, message, playAgainRole) {
     const repeatChannel = message.guild.channels.cache.find((channel) => channel.id === replayChannelID);
+
+    repeatChannel.send(`<@&${replayRoleID}>`)
     
     const embed = new Discord.MessageEmbed()
         .setColor("#0099ff")
@@ -626,7 +628,7 @@ async function createReactionCollector (redBluePlayersArray, confirmedArray, mes
         embeds: [embed]
     });
 
-    const tagUsersWithRole = repeatChannel.send(`<@&${replayRoleID}>`)
+
     await confirmMessage.react("✅");
     const filter = (reaction, user) => {
         return redBluePlayersArray.includes(user.id) && reaction.emoji.name === "✅";
@@ -638,13 +640,13 @@ async function createReactionCollector (redBluePlayersArray, confirmedArray, mes
     });
 
     message.client.on("messageReactionAdd",  (reaction, user) => {
-        if (filter && user.id !== process.env.BOT_ID) {
+        if(redBluePlayersArray.includes(user.id) && reaction.emoji.name === "✅" && reaction.message.id === confirmMessage.id && user.id !== process.env.BOT_ID) {
             if (!confirmedArray.includes(user.id)) confirmedArray.push(user.id);
         }
     })
 
     message.client.on("messageReactionRemove", (reaction, user) => {
-        if (filter) {
+        if (redBluePlayersArray.includes(user.id) && reaction.emoji.name === "✅" && reaction.message.id === confirmMessage.id) {
             const index = confirmedArray.indexOf(user.id);
             confirmedArray.splice(index, 1);
         }
@@ -655,11 +657,10 @@ async function createReactionCollector (redBluePlayersArray, confirmedArray, mes
         console.log(confirmedArray);
         const userNamesArray = getUserNameArray(confirmedArray);
         removePlayersWhoDontWantToPlayAgain(userNamesArray, message);
-        // need to double-check if this works
+
         removeHiddenPickupChannelRole(playAgainRole);
 
-        confirmMessage.delete();
-        tagUsersWithRole.delete();
+        repeatChannel.bulkDelete(2)
         data = writeAliasData(filePath, data);
     });
 }
@@ -719,10 +720,11 @@ function removeHiddenPickupChannelRole(role) {
 // need team embed when I join a game that is currently running
 // need team embed after switch
 
+
+
 module.exports = {
     pickupGame,
     wipeAllTeams,
     makeSureTeamsHaveCaptains,
     removeCaptainRole
-
-};
+}

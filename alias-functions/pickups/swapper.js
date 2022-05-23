@@ -1,17 +1,6 @@
-// command "pickup swap <@discord user>"
-
-// message must have a mention of the player to be switched with -- that player must be on the other team.
-
-// check if user is on red/blue team - if not, tell em to fuck off
-
-//if so, check if tagged user is on the opposit team
-
-//if so, send 
-
 const JSONFunctions = require("../../JSONParser.js");
 const Discord = require("discord.js");
-const {makeSureTeamsHaveCaptains, removeCaptainRole} = require("./pickupRefactor")
-
+const pickupCaptainRoleId = process.env.PICKUP_CAPTAIN_ROLE_ID;
 
 let data;
 let userToBeSwappedTeam;
@@ -52,7 +41,8 @@ async function switchWithPlayer(message) {
     if(!user2OnOppositTeam(authorId, user2Name)) {
         return message.reply("Player is not on the other team.");
     }
-   return createConfirmMessage(message, authorName, authorId, user2Name, user2Id);
+    await createConfirmMessage(message, authorName, authorId, user2Name, user2Id);
+    return data;
 }
 
 
@@ -89,21 +79,13 @@ function user2OnOppositTeam(authorId, user2Name) {
         swapperTeam = "BLUE Team";
     }
 
-    if(authorTeam === swapperTeam) {
-        return false;
-    } else {
-        return true;
-    }
+    return authorTeam !== swapperTeam;
 }
 
 function user2OnATeam(user2Name) {
     if(data.teams.hasOwnProperty("RED Team") && data.teams["RED Team"].includes(user2Name)) {
         return true;
-    } else if (data.teams.hasOwnProperty("BLUE Team") && data.teams["BLUE Team"].includes(user2Name)) {
-        return true;
-    } else {
-        return false;
-    }
+    } else return data.teams.hasOwnProperty("BLUE Team") && data.teams["BLUE Team"].includes(user2Name);
 }
  
 
@@ -136,11 +118,11 @@ async function createConfirmMessage(message, authorName, authorId, user2Name, us
             message.channel.send(`Players have successfully swapped.`);
             data = JSONFunctions.getAliasData(filePath);
 
-           removeCaptainRole(data, userToBeSwappedTeam, data.players[authorId], message)
 
             data.teams[userToBeSwappedTeam][data.teams[userToBeSwappedTeam].indexOf(user2Name)] = data.players[authorId];
 
             userToBeSwappedTeam === "RED Team" ? userToBeSwappedTeam = "BLUE Team" : userToBeSwappedTeam = "RED Team";
+
 
             data.teams[userToBeSwappedTeam][data.teams[userToBeSwappedTeam].indexOf(data.players[authorId])] = user2Name;
 
@@ -164,7 +146,38 @@ async function createConfirmMessage(message, authorName, authorId, user2Name, us
             message.delete();  
     });
 }
-    
+
+
+function makeSureTeamsHaveCaptains(message, data) {
+    if (data.teams["RED Team"].length > 0) {
+        const userId = getUserIdByUserName(data.teams["RED Team"][0], data.players);
+        message.guild.members.fetch(userId).then((user) => {
+            user.roles.add(pickupCaptainRoleId)
+        })
+
+    }
+    if (data.teams["BLUE Team"].length > 0) {
+        const userId = getUserIdByUserName(data.teams["BLUE Team"][0], data.players);
+        message.guild.members.fetch(userId).then((user) => {
+            user.roles.add(pickupCaptainRoleId)
+        });
+    }
+}
+
+function getUserIdByUserName(user, players) {
+    return Object.keys(players).find(key => players[key] === user);
+}
+
+function removeCaptainRole(data, team, userName, message) {
+    if (data.teams[team][0] === userName) {
+        const discordId = getUserIdByUserName(userName, data.players);
+        message.guild.members.fetch(discordId).then((user) => {
+            user.roles.remove(pickupCaptainRoleId);
+        }).catch((error) => {
+            console.log(error)
+        });
+    }
+}
     
 
 
