@@ -10,9 +10,7 @@ const {
     changePin
 } = require("../../rcon-functions/checkRconUserCount");
 const exec = require("child_process").exec;
-const {
-    voter
-} = require("./voter")
+// const { voter } = require("./voter")
 const switchWithPlayer = require("./swapper")
 const Discord = require("discord.js");
 require("dotenv").config();
@@ -212,15 +210,14 @@ async function resetPickupGame(message) {
 
     em.successEmbedNoReply(message, "Game Resetting", "The game will be reset in 2 minutes.\nIf you join a team, you will be added to the queue in the order you joined.");
 
-    setTimeout(() => {
+    setTimeout( () => {
         gameResetting = false;
+
+        data = getAliasData(filePath)
+
         em.successEmbedNoReply(message, "Pickups is LIVE!", "Have fun!");
 
-       data = writeAliasData(filePath, data);
-
         movePlayersFromQueue(message);
-
-        data =  writeAliasData(filePath, data);
 
         sendTeamsEmbed(message);
 
@@ -230,7 +227,6 @@ async function resetPickupGame(message) {
             startGame(message);
         }
     }, 120000);
-    
 }
 
 
@@ -565,27 +561,25 @@ async function getRconPlayersList(message) {
 
 
 
-async function makePickupGameResetEmbed(message) {
+function makePickupGameResetEmbed(message) {
     const playAgainRole = message.guild.roles.cache.find(role => role.id === replayRoleID);
 
     let redBluePlayersArray = [];
     let confirmedArray = [];
 
-    data.teams["RED Team"].forEach((player) => {
+    data.teams["RED Team"].forEach(async (player) => {
         const userId = getUserIdByUserName(player, data.players);
-        giveUserHiddenPickupChannelRole(message, userId, playAgainRole);
-        setTimeout(() => {});
+        await giveUserHiddenPickupChannelRole(message, userId, playAgainRole);
         redBluePlayersArray.push(userId);
     });
 
-    data.teams["BLUE Team"].forEach((player) => {
+    data.teams["BLUE Team"].forEach(async (player) => {
         const userId = getUserIdByUserName(player, data.players);
-        giveUserHiddenPickupChannelRole(message, userId, playAgainRole);
-        setTimeout(() => {});
+        await  giveUserHiddenPickupChannelRole(message, userId, playAgainRole);
         redBluePlayersArray.push(userId);
     });
-    setTimeout(() => {
-        createReactionCollector(redBluePlayersArray, confirmedArray, message, playAgainRole)
+    setTimeout(async () => {
+        await createReactionCollector(redBluePlayersArray, confirmedArray, message, playAgainRole)
     }, 2000)
 }
 
@@ -595,7 +589,6 @@ async function makePickupGameResetEmbed(message) {
 
 async function createReactionCollector (redBluePlayersArray, confirmedArray, message, playAgainRole) {
     const repeatChannel = message.guild.channels.cache.find((channel) => channel.id === replayChannelID);
-
     repeatChannel.send(`<@&${replayRoleID}>`)
     
     const embed = new Discord.MessageEmbed()
@@ -604,14 +597,13 @@ async function createReactionCollector (redBluePlayersArray, confirmedArray, mes
         .setDescription("DESCRIPTION")
         .addField("Would you like to continue playing Pickups?", "Click ✅ to confirm.")
 
-
-    
     const confirmMessage = await repeatChannel.send({
         embeds: [embed]
     });
 
 
     await confirmMessage.react("✅");
+
     const filter = (reaction, user) => {
         return redBluePlayersArray.includes(user.id) && reaction.emoji.name === "✅";
     };
@@ -634,15 +626,14 @@ async function createReactionCollector (redBluePlayersArray, confirmedArray, mes
         }
     })
 
-    collector.on('end', () => {
-
+    collector.on('end', async () => {
         console.log(confirmedArray);
         const userNamesArray = getUserNameArray(confirmedArray);
-        removePlayersWhoDontWantToPlayAgain(userNamesArray, message);
 
-        removeHiddenPickupChannelRole(playAgainRole);
+        await removePlayersWhoDontWantToPlayAgain(userNamesArray, message);
+        await removeHiddenPickupChannelRole(playAgainRole);
 
-        repeatChannel.bulkDelete(2)
+        await repeatChannel.bulkDelete(2)
     });
 }
 
@@ -663,19 +654,19 @@ function getUserNameArray(confirmedArray) {
 
 function removePlayersWhoDontWantToPlayAgain(array, message) {
     console.log(array);
-    data.teams["RED Team"].forEach((player, index) => {
+    data.teams["RED Team"].forEach( async (player, index) => {
         if (!array.includes(player)) {
             if (index === 0) {
-                removeCaptainRole("RED Team", player, message)
+              await removeCaptainRole("RED Team", player, message)
             }
             data.teams["RED Team"].splice(data.teams["RED Team"].indexOf(player), 1);
             console.log("Kicking " + player + " from RED Team");
         }
     });
-    data.teams["BLUE Team"].forEach((player, index) => {
+    data.teams["BLUE Team"].forEach( async (player, index) => {
         if (!array.includes(player)) {
             if (index === 0) {
-                removeCaptainRole("BLUE Team", player, message)
+              await removeCaptainRole("BLUE Team", player, message)
             }
             data.teams["BLUE Team"].splice(data.teams["BLUE Team"].indexOf(player), 1);
             console.log("Kicking " + player + " from BLUE Team");
