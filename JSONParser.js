@@ -16,9 +16,7 @@ function readAliasFile(filePath, callback) {
 }
 
 function getAliasData(filePath) {
-  const aliases = fs.readFileSync(filePath);
-  const data = JSON.parse(aliases);
-  return data;
+  return JSON.parse(fs.readFileSync(filePath).toString());
 }
 
 function writeAliasData(filePath, data) {
@@ -27,6 +25,6 @@ function writeAliasData(filePath, data) {
   }
 
 
-const JSONFunctions = {readAliasFile, getAliasData, writeAliasData};
+const JSONFunctions = { readAliasFile, getAliasData, writeAliasData };
 
 module.exports = JSONFunctions;

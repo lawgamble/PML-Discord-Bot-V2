@@ -1,4 +1,5 @@
 const JSONFunctions = require("../../JSONParser.js");
+const botRepeat = require("../../discord-functions/botRepeat");
 const Discord = require("discord.js");
 const pickupCaptainRoleId = process.env.PICKUP_CAPTAIN_ROLE_ID;
 const em = require("../../discord-functions/generalEmbed");
@@ -13,7 +14,7 @@ const filePath = process.env.ALIASES_FILEPATH;
 async function switchWithPlayer(message) {
     // if there is no mention, return saying you need to tag someone
     if(!message.mentions.users.first()) {
-        message.reply("You need to tag a valid player on the opposite team in order to use this command.");
+        em.cautionEmbed(message, "NOPE:", "You need to tag a valid player on the opposite team in order to use this command.")
         return;
     }
     if (switchFlag) {
@@ -22,6 +23,7 @@ async function switchWithPlayer(message) {
 
     const authorName = message.author.username;
     const authorId = message.author.id;
+
     data = JSONFunctions.getAliasData(filePath);
 
     if (!userOnTeam(authorId, data)) {
@@ -32,7 +34,12 @@ async function switchWithPlayer(message) {
     const user2Name = data.players[user2Id];
 
     if(authorId === user2Id) {
-        return message.channel.send("https://media0.giphy.com/media/KBaxHrT7rkeW5ma77z/giphy.gif?cid=ecf05e474w62ajs5334uiltt0mehk1aqo5rptt9auwoj3f31&rid=giphy.gif&ct=g");
+        return message.reply("https://media0.giphy.com/media/KBaxHrT7rkeW5ma77z/giphy.gif?cid=ecf05e474w62ajs5334uiltt0mehk1aqo5rptt9auwoj3f31&rid=giphy.gif&ct=g");
+    }
+
+    if (user2Id === process.env.BOT_ID) {
+        const arguments = ["Don't be a moron, I would smoke every one of you."]
+        botRepeat(message, arguments)
     }
 
     if(!user2OnATeam(user2Name)) {
@@ -43,7 +50,6 @@ async function switchWithPlayer(message) {
         return message.reply("Player is not on the other team.");
     }
     await createConfirmMessage(message, authorName, authorId, user2Name, user2Id);
-    return data;
 }
 
 
@@ -145,7 +151,7 @@ async function createConfirmMessage(message, authorName, authorId, user2Name, us
     confirm.on('end', reaction => {
             switchFlag = false;
             confirmMessage.delete();
-            message.delete();  
+            message.delete();
     });
 }
 
