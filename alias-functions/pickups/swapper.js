@@ -1,6 +1,7 @@
 const JSONFunctions = require("../../JSONParser.js");
 const Discord = require("discord.js");
 const pickupCaptainRoleId = process.env.PICKUP_CAPTAIN_ROLE_ID;
+const em = require("../../discord-functions/generalEmbed");
 
 let data;
 let userToBeSwappedTeam;
@@ -38,7 +39,7 @@ async function switchWithPlayer(message) {
         return message.reply("That user isn't on a team. You can't switch.");
     }
 
-    if(!user2OnOppositTeam(authorId, user2Name)) {
+    if(!user2OnOppositeTeam(authorId, user2Name)) {
         return message.reply("Player is not on the other team.");
     }
     await createConfirmMessage(message, authorName, authorId, user2Name, user2Id);
@@ -63,7 +64,7 @@ function userOnTeam(authorId, data) {
 }
 
 
-function user2OnOppositTeam(authorId, user2Name) {
+function user2OnOppositeTeam(authorId, user2Name) {
     let authorTeam;
     let swapperTeam;
     if(data.teams.hasOwnProperty("RED Team") && data.teams["RED Team"].includes(data.players[authorId])) {
@@ -115,14 +116,16 @@ async function createConfirmMessage(message, authorName, authorId, user2Name, us
     confirm.on('collect', reaction => {
         switchFlag = false;
         if (reaction.emoji.name === '✅') {
-            message.channel.send(`Players have successfully swapped.`);
+            em.successEmbedNoReply(message, "You did it!", `**Players have successfully swapped**`)
+            message.channel.send("https://tenor.com/view/martin-lawrence-switch-gif-4964995")
             data = JSONFunctions.getAliasData(filePath);
 
+            removeCaptainRole(data, data.players[authorId], message)
+            removeCaptainRole(data, user2Name, message)
 
             data.teams[userToBeSwappedTeam][data.teams[userToBeSwappedTeam].indexOf(user2Name)] = data.players[authorId];
 
             userToBeSwappedTeam === "RED Team" ? userToBeSwappedTeam = "BLUE Team" : userToBeSwappedTeam = "RED Team";
-
 
             data.teams[userToBeSwappedTeam][data.teams[userToBeSwappedTeam].indexOf(data.players[authorId])] = user2Name;
 
@@ -131,7 +134,6 @@ async function createConfirmMessage(message, authorName, authorId, user2Name, us
             makeSureTeamsHaveCaptains(message, data)
 
             confirmMessage.delete();
-            message.delete();
         } else if (reaction.emoji.name === '❌') {
             switchFlag = false;
             message.channel.send("Switch cancelled.");
@@ -168,15 +170,13 @@ function getUserIdByUserName(user, players) {
     return Object.keys(players).find(key => players[key] === user);
 }
 
-function removeCaptainRole(data, team, userName, message) {
-    if (data.teams[team][0] === userName) {
+function removeCaptainRole(data, userName, message) {
         const discordId = getUserIdByUserName(userName, data.players);
-        message.guild.members.fetch(discordId).then((user) => {
-            user.roles.remove(pickupCaptainRoleId);
-        }).catch((error) => {
-            console.log(error)
-        });
-    }
+        const user = message.guild.members.fetch(discordId).then((user) => {
+            if(user.roles.cache.find((role) => role.id === pickupCaptainRoleId)) {
+                user.roles.remove(pickupCaptainRoleId);
+            }
+        })
 }
     
 

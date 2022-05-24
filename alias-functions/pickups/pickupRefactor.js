@@ -58,8 +58,8 @@ function pickupGame(message, arguments, command, buttons) {
             // this is going check if the game is being reset
             //if(gameIsbeingReset()) return addPlayerToTeam("queue", message);
             if (gameResetting) {
-                addPlayerToTeam("queue", message)
-                sendTeamsEmbed(message);
+                //addPlayerToTeam("queue", message)
+
                 return addPlayerToTeam("queue", message);
             } 
 
@@ -146,8 +146,8 @@ function addPlayerToTeam(teamName, message) {
         case "queue":
             userName = data.players[message.author.id];
             data.teams["PICKUP Queue"].push(userName);
+            data = writeAliasData(filePath, data)
             em.successEmbed(message, "Queued Up!", "The team is full, so you've been queued up!");
-            sendTeamsEmbed(message);
 
             break;
     }
@@ -339,7 +339,6 @@ function sendTeamsEmbed(message) {
     data = getAliasData(filePath);
     const timeLeft = checkPregameTimer(preGameTimer)
     em.redAndBlueTeamEmbed(message, data, timeLeft, gameIsActive);
-
 }
 
 function checkPregameTimer(timer) {
@@ -717,14 +716,11 @@ function removeHiddenPickupChannelRole(role) {
 }
 
 
-// need team embed when I join a game that is currently running
-// need team embed after switch
+
 
 
 
 module.exports = {
     pickupGame,
     wipeAllTeams,
-    makeSureTeamsHaveCaptains,
-    removeCaptainRole
 }
