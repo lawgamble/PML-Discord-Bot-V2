@@ -23,6 +23,7 @@ const replayRoleID = process.env.REPLAY_ROLE_ID;
 let gameIsActive = false;
 let gameResetting = false;
 let initialized = false;
+let noSwitchOrLeaveFlag;
 let data;
 let pin;
 const {
@@ -73,6 +74,7 @@ function pickupGame(message, arguments, command, buttons) {
             break;
 
         case "leave":
+            if (noSwitchOrLeaveFlag) return closure(message, "noLeaving")
             if (!initialized) return closure(message, "gameNotInitialized");
             leavePickupGame(message.author.id, message);
             break;
@@ -105,6 +107,7 @@ function pickupGame(message, arguments, command, buttons) {
         //     break;
 
         case "switch":
+            if (noSwitchOrLeaveFlag) return closure(message, "noSwitching")
             switchWithPlayer(message, buttons).catch(e => console.log(e));
             break;
 
@@ -199,6 +202,7 @@ function startGame(message) {
 }
 
 async function resetPickupGame(message) {
+    noSwitchOrLeaveFlag = true;
     gameIsActive = false;
     gameResetting = true;
 
@@ -226,6 +230,7 @@ async function resetPickupGame(message) {
         if (totalPlayers() >= 10 && !gameIsActive) {
             startGame(message);
         }
+        noSwitchOrLeaveFlag = false;
     }, 120000);
 }
 
@@ -477,12 +482,20 @@ function closure(message, closureArguments, command, arguments) {
         case "noArgument":
             em.cautionEmbed(message, "``NO ARGUMENT:``", "You must use a VALID pickup command.");
             break;
+
+        case "noLeaving":
+            em.cautionEmbed(message, "``GAME BEING RESET:``", "No need to leave - You will be kicked automatically when the game is finished resetting." );
+            break;
+
+        case "noSwitching":
+            em.cautionEmbed(message, "``GAME BEING RESET:``", "You can't switch right now - wait until the game is done resetting." );
+            break;
     }
 }
 
 
 
-function movePlayersFromQueue(message) {
+async function movePlayersFromQueue(message) {
     if (data.teams["PICKUP Queue"].length === 0) return;
     let queueNumber = 0;
     let player;
@@ -505,7 +518,7 @@ function movePlayersFromQueue(message) {
             queueNumber++;
         }
     }
-    data = writeAliasData(filePath, data);
+    data = await writeAliasData(filePath, data);
     makeSureTeamsHaveCaptains(message, data)
     return queueNumber;
 }
@@ -594,7 +607,7 @@ async function createReactionCollector (redBluePlayersArray, confirmedArray, mes
     const embed = new Discord.MessageEmbed()
         .setColor("#0099ff")
         .setTitle("Play Again?")
-        .setDescription("DESCRIPTION")
+        .setDescription("Make a selection...")
         .addField("Would you like to continue playing Pickups?", "Click ✅ to confirm.")
 
     const confirmMessage = await repeatChannel.send({
@@ -653,26 +666,17 @@ function getUserNameArray(confirmedArray) {
 
 
 function removePlayersWhoDontWantToPlayAgain(array, message) {
+    let kickedData = getAliasData(filePath)
     console.log(array);
-    data.teams["RED Team"].forEach( async (player, index) => {
-        if (!array.includes(player)) {
-            if (index === 0) {
-              await removeCaptainRole("RED Team", player, message)
-            }
-            data.teams["RED Team"].splice(data.teams["RED Team"].indexOf(player), 1);
-            console.log("Kicking " + player + " from RED Team");
-        }
-    });
-    data.teams["BLUE Team"].forEach( async (player, index) => {
-        if (!array.includes(player)) {
-            if (index === 0) {
-              await removeCaptainRole("BLUE Team", player, message)
-            }
-            data.teams["BLUE Team"].splice(data.teams["BLUE Team"].indexOf(player), 1);
-            console.log("Kicking " + player + " from BLUE Team");
-        }
-    });
-   data = writeAliasData(filePath, data);
+
+    removeCaptainRole("RED Team", kickedData.teams["RED Team"][0], message)
+    kickedData.teams["RED Team"] = kickedData.teams["RED Team"].filter((player) => array.includes(player))
+    removeCaptainRole("BLUE Team", kickedData.teams["BLUE Team"][0], message)
+    kickedData.teams["BLUE Team"] = kickedData.teams["BLUE Team"].filter((player) => array.includes(player));
+
+    data = writeAliasData(filePath, kickedData);
+
+    makeSureTeamsHaveCaptains(message, data)
 }
 
 function giveUserHiddenPickupChannelRole(message, userId, role) {
