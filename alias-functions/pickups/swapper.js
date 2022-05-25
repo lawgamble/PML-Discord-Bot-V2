@@ -3,6 +3,7 @@ const botRepeat = require("../../discord-functions/botRepeat");
 const Discord = require("discord.js");
 const pickupCaptainRoleId = process.env.PICKUP_CAPTAIN_ROLE_ID;
 const em = require("../../discord-functions/generalEmbed");
+const {restartOtherBot} = require("./rcon");
 
 let data;
 let userToBeSwappedTeam;
@@ -50,6 +51,7 @@ async function switchWithPlayer(message) {
         return message.reply("Player is not on the other team.");
     }
     await createConfirmMessage(message, authorName, authorId, user2Name, user2Id);
+    restartOtherBot();
 }
 
 
