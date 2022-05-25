@@ -3,13 +3,14 @@ const botRepeat = require("../../discord-functions/botRepeat");
 const Discord = require("discord.js");
 const pickupCaptainRoleId = process.env.PICKUP_CAPTAIN_ROLE_ID;
 const em = require("../../discord-functions/generalEmbed");
-const {restartOtherBot} = require("./rcon");
+const exec = require("child_process").exec;
 
 let data;
 let userToBeSwappedTeam;
 let switchFlag = false;
 
-const filePath = process.env.ALIASES_FILEPATH; 
+const filePath = process.env.ALIASES_FILEPATH;
+const botRebootCommandSwitch = process.env.BOT_REBOOT_COMMAND;
 
 
 async function switchWithPlayer(message) {
@@ -185,6 +186,20 @@ function removeCaptainRole(data, userName, message) {
                 user.roles.remove(pickupCaptainRoleId);
             }
         })
+}
+
+function restartOtherBot() {
+    exec(botRebootCommandSwitch, (error, stdout, stderr) => {
+        if (error) {
+            console.log(`error: ${error.message}`);
+            return;
+        }
+        if (stderr) {
+            console.log(`stderr: ${stderr}`);
+            return;
+        }
+        console.log(`stdout: ${stdout}`);
+    });
 }
     
 

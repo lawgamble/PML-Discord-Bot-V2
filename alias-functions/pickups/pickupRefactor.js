@@ -42,7 +42,7 @@ let preGameTimer = new Timer();
 
 // grab the data one time and update the data with writeAliasData()
 
-function pickupGame(message, arguments, command, buttons) {
+async function pickupGame(message, arguments, command, buttons) {
     if (arguments[0] === undefined)  return closure(message, "noArgument")
 
     data = getAliasData(filePath);
@@ -76,7 +76,7 @@ function pickupGame(message, arguments, command, buttons) {
         case "leave":
             if (noSwitchOrLeaveFlag) return closure(message, "noLeaving")
             if (!initialized) return closure(message, "gameNotInitialized");
-            leavePickupGame(message.author.id, message);
+            await leavePickupGame(message.author.id, message);
             break;
 
         case "start":
@@ -155,6 +155,8 @@ function addPlayerToTeam(teamName, message) {
 
     let sumOfPlayers = totalPlayers();
     if (sumOfPlayers < 10) sendTeamsEmbed(message);
+
+    if (sumOfPlayers <= 10 && gameIsActive) sendTeamsEmbed(message);
 
     if (sumOfPlayers === 10 && !gameIsActive) {
         startGame(message);
@@ -291,7 +293,7 @@ function userIsCaptain(message) {
 }
 
 
-function leavePickupGame(authorId, message) {
+async function leavePickupGame(authorId, message) {
     let team;
 
     const userName = data.players[authorId];
@@ -318,7 +320,7 @@ function leavePickupGame(authorId, message) {
     data = writeAliasData(filePath, data);
 
     if (data.teams["PICKUP Queue"].length > 0) {
-        movePlayersFromQueue(message);
+       await movePlayersFromQueue(message);
     }
 
     if (totalPlayers() === 0) return wipeAllTeams(message)
