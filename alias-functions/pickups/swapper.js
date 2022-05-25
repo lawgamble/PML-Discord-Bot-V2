@@ -41,7 +41,7 @@ async function switchWithPlayer(message) {
 
     if (user2Id === process.env.BOT_ID) {
         const arguments = ["Don't be a moron, I would smoke every one of you."]
-        botRepeat(message, arguments)
+        return botRepeat(message, arguments)
     }
 
     if(!user2OnATeam(user2Name)) {

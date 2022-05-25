@@ -306,12 +306,10 @@
       "q-LegoManStan",
       "q-XTRACTN"
     ],
-    "RED Team": [],
-    "BLUE Team": [
-      "q-EagleGround"
+    "RED Team": [
+      "q-LawMan"
     ],
-    "PICKUP Queue": [
-      "q-deez"
-    ]
+    "BLUE Team": [],
+    "PICKUP Queue": []
   }
 }
