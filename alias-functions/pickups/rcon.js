@@ -1,5 +1,6 @@
 const net = require("net");
 const exec = require("child_process").exec;
+const botRebootCommand = process.env.BOT_REBOOT_COMMAND;
 
 
 

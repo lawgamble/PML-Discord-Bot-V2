@@ -52,7 +52,7 @@ async function switchWithPlayer(message) {
         return message.reply("Player is not on the other team.");
     }
     await createConfirmMessage(message, authorName, authorId, user2Name, user2Id);
-    restartOtherBot();
+    restartOtherBotSwapper();
 }
 
 
@@ -188,7 +188,7 @@ function removeCaptainRole(data, userName, message) {
         })
 }
 
-function restartOtherBot() {
+function restartOtherBotSwapper() {
     exec(botRebootCommandSwitch, (error, stdout, stderr) => {
         if (error) {
             console.log(`error: ${error.message}`);

@@ -198,7 +198,7 @@ function startGame(message) {
 
     gameIsActive = true;
     clearTimeout(preGameTimeout);
-    restartOtherBot();
+    restartOtherBotPickups();
     em.startPickupGameEmbed(message, "``Pickup Game Has Started``", "Check you DM's for specific instructions on how to play this pickup game.");
     pem.redAndBlueMatchupEmbed(message, "RED vs BLUE", data);
 }
@@ -421,7 +421,7 @@ function thereIsACaptain(data, team) {
     return data?.teams?.[team]?.[0] !== undefined;
 }
 
-function restartOtherBot() {
+function restartOtherBotPickups() {
     exec(botRebootCommand, (error, stdout, stderr) => {
         if (error) {
             console.log(`error: ${error.message}`);
