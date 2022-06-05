@@ -1,5 +1,5 @@
 require("dotenv").config();
-const fs = require("fs");
+
 const registerUser = require("./alias-functions/users/registerUser");
 const unRegisterUser = require("./alias-functions/users/unRegisterUser");
 const createTeam = require("./alias-functions/teams/createTeam");
@@ -184,6 +184,7 @@ client.on("messageCreate", (message) => {
         case"votes":
             checkVoteCount(message);
             break;
+
 
         default:
             break;

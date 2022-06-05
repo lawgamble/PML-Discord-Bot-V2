@@ -4,7 +4,7 @@ const em = require("./discord-functions/generalEmbed");
 const pickupChannelId = process.env.PICKUP_CHANNEL_ID;
 const leagueManagerRoleId = process.env.LEAGUE_MANAGER_ROLE_ID;
 const captainRoleId = process.env.CAPTAIN_ROLE_ID;
-const coCaptainRoleId = process.env.CO_CAPTAIN_ROLE_ID;
+const coCaptainRoleId = process.env.CO_CAP_ROLE_ID;
 
 
 function deletePickupTeams(data) {
