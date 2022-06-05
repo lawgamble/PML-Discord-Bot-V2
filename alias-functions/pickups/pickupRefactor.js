@@ -173,6 +173,8 @@ function startGame(message) {
 
     pin = generatePin();
 
+    restartOtherBotPickups();
+
     redTeam.forEach((user, index) => {
         switch (index) {
             case 0:
@@ -198,7 +200,7 @@ function startGame(message) {
 
     gameIsActive = true;
     clearTimeout(preGameTimeout);
-    restartOtherBotPickups();
+
     em.startPickupGameEmbed(message, "``Pickup Game Has Started``", "Check you DM's for specific instructions on how to play this pickup game.");
     pem.redAndBlueMatchupEmbed(message, "RED vs BLUE", data);
 }
